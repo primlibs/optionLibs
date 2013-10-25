@@ -32,6 +32,7 @@ class OptionEnt extends OptionAbstract{
   @Override
   public String render() throws Exception{
     AbsEnt base=rd.div("","");
+    base.setValue("Вызван объект"+ object);
     return base.render();
     
   }
