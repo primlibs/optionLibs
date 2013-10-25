@@ -13,11 +13,11 @@ import web.Render;
  * @author кот
  */
 public interface Renderrable {
-  public String render();
+  public String render() throws Exception ;
   public String getRedirectObject();
   public String getRedirectAction();
   public String getRedirectSpecAction();
-  public Boolean run();
+  public Boolean run() throws Exception;
   public Boolean isRedirect();
   public Map<String, Object> getRedirectParams();
   public void setApplication(AbstractApplication app);

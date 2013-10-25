@@ -9,6 +9,7 @@ import java.util.Map;
 import prim.AbstractApplication;
 import prim.libs.MyString;
 import web.Render;
+import web.fabric.AbsEnt;
 
 /**
  *
@@ -29,13 +30,15 @@ class OptionEnt extends OptionAbstract{
   }
   
   @Override
-  public String render() {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  public String render() throws Exception{
+    AbsEnt base=rd.div("","");
+    return base.render();
+    
   }
 
   @Override
-  public Boolean run() {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  public Boolean run() throws Exception{
+    return true;
   }
 
   

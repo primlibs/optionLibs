@@ -26,12 +26,12 @@ public class PairEnt extends OptionAbstract{
   }
 
   @Override
-  public String render() {
+  public String render()throws Exception {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
 
   @Override
-  public Boolean run() {
+  public Boolean run() throws Exception{
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
 }
