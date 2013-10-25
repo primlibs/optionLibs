@@ -8,6 +8,7 @@ import option.ents.OptionAbstract;
 import java.util.HashMap;
 import java.util.Map;
 import prim.AbstractApplication;
+import prim.libs.MyString;
 import web.Render;
 
 /**
@@ -37,6 +38,7 @@ public final class Creator {
   }
   
   public String run(){
+    try{
     //маршрутизация
     String result="";
     Renderrable rbl= getPath(app,object,action,specAction,innerRequest,rd);
@@ -54,9 +56,12 @@ public final class Creator {
     }
     //ответ
     return result;
+    }catch(Exception ex){
+      return MyString.getStackExeption(ex);
+    }
   }
   
-  public Renderrable getPath(AbstractApplication app,String object,String action,String specAction,Map<String, Object> innerRequest, Render rd){
+  private Renderrable getPath(AbstractApplication app,String object,String action,String specAction,Map<String, Object> innerRequest, Render rd){
     if(object.equals("modelEnt")){
       return OptionAbstract.getModel(app, rd,action,specAction);
     }else if(object.equals("pairEnt")){
