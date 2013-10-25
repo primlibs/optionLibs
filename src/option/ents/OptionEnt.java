@@ -73,11 +73,6 @@ class OptionEnt extends OptionAbstract {
     inner.put(rd.textInput("appLogPath",  os.getAppLogPath(), "Путь к логам приложения"), "Путь к логам приложения");
    
     
-    
-    
-    
-    
-    inner.put(rd.submitInput("submit", "Отправить"),"");
     inner.put(rd.hiddenInput("action", "refresh"),"");
     AbsEnt form=rd.rightForm(false,object,"false", null, inner, "Подтвердить изменения", rd.getRenderConstant().OK_IMGPH, false).setAttribute(EnumAttrType.action, "./option");
     return form.render() + "Ошибки:" + os.getError();
