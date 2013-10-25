@@ -9,6 +9,7 @@ import java.util.Map;
 import option.Renderrable;
 import option.Renderrable;
 import prim.AbstractApplication;
+import prim.libs.MyString;
 import web.Render;
 
 /**
@@ -87,6 +88,17 @@ public abstract class OptionAbstract implements Renderrable{
     return PairEnt.getInstance(app, rd, action, specAction);
   }
   
-
+  public Boolean setRedirect(String object,String action,String specAction){
+    if(MyString.NotNull(object)){
+      isRedirect=true;
+      redirectObject=object;
+      redirectAction=action;
+      redirectSpecAction=specAction;
+      return isRedirect;
+    }else{
+      return false;
+    }
+    
+  }
   
 }
