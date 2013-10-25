@@ -9,8 +9,13 @@ package option;
  * @author кот
  */
 public class Creator {
-  public Creator(){
+  private Creator(){
     
+  }
+  
+  
+  public static Creator getInstance(){
+    return new Creator();
   }
   
   public String run(){
