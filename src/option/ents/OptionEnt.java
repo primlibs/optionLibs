@@ -79,7 +79,7 @@ class OptionEnt extends OptionAbstract {
 
 
     AbstractWebFabric cf = rd.getFabric();
-    AbsEnt form = rd.form("./options");
+    AbsEnt form = rd.form("./option");
     AbsEnt table = cf.get("table");
     form.addEnt(table);
     for (someEnt se : ents) {
@@ -97,9 +97,7 @@ class OptionEnt extends OptionAbstract {
     AbsEnt td2 = cf.get("td");
     tr.addEnt(td1);
     tr.addEnt(td2);
-    AbsEnt in = rd.submitInput("submit", "Отправить");
-
-
+    AbsEnt in = rd.submitInput("submit", "Отправить");  
     td1.addEnt(in);
     table.addEnt(tr);
 
