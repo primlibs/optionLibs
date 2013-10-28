@@ -67,7 +67,7 @@ class OptionEnt extends OptionAbstract {
     inner.put(rd.textInput("dumpPath",  os.getDumpPath(), "Путь к дампам БД"), "Путь к дампам БД");
     inner.put(rd.textInput("emailNotification",  os.getEmailNotification(), "Email для получения служебных сообщений"), "Email для получения служебных сообщений");
     
-    AbsEnt form=rd.rightForm(false,object,"refresh", null, inner, "Подтвердить изменения", rd.getRenderConstant().OK_IMGPH, false).setAttribute(EnumAttrType.action, "./option");
+    AbsEnt form=rd.rightForm(false,object,"refresh", null, inner, "Подтвердить изменения", rd.getRenderConstant().OK_IMGPH, false);
     return form.render() + "Ошибки:" + os.getError();
   }
 
