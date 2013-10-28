@@ -45,8 +45,7 @@ class OptionEnt extends OptionAbstract {
 
   @Override
   public String render() throws Exception {
-    OptionsKeeper os = app.getKeeper().getOptionKeeper();
-
+    OptionsKeeper os = OptionsKeeper.getInstance(app.getOptionSingletonPath());
     Map <AbsEnt,String> inner= new LinkedHashMap<AbsEnt, String>();
     inner.put(rd.textInput("appConfigPath",  os.getAppConfigPath(), "Путь к конфигам приложения"), "Путь к конфигам приложения");
     inner.put(rd.textInput("appLocale",  os.getAppLocale(), "Язык локали"), "Язык локали");
