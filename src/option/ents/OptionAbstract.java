@@ -6,29 +6,32 @@ package option.ents;
 
 import java.util.HashMap;
 import java.util.Map;
+import option.Creator;
 import option.Renderrable;
 import option.Renderrable;
 import prim.AbstractApplication;
 import prim.libs.MyString;
 import web.Render;
+import web.fabric.AbsEnt;
+import web.fabric.EnumAttrType;
 
 /**
  *
  * @author кот
  */
 public abstract class OptionAbstract implements Renderrable{
-  AbstractApplication app;
-  Map<String, Object> redirectParams=new HashMap<String, Object>();
-  Map<String, Object> params=new HashMap<String, Object>();
-  Render rd;
-  Boolean isRedirect=false;
-  String redirectObject="";
-  String redirectAction="";
-  String redirectSpecAction="";
+  protected AbstractApplication app;
+  protected Map<String, Object> redirectParams=new HashMap<String, Object>();
+  protected Map<String, Object> params=new HashMap<String, Object>();
+  protected Render rd;
+  protected Boolean isRedirect=false;
+  protected String redirectObject="";
+  protected String redirectAction="";
+  protected String redirectSpecAction="";
   
-  String action="";
-  String specAction="";
-  String object="";
+  protected String action="";
+  protected String specAction="";
+  protected String object="";
 
   @Override
   public String getRedirectObject() {
@@ -98,7 +101,23 @@ public abstract class OptionAbstract implements Renderrable{
     }else{
       return false;
     }
-    
   }
+  
+  protected String href(String object, String action, String specAction, String name, Map<String, Object> params) throws Exception {
+    return rd.href(object, action, specAction, params, name, false).render();
+  }
+  
+  protected String href(String object, String action, String specAction, String name, Map<String, Object> params, String style, String js) throws Exception {
+    AbsEnt href = rd.href(object, action, specAction, params, name, false);
+    if (style != null && !style.isEmpty()) {
+      href.setAttribute(EnumAttrType.style, style);
+    }
+    if (js != null && !js.isEmpty()) {
+      href.setJs(js);
+    }
+    return href.render();
+  }
+  
+
   
 }

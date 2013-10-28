@@ -23,11 +23,38 @@ public final class Creator {
   Map<String, Object> innerRequest=new HashMap();
   Render rd;
   
+  protected Boolean redirect=false;
+  protected String redirectObject="";
+  protected String redirectAction="";
+  protected String redirectSpecAction = "";
+  protected Map<String, Object> redirectParams=new HashMap<String, Object>();
+  
   
   public static final String OPTION_OBJECT_NAME="optionEnt";
   public static final String CONTROLLER_OBJECT_NAME="controlletEnt";
   public static final String PAIR_OBJECT_NAME="pairEnt";
   public static final String MODEL_OBJECT_NAME="modelEnt";
+
+  public Boolean isRedirect() {
+    return redirect;
+  }
+
+  public String getRedirectObject() {
+    return redirectObject;
+  }
+
+  public String getRedirectAction() {
+    return redirectAction;
+  }
+
+  public Map<String, Object> getRedirectParams() {
+    return redirectParams;
+  }
+
+  public String getRedirectSpecAction() {
+    return redirectSpecAction;
+  }
+  
   
   
   private Creator(AbstractApplication app,String object,String action,String specAction,Map<String, Object> innerRequest,Render rd){
@@ -39,11 +66,11 @@ public final class Creator {
     this.rd=rd;
   }
   
-  
   public static Creator getInstance(AbstractApplication app,String object,String action,String specAction,Map<String, Object> innerRequest, Render rd){
     return new Creator(app,object,action,specAction,innerRequest,rd);
   }
   
+  /*
   public String run(){
     try{
     //маршрутизация
@@ -59,6 +86,31 @@ public final class Creator {
       this.specAction=rbl.getRedirectSpecAction();
       this.innerRequest=rbl.getRedirectParams();
       result=run();
+    }else{
+      result=rbl.render();
+    }
+    //ответ
+    return result;
+    }catch(Exception ex){
+      return MyString.getStackExeption(ex);
+    }
+  */
+  
+   public String run(){
+    try{
+    //маршрутизация
+    String result="";
+    Renderrable rbl= getPath(app,object,action,specAction,innerRequest,rd);
+    rbl.setParams(innerRequest);
+    //выполнение
+    rbl.run();
+    //переадресация
+    if(rbl.isRedirect()){
+      redirect = true;
+      this.redirectAction = rbl.getRedirectAction();
+      this.redirectObject = rbl.getRedirectObject();
+      this.redirectParams = rbl.getRedirectParams();  
+      this.redirectSpecAction = rbl.getRedirectSpecAction();
     }else{
       result=rbl.render();
     }

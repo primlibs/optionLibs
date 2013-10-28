@@ -4,6 +4,9 @@
  */
 package option.ents;
 
+import option.modelEnts.AddStructure;
+import option.modelEnts.AllStructure;
+import option.modelEnts.OneStructure;
 import prim.AbstractApplication;
 import prim.libs.MyString;
 import web.Render;
@@ -14,7 +17,7 @@ import web.Render;
  */
 public class ModelEnt extends OptionAbstract{
   
-  private ModelEnt(AbstractApplication app,Render rd,String action,String specAction){
+  protected ModelEnt(AbstractApplication app,Render rd,String action,String specAction){
     this.object="modelEnt";
     setApplication(app);
     setRender(rd);
@@ -23,7 +26,14 @@ public class ModelEnt extends OptionAbstract{
   }
 
   static ModelEnt getInstance(AbstractApplication app,Render rd,String action,String specAction){
-    return new ModelEnt(app, rd,action,specAction);
+    if (action.equals("AllStructure")) {
+      return new AllStructure(app, rd, action, specAction);
+    } else if (action.equals("OneStructure")) {
+      return new OneStructure(app, rd, action, specAction);
+    } else if (action.equals("AddStructure")) {
+      return new AddStructure(app, rd, action, specAction);
+    }
+    return new ModelEnt(app, rd, action, specAction);
   }
 
   @Override
