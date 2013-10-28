@@ -23,6 +23,13 @@ public final class Creator {
   Map<String, Object> innerRequest=new HashMap();
   Render rd;
   
+  
+  public static final String OPTION_OBJECT_NAME="optionEnt";
+  public static final String CONTROLLER_OBJECT_NAME="controlletEnt";
+  public static final String PAIR_OBJECT_NAME="pairEnt";
+  public static final String MODEL_OBJECT_NAME="modelEnt";
+  
+  
   private Creator(AbstractApplication app,String object,String action,String specAction,Map<String, Object> innerRequest,Render rd){
     this.app=app;
     this.action=action;
@@ -63,11 +70,11 @@ public final class Creator {
   }
   
   private Renderrable getPath(AbstractApplication app,String object,String action,String specAction,Map<String, Object> innerRequest, Render rd){
-    if(object.equals("modelEnt")){
+    if(object.equals(MODEL_OBJECT_NAME)){
       return OptionAbstract.getModel(app, rd,action,specAction);
-    }else if(object.equals("pairEnt")){
+    }else if(object.equals(PAIR_OBJECT_NAME)){
       return OptionAbstract.getPair(app, rd,action,specAction);
-    }else if(object.equals("controllerEnt")){
+    }else if(object.equals(CONTROLLER_OBJECT_NAME)){
       return OptionAbstract.getController(app, rd,action,specAction);
     }else{
       return OptionAbstract.getOption(app, rd,action,specAction);
