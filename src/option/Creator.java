@@ -42,6 +42,7 @@ public final class Creator {
     //маршрутизация
     String result="";
     Renderrable rbl= getPath(app,object,action,specAction,innerRequest,rd);
+    rbl.setParams(innerRequest);
     //выполнение
     rbl.run();
     //переадресация
