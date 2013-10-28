@@ -47,19 +47,6 @@ class OptionEnt extends OptionAbstract {
   public String render() throws Exception {
     OptionsKeeper os = app.getKeeper().getOptionKeeper();
 
-
-    /*
-    ents.add(new someEnt("Пользователь", "dbUser", os.getDbUser()));
-    ents.add(new someEnt("Путь к файлам", "filePath", os.getFilePath()));
-    ents.add(new someEnt("Временная директория для загружаемых файлов", "uploadPath", os.getUploadPath()));
-    ents.add(new someEnt("Путь к bi", "biPath", os.getBiPath()));
-    ents.add(new someEnt("Путь к рендерам", "renderPath", os.getRenderPath()));
-    ents.add(new someEnt("Время жизни сессии, в минутах", "sessionLifeTime", os.getSessionLifeTime()));
-    ents.add(new someEnt("Максимальный размер загружаемых файлов в мб", "maxUploadSizeMB", os.getMaxUploadSizeMB()));
-    ents.add(new someEnt("Путь к дампам БД", "dumpPath", os.getDumpPath()));
-    ents.add(new someEnt("Email для получения служебных сообщений", "emailNotification", os.getEmailNotification()));
-
-* */
     Map <AbsEnt,String> inner= new LinkedHashMap<AbsEnt, String>();
     inner.put(rd.textInput("appConfigPath",  os.getAppConfigPath(), "Путь к конфигам приложения"), "Путь к конфигам приложения");
     inner.put(rd.textInput("appLocale",  os.getAppLocale(), "Язык локали"), "Язык локали");
