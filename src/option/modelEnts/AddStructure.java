@@ -46,11 +46,6 @@ public class AddStructure extends ModelEnt {
     
      try {
       
-      str += "<html>";
-      str += "<head>";
-      str += "<title>Servlet ChangeField</title>";
-      str += "</head>";
-      str += "<body>";
       str += href(Creator.MODEL_OBJECT_NAME, "AllStructure", "", "Перейти к списку всех моделей", new HashMap());
       str += "<h1>Добавить новый тип данных</h1>";
 
@@ -66,9 +61,6 @@ public class AddStructure extends ModelEnt {
       form.setAttribute(EnumAttrType.action, "");
       str += form.render();
 
-
-      str += "</body>";
-      str += "</html>";
     } catch (Exception e) {
       str += MyString.getStackExeption(e);
     }

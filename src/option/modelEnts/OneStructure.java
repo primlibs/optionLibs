@@ -44,12 +44,6 @@ public class OneStructure extends ModelEnt {
       title = "Struct " + structureAlias;
     }
 
-    str += "<html>";
-    str += "<head>";
-    str += "<title>" + title + "</title>";
-    str += "<link rel='stylesheet' href='./style.css' type='text/css'/>";
-    str += "</head>";
-    str += "<body>";
     str += "<script src='./script.js'></script>";
     str += href(Creator.MODEL_OBJECT_NAME, "AllStructure", "", "Перейти к списку всех моделей", new HashMap());
 
@@ -80,7 +74,6 @@ public class OneStructure extends ModelEnt {
         structureParams.put("structureAlias", structureAlias);
         str += href(Creator.MODEL_OBJECT_NAME, action, "ChangeStructure", "Изменить параметры модели", structureParams, "margin-right:100px;", "");
         str += href(Creator.MODEL_OBJECT_NAME, action, "deleteStructure", "Удалить модель", structureParams, "margin-right:100px;", "onclick='return confirmDelete();'");
-        str += href(Creator.MODEL_OBJECT_NAME, action, "AddField", "Добавить поле", structureParams, "margin-right:100px;", "");
         str += "<div style='overflow:hidden;'>" + addFieldForm() + "</div>";
         str += "<h2>Поля модели</h2>";
 
@@ -111,7 +104,6 @@ public class OneStructure extends ModelEnt {
             str += changeFieldForm(field);
 
             structureParams.put("fieldAlias", field.getAlias());
-            str += href(Creator.MODEL_OBJECT_NAME, action, "ChangeField", "[Изменить параметры поля]", structureParams, "margin-right:100px;", "");
             str += href(Creator.MODEL_OBJECT_NAME, action, "AddValidator", "[Добавить фильтр либо валидатор]", structureParams, "margin-right:100px;", "");
             str += href(Creator.MODEL_OBJECT_NAME, action, "deleteField", "[Удалить поле]", structureParams, "margin-right:100px;", "onclick='return confirmDelete();'");
             str += href(Creator.MODEL_OBJECT_NAME, action, "deleteFieldWithData", "[Удалить поле вместе с данными]", structureParams, "margin-right:100px;", "onclick='return confirmDelete();'");
@@ -177,8 +169,6 @@ public class OneStructure extends ModelEnt {
       }
     }
 
-    str += "</body>";
-    str += "</html>";
     return str;
   }
 
@@ -316,7 +306,7 @@ public class OneStructure extends ModelEnt {
     hs.put(rd.hiddenInput("object", object), "");
     hs.put(rd.hiddenInput("structureAlias", params.get("structureAlias")), "");
     AbsEnt form = rd.verticalForm(hs, "Добавить", "images/add.png");
-    form.setAttribute(EnumAttrType.action, "/option");
+    form.setAttribute(EnumAttrType.action, rd.getBaseLinkPath());
     return form.render();
   }
 
@@ -327,12 +317,12 @@ public class OneStructure extends ModelEnt {
     hs.put(rd.checkBox("updatable", field.isUpdatable(), null), "Обновляемое");
     hs.put(rd.combo(relationsMap, field.getRelations(), "relations"), "Зависимость");
     hs.put(rd.textInput("def", field.getDef(), "Значение по умолчанию"), "Значение по умолчанию");
-    AbsEnt form = rd.horizontalForm(hs, "Отправить", "images/ok.png");
-    form.addEnt(rd.hiddenInput("fieldName", field.getAlias()));
     hs.put(rd.hiddenInput("action", action), "");
     hs.put(rd.hiddenInput("object", object), "");
     hs.put(rd.hiddenInput("structureAlias", params.get("structureAlias")), "");
-    form.setAttribute(EnumAttrType.action, "/option");
+    AbsEnt form = rd.horizontalForm(hs, "Отправить", "images/ok.png");
+    form.addEnt(rd.hiddenInput("fieldName", field.getAlias()));
+    form.setAttribute(EnumAttrType.action, rd.getBaseLinkPath());
     form.setAttribute(EnumAttrType.style, "float:none;");
     return form.render();
   }
@@ -354,11 +344,11 @@ public class OneStructure extends ModelEnt {
     hs.put(rd.textInput("names", null, "Список полей"), "");
     hs.put(rd.checkBox("checkDeleted", false, null), "");
     hs.put(rd.hiddenInput("specAction", "addUnique"), "");
-    AbsEnt form = rd.horizontalForm(hs, "Добавить Unique", "images/add.png");
     hs.put(rd.hiddenInput("action", action), "");
     hs.put(rd.hiddenInput("object", object), "");
     hs.put(rd.hiddenInput("structureAlias", params.get("structureAlias")), "");
-    form.setAttribute(EnumAttrType.action, "/option");
+    AbsEnt form = rd.horizontalForm(hs, "Добавить Unique", "images/add.png");
+    form.setAttribute(EnumAttrType.action, rd.getBaseLinkPath());
     return form.render();
   }
 
@@ -370,25 +360,25 @@ public class OneStructure extends ModelEnt {
     }
     hs.put(rd.textInput("names", names, "Список полей"), "");
     hs.put(rd.checkBox("checkDeleted", unique.isCheckDeleted(), null), "");
-    hs.put(rd.hiddenInput("action", "changeUnique"), "");
+    hs.put(rd.hiddenInput("specAction", "changeUnique"), "");
     hs.put(rd.hiddenInput("index", index), "");
-    AbsEnt form = rd.horizontalForm(hs, "Именить Unique", "images/change.png");
     hs.put(rd.hiddenInput("action", action), "");
     hs.put(rd.hiddenInput("object", object), "");
     hs.put(rd.hiddenInput("structureAlias", params.get("structureAlias")), "");
-    form.setAttribute(EnumAttrType.action, "/option");
+    AbsEnt form = rd.horizontalForm(hs, "Именить Unique", "images/change.png");
+    form.setAttribute(EnumAttrType.action, rd.getBaseLinkPath());
     return form.render();
   }
 
   private String deleteUniqueForm(Unique unique, int index) throws Exception {
     LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
-    hs.put(rd.hiddenInput("action", "deleteUnique"), "");
+    hs.put(rd.hiddenInput("specAction", "deleteUnique"), "");
     hs.put(rd.hiddenInput("index", index), "");
-    AbsEnt form = rd.horizontalForm(hs, "Удалить Unique", "images/delete.png");
     hs.put(rd.hiddenInput("action", action), "");
     hs.put(rd.hiddenInput("object", object), "");
     hs.put(rd.hiddenInput("structureAlias", params.get("structureAlias")), "");
-    form.setAttribute(EnumAttrType.action, "/option");
+    AbsEnt form = rd.horizontalForm(hs, "Удалить Unique", "images/delete.png");
+    form.setAttribute(EnumAttrType.action, rd.getBaseLinkPath());
     return form.render();
   }
 }

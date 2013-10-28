@@ -46,12 +46,6 @@ public class AllStructure extends ModelEnt {
     String str = "";
       try {
 
-      str += "<html>";
-      str += "<head>";
-      str += "<title>Servlet AllStructure</title>";
-      str += "</head>";
-      str += "<body>";
-
       if (params.get("modelName") != null && !"".equals(params.get("modelName")) && specAction.equals("modulate")) {
         String modelName = params.get("modelName").toString();
 
@@ -140,11 +134,6 @@ public class AllStructure extends ModelEnt {
         str += "</td></tr>";
       }
       str += "</table>";
-
-
-
-      str += "</body>";
-      str += "</html>";
 
     } catch (Exception e) {
       str += MyString.getStackExeption(e);
