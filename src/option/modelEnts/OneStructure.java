@@ -72,7 +72,7 @@ public class OneStructure extends ModelEnt {
 
         Map<String, Object> structureParams = new HashMap();
         structureParams.put("structureAlias", structureAlias);
-        str += href(Creator.MODEL_OBJECT_NAME, action, "ChangeStructure", "Изменить параметры модели", structureParams, "margin-right:100px;", "");
+        str += href(Creator.MODEL_OBJECT_NAME, "ChangeStructure", "", "Изменить параметры модели", structureParams, "margin-right:100px;", "");
         str += href(Creator.MODEL_OBJECT_NAME, action, "deleteStructure", "Удалить модель", structureParams, "margin-right:100px;", "onclick='return confirmDelete();'");
         str += "<div style='overflow:hidden;'>" + addFieldForm() + "</div>";
         str += "<h2>Поля модели</h2>";
@@ -104,7 +104,7 @@ public class OneStructure extends ModelEnt {
             str += changeFieldForm(field);
 
             structureParams.put("fieldAlias", field.getAlias());
-            str += href(Creator.MODEL_OBJECT_NAME, action, "AddValidator", "[Добавить фильтр либо валидатор]", structureParams, "margin-right:100px;", "");
+            str += href(Creator.MODEL_OBJECT_NAME, "AddValidator", "", "[Добавить фильтр либо валидатор]", structureParams, "margin-right:100px;", "");
             str += href(Creator.MODEL_OBJECT_NAME, action, "deleteField", "[Удалить поле]", structureParams, "margin-right:100px;", "onclick='return confirmDelete();'");
             str += href(Creator.MODEL_OBJECT_NAME, action, "deleteFieldWithData", "[Удалить поле вместе с данными]", structureParams, "margin-right:100px;", "onclick='return confirmDelete();'");
 
@@ -121,7 +121,7 @@ public class OneStructure extends ModelEnt {
 
               structureParams.put("validatorId", idx);
               String deleteLink = href(Creator.MODEL_OBJECT_NAME, action, "deleteValidator", "[удалить]", structureParams, "", "onclick='return confirmDelete();'");
-              String changeLink = href(Creator.MODEL_OBJECT_NAME, action, "ChangeValidator", "[изменить параметры]", structureParams);
+              String changeLink = href(Creator.MODEL_OBJECT_NAME, "ChangeValidator", "", "[изменить параметры]", structureParams);
               String upLink = href(Creator.MODEL_OBJECT_NAME, action, "upValidator", "[поднять]", structureParams);
               String downLink = href(Creator.MODEL_OBJECT_NAME, action, "downValidator", "[опустить]", structureParams);
 

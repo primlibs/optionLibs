@@ -68,10 +68,8 @@ public class AddValidator extends ModelEnt {
 
         LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
         hs.put(rd.combo(combo, null, "validatorName"), "Валидатор");
-        hs.put(rd.hiddenInput("action", action), "");
-        hs.put(rd.hiddenInput("object", object), "");
         AbsEnt form = rd.verticalForm(hs, "Изменить", "images/ok.png");
-        form.setAttribute(EnumAttrType.action, "/option");
+        form.setAttribute(EnumAttrType.action, "");
         content = form.render();
       } else {
         content = "Не найдено поля структуры с таким именем";

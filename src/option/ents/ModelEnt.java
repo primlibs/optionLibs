@@ -8,6 +8,7 @@ import option.modelEnts.AddStructure;
 import option.modelEnts.AddValidator;
 import option.modelEnts.AllStructure;
 import option.modelEnts.ChangeStructure;
+import option.modelEnts.ChangeValidator;
 import option.modelEnts.OneStructure;
 import prim.AbstractApplication;
 import prim.libs.MyString;
@@ -38,6 +39,8 @@ public class ModelEnt extends OptionAbstract{
       return new AddValidator(app, rd, action, specAction);
     } else if (action.equals("ChangeStructure")) {
       return new ChangeStructure(app, rd, action, specAction);
+    } else if (action.equals("ChangeValidator")) {
+      return new ChangeValidator(app, rd, action, specAction);
     }
     return new ModelEnt(app, rd, action, specAction);
   }

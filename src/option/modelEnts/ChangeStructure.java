@@ -45,8 +45,11 @@ public class ChangeStructure extends ModelEnt {
     ModelStructureKeeper mss = app.getKeeper().getModelStructureKeeper();
     String structureAlias = (params.get("structureAlias") != null ? params.get("structureAlias").toString().trim() : "");
 
-    str += ("<a href='AllStructure'>Перейти к списку всех моделей</a></br>");
-    str += ("<a href='OneStructure?structureAlias=" + structureAlias + "'>Перейти к модели " + structureAlias + "</a>");
+    Map<String, Object> modelParams = new HashMap();
+    modelParams.put("structureAlias", structureAlias);
+    str += href(Creator.MODEL_OBJECT_NAME, "AllStructure", "", "Перейти к списку всех моделей", new HashMap()) + "</br>";
+    str += href(Creator.MODEL_OBJECT_NAME, "OneStructure", "", "Перейти к модели " + structureAlias, modelParams) + "</br>";
+    
     str += ("<h1>Изменить параметры модели " + structureAlias + "</h1>");
 
     if (!errors.isEmpty()) {
@@ -58,10 +61,13 @@ public class ChangeStructure extends ModelEnt {
         Structure struct = mss.getStructure(structureAlias);
 
         LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
+        hs.put(rd.hiddenInput("action", action), "");
+        hs.put(rd.hiddenInput("object", object), "");
+        hs.put(rd.hiddenInput("structureAlias", params.get("structureAlias")), "");
         hs.put(rd.checkBox("fileWork", struct.isFileWork(), null), "Работа с файлами");
-
         AbsEnt form = rd.verticalForm(hs, "Обновить", "images/refresh.png");
-        form.setAttribute(EnumAttrType.action, "");
+        form.setAttribute(EnumAttrType.action, rd.getBaseLinkPath());
+
         str += (form.render());
       }
     }
@@ -74,7 +80,7 @@ public class ChangeStructure extends ModelEnt {
     boolean status = true;
 
     String structureAlias = (params.get("structureAlias") != null ? params.get("structureAlias").toString().trim() : "");
-    String fileWork = (params.get("fileWork") != null ? params.get("fileWork").toString() : "");
+    String fileWork = (params.get("fileWork") != null ? params.get("fileWork").toString() : null);
 
     if (params.get("submit") != null) {
       ModelStructureManager manager = new ModelStructureManager(app);
