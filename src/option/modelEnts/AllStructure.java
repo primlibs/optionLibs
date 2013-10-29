@@ -7,6 +7,7 @@ package option.modelEnts;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import option.Creator;
@@ -58,7 +59,7 @@ public class AllStructure extends ModelEnt {
         if (result.getErrors().isEmpty()) {
           str += "</br><b>Контроллер смоделирован</b>";
           str += "</br>Модуляция пар........";
-          result = modulatePairs(modelName, params.get("pairName").toString());
+          result = modulatePairs(modelName, null);
           for (String res : result.getMessages()) {
             str += "</br> " + res;
           }
@@ -105,9 +106,12 @@ public class AllStructure extends ModelEnt {
           }
           str += "</td>";
           str += "<td>";
-
-          AbsEnt form = rd.form("./AllStructure?specAction=modulate");
-          form.addEnt(rd.formSubmit(name, "images/refresh.png"));
+          
+          LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
+          hs.put(rd.hiddenInput("object", object), "");
+          hs.put(rd.hiddenInput("action", action), "");
+          hs.put(rd.hiddenInput("specAction", "modulate"), "");
+          AbsEnt form = rd.verticalForm(hs, name, "images/refresh.png");
           form.addEnt(rd.hiddenInput("modelName", name));
           str += form.render();
 

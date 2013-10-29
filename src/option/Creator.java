@@ -31,7 +31,7 @@ public final class Creator {
   
   
   public static final String OPTION_OBJECT_NAME="optionEnt";
-  public static final String CONTROLLER_OBJECT_NAME="controlletEnt";
+  public static final String CONTROLLER_OBJECT_NAME="controllerEnt";
   public static final String PAIR_OBJECT_NAME="pairEnt";
   public static final String MODEL_OBJECT_NAME="modelEnt";
 
