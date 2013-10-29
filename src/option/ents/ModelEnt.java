@@ -5,7 +5,9 @@
 package option.ents;
 
 import option.modelEnts.AddStructure;
+import option.modelEnts.AddValidator;
 import option.modelEnts.AllStructure;
+import option.modelEnts.ChangeStructure;
 import option.modelEnts.OneStructure;
 import prim.AbstractApplication;
 import prim.libs.MyString;
@@ -32,6 +34,10 @@ public class ModelEnt extends OptionAbstract{
       return new OneStructure(app, rd, action, specAction);
     } else if (action.equals("AddStructure")) {
       return new AddStructure(app, rd, action, specAction);
+    } else if (action.equals("AddValidator")) {
+      return new AddValidator(app, rd, action, specAction);
+    } else if (action.equals("ChangeStructure")) {
+      return new ChangeStructure(app, rd, action, specAction);
     }
     return new ModelEnt(app, rd, action, specAction);
   }
