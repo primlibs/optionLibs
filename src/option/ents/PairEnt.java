@@ -77,7 +77,9 @@ public class PairEnt extends OptionAbstract {
 
     try {
 
+      // если послана форма
       if (params.get("submit") != null) {
+        // вызвать метод контроллера
         status = false;
         PairController cnt = new PairController(app);
         String methodName = params.get("method") != null ? params.get("method").toString() : "";
@@ -103,7 +105,6 @@ public class PairEnt extends OptionAbstract {
 
       rendersMethods.put("0", "--");
       rendersMethods.putAll(getRenders());
-
 
       //перегружаем пары на случай изменений
       WarehouseSingleton.getInstance().getNewKeeper(app);
@@ -169,9 +170,31 @@ public class PairEnt extends OptionAbstract {
             }
           }
 
-          Map<String, Object> linkParams = new HashMap();
           content += href(object, action, "", "Посмотреть все", new HashMap());
           content += detailRenderPair(pair);
+        } else if (params.get("search") != null) {
+          String searchObject = params.get("searchObject") != null ? params.get("searchObject").toString().trim() : "";
+          String searchAction = params.get("searchAction") != null ? params.get("searchAction").toString().trim() : "";
+          List<Pair> newPairs = new ArrayList();
+          List<Pair> all = ps.getPair().getAllPairsClone();
+          if (!searchObject.isEmpty() || !searchAction.isEmpty()) {
+            for (Pair p : all) {
+              if (searchObject != null && p.getObject().equals(searchObject)) {
+                newPairs.add(p);
+              } else if (searchAction != null && p.getAction().equals(searchAction)) {
+                newPairs.add(p);
+              }
+            }
+          } else {
+            newPairs = all;
+          }
+          TreeMap<String, Pair> pairsMap = new TreeMap<String, Pair>();
+          for (Pair innerPair : newPairs) {
+            pairsMap.put(innerPair.getObject() + ":" + innerPair.getAction(), innerPair);
+          }
+          for (Pair p : pairsMap.values()) {
+            content += showLink(p);
+          }
         } else {
           // иначе, показать всё
           content += renderPair(pair);
@@ -188,6 +211,9 @@ public class PairEnt extends OptionAbstract {
 
       str += ("</link><script type='text/javascript' src='./script.js'></script>");
 
+      // форма поиска
+      str += searchForm();
+
       str += (content);
       str += (ps.getErrors());
       str += (PairObject.message);
@@ -195,6 +221,25 @@ public class PairEnt extends OptionAbstract {
       MyString.getStackExeption(e);
     }
     return status;
+  }
+
+  private String showLink(Pair pair) throws Exception {
+    Map<String, Object> linkParams = new HashMap();
+    linkParams.put("pairAction", pair.getAction());
+    linkParams.put("pairObject", pair.getObject());
+    return href(object, action, "", pair.getObject() + ":" + pair.getAction(), linkParams) + "</br>";
+  }
+
+  private String searchForm() throws Exception {
+    Map<AbsEnt, String> hs = new LinkedHashMap();
+    hs.put(rd.textInput("searchObject", params.get("searchObject"), "Object"), "");
+    hs.put(rd.textInput("searchAction", params.get("searchAction"), "Action"), "");
+    hs.put(rd.hiddenInput("search", "1"), "");
+    hs.put(rd.hiddenInput("action", action), "");
+    hs.put(rd.hiddenInput("object", object), "");
+    AbsEnt form = rd.horizontalForm(hs, "Поиск", "images/ok.png");
+    form.setAttribute(EnumAttrType.style, "");
+    return form.render();
   }
 
   /**
