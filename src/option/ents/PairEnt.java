@@ -173,6 +173,7 @@ public class PairEnt extends OptionAbstract {
           content += href(object, action, "", "Посмотреть все", new HashMap());
           content += detailRenderPair(pair);
         } else if (params.get("search") != null) {
+          // если задан запрос на поиск
           String searchObject = params.get("searchObject") != null ? params.get("searchObject").toString().trim() : "";
           String searchAction = params.get("searchAction") != null ? params.get("searchAction").toString().trim() : "";
           List<Pair> newPairs = new ArrayList();
