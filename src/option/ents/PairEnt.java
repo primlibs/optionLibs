@@ -13,9 +13,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import option.objects.PairController;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import prim.AbstractApplication;
 import prim.libs.MyString;
+import prim.libs.primXml;
 import prim.service.ServiceFactory;
 import warehouse.WarehouseSingleton;
 import warehouse.controllerStructure.ControllerKeeper;
@@ -47,7 +52,8 @@ public class PairEnt extends OptionAbstract {
   private ArrayList<Pair> activePairs;
   private String formAction = "";
   private String str = "";
-
+  private final String FILE_SPECACTION = "getPairFiles";
+  
   private PairEnt(AbstractApplication app, Render rd, String action, String specAction) {
     this.object = "pairEnt";
     setApplication(app);
@@ -75,6 +81,12 @@ public class PairEnt extends OptionAbstract {
     ArrayList<String> errors = new ArrayList<String>();
 
 
+    // вернуть файл моделей
+      if (specAction.equals(FILE_SPECACTION)) {
+        getPairsFile();
+        return true;
+      }
+    
     try {
 
       // если послана форма
@@ -223,6 +235,52 @@ public class PairEnt extends OptionAbstract {
     }
     return status;
   }
+  
+   private void getPairsFile() throws Exception {
+
+    WarehouseSingleton.getInstance().getNewKeeper(app);
+    PairKeeper ps = app.getKeeper().getPairKeeper();
+
+    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+    DocumentBuilder db = dbf.newDocumentBuilder();
+    Document doc = db.newDocument();
+    Element root = doc.createElement("root");
+    doc.appendChild(root);
+
+    if (params.get("pairObject") != null && params.get("pairAction") != null) {
+
+        String pairObject = params.get("pairObject").toString();
+        String pairAction = params.get("pairAction").toString();
+
+        Pair pair = ps.searchOnePair(pairObject, pairAction);
+
+        pair.getSelfInXml(doc, root);
+      
+    }
+    fileContent = primXml.documentToString(doc).getBytes("UTF-8");
+    fileName = "pairs.xml";
+  }
+  
+  private String fileForm(String pairAction, String pairObject) throws Exception {
+    WarehouseSingleton.getInstance().getNewKeeper(app);
+    PairKeeper ps = app.getKeeper().getPairKeeper();
+    List<Pair> allPairs = ps.getPair().getAllPairsClone();
+    Map<String, Object> pairNames = new TreeMap();
+    for (Pair pair : allPairs) {
+      String name = pair.getObject() + ":" + pair.getAction();
+      pairNames.put(name, name);
+    }
+    Map<AbsEnt, String> inner = new LinkedHashMap();
+    inner.put(rd.hiddenInput("pairAction", pairAction), "");
+    inner.put(rd.hiddenInput("pairObject", pairObject), "");
+    inner.put(rd.hiddenInput("action", action), "");
+    inner.put(rd.hiddenInput("object", object), "");
+    inner.put(rd.hiddenInput("specAction", FILE_SPECACTION), "");
+    inner.put(rd.hiddenInput("getFile", "1"), "");
+    AbsEnt form = rd.horizontalForm(inner, "Скачать файл", null);
+    form.setAttribute(EnumAttrType.style, "");
+    return form.render();
+  }
 
   private String showLink(Pair pair) throws Exception {
     Map<String, Object> linkParams = new HashMap();
@@ -262,6 +320,7 @@ public class PairEnt extends OptionAbstract {
     str += "<table><tr>";
     str += "<td>Object: <b>" + pairObject + "</b> Action: <b>" + pairAction + "</b></td>";
     str += "<td>" + removePairForm(pair) + "</td>";
+    str += "<td>" + fileForm(pairAction, pairObject) + "</td>";
     str += "<td><font class='display_link' onclick=\"hide('pair_show" + fullName + "');\">[Отображение]</font></td>";
     if (pair.getDef()) {
       str += " Default ";

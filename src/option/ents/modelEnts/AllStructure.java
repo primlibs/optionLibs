@@ -10,11 +10,16 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import option.Creator;
 import option.ents.ModelEnt;
 import option.objects.ModuleError;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import prim.AbstractApplication;
 import prim.libs.MyString;
+import prim.libs.primXml;
 import prim.modelStructure.Field;
 import prim.modelStructure.Structure;
 import warehouse.controllerStructure.ControllerKeeper;
@@ -37,45 +42,58 @@ import web.pair.SequenceObject;
  * @author User
  */
 public class AllStructure extends ModelEnt {
-  
-  public AllStructure(AbstractApplication app,Render rd,String action,String specAction) {
+
+  private final String FILE_SPECACTION = "getModelFiles";
+  private String content = "";
+
+  public AllStructure(AbstractApplication app, Render rd, String action, String specAction) {
     super(app, rd, action, specAction);
   }
-  
+
   @Override
-  public String render() throws Exception{
-    String str = "";
-      try {
+  public String render() throws Exception {
+    return content;
+  }
+
+  @Override
+  public Boolean run() throws Exception {
+    try {
+
+      // вернуть файл моделей
+      if (specAction.equals(FILE_SPECACTION)) {
+        getModelsFile();
+        return true;
+      }
 
       if (params.get("modelName") != null && !"".equals(params.get("modelName")) && specAction.equals("modulate")) {
         String modelName = params.get("modelName").toString();
 
         ModuleError result;
-        str += "</br>Модуляция контроллера........";
+        content += "</br>Модуляция контроллера........";
         result = modulateController(modelName);
         for (String res : result.getMessages()) {
-          str += "</br> " + res;
+          content += "</br> " + res;
         }
         if (result.getErrors().isEmpty()) {
-          str += "</br><b>Контроллер смоделирован</b>";
-          str += "</br>Модуляция пар........";
+          content += "</br><b>Контроллер смоделирован</b>";
+          content += "</br>Модуляция пар........";
           result = modulatePairs(modelName, null);
           for (String res : result.getMessages()) {
-            str += "</br> " + res;
+            content += "</br> " + res;
           }
           if (result.getErrors().isEmpty()) {
-            str += "</br><b>Пары смоделированы</b>";
+            content += "</br><b>Пары смоделированы</b>";
           }
         } else {
           for (String res : result.getErrors()) {
-            str += "</br> " + res;
+            content += "</br> " + res;
           }
         }
-        str += "</br> ";
+        content += "</br> ";
       }
 
-      str += "<br/>" + href(Creator.MODEL_OBJECT_NAME, "AddStructure", "", "Добавить новый тип данных", new HashMap()) + "<br/>";
-      str += "<h1>Модели данных</h1>";
+      content += "<br/>" + href(Creator.MODEL_OBJECT_NAME, "AddStructure", "", "Добавить новый тип данных", new HashMap()) + "<br/>";
+      content += "<h1>Модели данных</h1>";
 
       ModelStructureKeeper mss = app.getKeeper().getModelStructureKeeper();
 
@@ -83,76 +101,125 @@ public class AllStructure extends ModelEnt {
       ArrayList<String> systemMap = new ArrayList<String>();
       // показать список
 
-      str += "<table border=1>";
-      str += "<tr><td>Название</td><td>Полей</td><td>Первичный ключ</td><td>Работа с файлами</td><td>связи</td></tr>";
+      content += "<table border=1>";
+      content += "<tr><td>Название</td><td>Полей</td><td>Первичный ключ</td><td>Работа с файлами</td><td>связи</td></tr>";
       for (String name : structureMap.keySet()) {
         Structure structure = structureMap.get(name);
         if (!structure.isSystem()) {
           Map<String, Object> oneStructureParams = new HashMap();
           oneStructureParams.put("structureAlias", name);
-          str += "<tr><td>" + href(Creator.MODEL_OBJECT_NAME, "OneStructure", "", name, oneStructureParams) + "</td>";
-          str += "<td>" + (structure.getCloneFields().size() - 8) + "</td>";
-          str += "<td>" + structure.getPrimaryAlias() + "</td>";
-          str += "<td>";
+          content += "<tr><td>" + href(Creator.MODEL_OBJECT_NAME, "OneStructure", "", name, oneStructureParams) + "</td>";
+          content += "<td>" + (structure.getCloneFields().size() - 8) + "</td>";
+          content += "<td>" + structure.getPrimaryAlias() + "</td>";
+          content += "<td>";
           if (structure.isFileWork() != false) {
-            str += "Да";
+            content += "Да";
           }
-          str += "</td>";
-          str += "<td>";
+          content += "</td>";
+          content += "<td>";
           for (Field fi : structure.getCloneFields().values()) {
             if (fi.getRelations() != null) {
-              str += fi.getAlias() + "-" + fi.getRelations() + ";";
+              content += fi.getAlias() + "-" + fi.getRelations() + ";";
             }
           }
-          str += "</td>";
-          str += "<td>";
-          
+          content += "</td>";
+          content += "<td>";
+
           LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
           hs.put(rd.hiddenInput("object", object), "");
           hs.put(rd.hiddenInput("action", action), "");
           hs.put(rd.hiddenInput("specAction", "modulate"), "");
           AbsEnt form = rd.verticalForm(hs, name, "images/refresh.png");
           form.addEnt(rd.hiddenInput("modelName", name));
-          str += form.render();
+          content += form.render();
 
 
-          str += "</td></tr>";
+          content += "</td></tr>";
         } else {
           systemMap.add(name);
         }
       }
-      str += "</table>";
+      content += "</table>";
 
-      str += "<br/><br/><b>Системные:</b>";
-      str += "<table>";
+      content += "<br/><br/><b>Системные:</b>";
+      content += "<table>";
       for (String name : systemMap) {
         Map<String, Object> oneStructureParams = new HashMap();
         oneStructureParams.put("structureAlias", name);
-        str += "<tr><td>" + href(Creator.MODEL_OBJECT_NAME, "OneStructure", "", name, oneStructureParams) + "</td><td>";
+        content += "<tr><td>" + href(Creator.MODEL_OBJECT_NAME, "OneStructure", "", name, oneStructureParams) + "</td><td>";
 
         AbsEnt form = rd.form("./AllStructure?action=modulate");
         form.addEnt(rd.formSubmit("Смоделировать приложение", "images/refresh.png"));
         form.addEnt(rd.hiddenInput("modelName", name));
         form.setAttribute(EnumAttrType.action, "");
-        str += form.render();
-        str += "</td></tr>";
+        content += form.render();
+        content += "</td></tr>";
       }
-      str += "</table>";
+      content += "</table>";
+
+      content += modelsForm();
 
     } catch (Exception e) {
-      str += MyString.getStackExeption(e);
-    } 
-      return str;
-  }
- 
-  
-  
-  @Override
-  public Boolean run() throws Exception {
+      content += MyString.getStackExeption(e);
+    }
     return true;
   }
-  
-   
+
+  // матоды отображения ----------------------------------------------------------------------------------------------------------
+  private String modelsForm() throws Exception {
+    ModelStructureKeeper mss = app.getKeeper().getModelStructureKeeper();
+    Map<String, Structure> structureMap = mss.getStructureMap();
+    Map<String, Object> modelNames = new TreeMap();
+    for (String name : structureMap.keySet()) {
+      Structure struct = structureMap.get(name);
+      if (!struct.isSystem()) {
+        modelNames.put(name, name);
+      }
+    }
+    Map<AbsEnt, String> inner = new LinkedHashMap();
+    inner.put(rd.multipleCombo(modelNames, null, "models", 10), "Модели");
+    inner.put(rd.hiddenInput("action", action), "");
+    inner.put(rd.hiddenInput("object", object), "");
+    inner.put(rd.hiddenInput("specAction", FILE_SPECACTION), "");
+    inner.put(rd.hiddenInput("getFile", "1"), "");
+    AbsEnt form = rd.horizontalForm(inner, "Получить файл моделей", "images/ok.png");
+    form.setAttribute(EnumAttrType.style, "");
+    return form.render();
+  }
+
+  // методы получения данных -----------------------------------------------------------------------------------------------------------
+  /**
+   * получить файл моделей
+   *
+   * @throws Exception
+   */
+  private void getModelsFile() throws Exception {
+    ModelStructureKeeper mss = app.getKeeper().getModelStructureKeeper();
+
+    Map<String, Structure> models = mss.getStructureMap();
+
+    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+    DocumentBuilder db = dbf.newDocumentBuilder();
+    Document doc = db.newDocument();
+    Element root = doc.createElement("root");
+    doc.appendChild(root);
+
+    // найти структуры по переданным именам
+    // составить из них файл xml
+    // каждая структура вовращает себя в xml
+    String[] modelsNames = getArray("models");
+    for (String name : modelsNames) {
+      if (models.containsKey(name)) {
+        Element modelElement = primXml.createEmptyElement(doc, root, Structure.ELEMENT_NAME);
+        Structure modelStructure = models.get(name);
+        modelStructure.getSelfInXml(doc, modelElement);
+      }
+    }
+
+    fileContent = primXml.documentToString(doc).getBytes("UTF-8");
+    fileName = "models.xml";
+  }
+
   private ModuleError modulateController(String modelName) {
     ModuleError result = new ModuleError();
     ArrayList<String> banParams = new ArrayList<String>();
@@ -299,7 +366,7 @@ public class AllStructure extends ModelEnt {
     }
     return result;
   }
-  
+
   private ModuleError modulatePairs(String modelName, String pairName) throws Exception {
     ModuleError result = new ModuleError();
 
@@ -335,7 +402,7 @@ public class AllStructure extends ModelEnt {
       Pair deletePair = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair);
       Sequence deleteSeq = SequenceObject.getInstance("default", modelName, method, null, null, modelName + ":search", modelName + ":search", null, null);
       deletePair.setSequence(deleteSeq);
-      pair.addPair(deletePair); 
+      pair.addPair(deletePair);
     }
 
 
@@ -346,7 +413,7 @@ public class AllStructure extends ModelEnt {
 
       Sequence defSeq = SequenceObject.getInstance("default", null, null, modelName + ":renderAddEntityForm", modelName + ":renderAddEntityForm", null, null, null, null);
       addPair.setSequence(defSeq);
-      Sequence addSeq = SequenceObject.getInstance("add", modelName, method, null, modelName + ":renderAddEntityForm", modelName + ":search", null,  null, null);
+      Sequence addSeq = SequenceObject.getInstance("add", modelName, method, null, modelName + ":renderAddEntityForm", modelName + ":search", null, null, null);
 
       addPair.setSequence(addSeq);
       pair.addPair(addPair);
@@ -366,5 +433,4 @@ public class AllStructure extends ModelEnt {
     ps.SaveCollectionInFile();
     return result;
   }
-  
 }

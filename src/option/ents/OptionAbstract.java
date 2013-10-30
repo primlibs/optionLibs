@@ -128,6 +128,21 @@ public abstract class OptionAbstract implements Renderrable{
     return href.render();
   }
   
+   protected final String[] getArray(String paramName) {
+    if (params.get(paramName) != null) {
+      try {
+        String[] array = (String[]) params.get(paramName);
+        return array;
+      } catch (Exception e) {
+        String param = params.get(paramName).toString();
+        String[] array = {param};
+        return array;
+      }
+    }
+    String[] array = new String[0];
+    return array;
+  }
+  
   @Override
  public byte[] getFileContent() {
    return fileContent;

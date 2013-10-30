@@ -157,7 +157,7 @@ public class DownloadEnt extends OptionAbstract {
     inner.put(rd.hiddenInput("object", object), "");
     inner.put(rd.hiddenInput("specAction", PAIR_SPECACTION), "");
     inner.put(rd.hiddenInput("getFile", "1"), "");
-    AbsEnt form = rd.horizontalForm(inner, "Получить файл пар", "images/ok.png");
+    AbsEnt form = rd.horizontalForm(inner, "Получить файл пар", "images/file.png");
     form.setAttribute(EnumAttrType.style, "");
     return form.render();
   }
@@ -260,20 +260,7 @@ public class DownloadEnt extends OptionAbstract {
     fileName = "pairs.xml";
   }
 
-  protected final String[] getArray(String paramName) {
-    if (params.get(paramName) != null) {
-      try {
-        String[] array = (String[]) params.get(paramName);
-        return array;
-      } catch (Exception e) {
-        String param = params.get(paramName).toString();
-        String[] array = {param};
-        return array;
-      }
-    }
-    String[] array = new String[0];
-    return array;
-  }
+ 
   // загрузить контроллеры
   // разобрать файл xml
   // для каждого элемента создать структуру контроллера

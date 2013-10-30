@@ -11,8 +11,13 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import prim.AbstractApplication;
 import prim.libs.MyString;
+import prim.libs.primXml;
 import prim.service.ServiceFactory;
 import warehouse.OptionsKeeper;
 import warehouse.controllerStructure.ControllerKeeper;
@@ -32,6 +37,7 @@ import web.fabric.EnumAttrType;
 public class ControllerEnt extends OptionAbstract {
 
   private LinkedHashMap<String, Object> servicesMap;
+  private final String FILE_SPECACTION = "getControllerFiles";
   private String str = "";
 
   private ControllerEnt(AbstractApplication app, Render rd, String action, String specAction) {
@@ -60,6 +66,12 @@ public class ControllerEnt extends OptionAbstract {
       ck.setDataFromBase();
 
 
+      // вернуть файл моделей
+      if (specAction.equals(FILE_SPECACTION)) {
+        getControllersFile();
+        return true;
+      }
+      
       HashMap<String, ArrayList<String>> hs = new HashMap<String, ArrayList<String>>();
 
       Collection<String> classes;
@@ -498,15 +510,6 @@ public class ControllerEnt extends OptionAbstract {
         title = "Cnt " + name;
       }
 
-      str += ("<html>");
-      str += ("<head>");
-      str += ("<title>" + title + "</title>");
-      str += ("<link rel='stylesheet' href='./options.css' type='text/css'/>");
-      str += ("</link><script type='text/javascript' src='./jQuery.js'></script>");
-      str += ("</link><script type='text/javascript' src='./script.js'></script>");
-      str += ("</head>");
-      str += ("<body>");
-
       str += (getAddControllerForm());
 
       // вывод списка контроллеров
@@ -647,15 +650,62 @@ public class ControllerEnt extends OptionAbstract {
       }
 
       str += (ck.getErrors());
+      
+      str += controllersForm();
 
-      str += ("</body>");
-      str += ("</html>");
     } catch (Exception e) {
       str += MyString.getStackExeption(e);
     }
     return status;
   }
 
+   private void getControllersFile() throws Exception {
+    ControllerKeeper ck = app.getKeeper().getControllerKeeper();
+    ck.setDataFromBase();
+    Map<String, StructureController> controllers = ck.getControllers();
+
+    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+    DocumentBuilder db = dbf.newDocumentBuilder();
+    Document doc = db.newDocument();
+    Element root = doc.createElement("root");
+    doc.appendChild(root);
+
+    // найти структуры по переданным именам
+    // составить из них файл xml
+    // каждая структура вовращает себя в xml
+    String[] controllersNames = getArray("controllers");
+    for (String name : controllersNames) {
+      if (controllers.containsKey(name)) {
+        Element controllerElement = primXml.createEmptyElement(doc, root, StructureController.ELEMENT_NAME);
+        StructureController sc = controllers.get(name);
+        sc.getSelfInXml(doc, controllerElement);
+      }
+    }
+
+    fileContent = primXml.documentToString(doc).getBytes("UTF-8");
+    fileName = "controllers.xml";
+  }
+   
+  private String controllersForm() throws Exception {
+    ControllerKeeper ck = app.getKeeper().getControllerKeeper();
+    ck.setDataFromBase();
+    Map<String, StructureController> controllers = ck.getControllers();
+    Map<String, Object> controllersNames = new TreeMap();
+    for (String name : controllers.keySet()) {
+      controllersNames.put(name, name);
+    }
+    Map<AbsEnt, String> inner = new LinkedHashMap();
+    inner.put(rd.multipleCombo(controllersNames, null, "controllers", 10), "Контроллеры");
+    inner.put(rd.hiddenInput("action", action), "");
+    inner.put(rd.hiddenInput("object", object), "");
+    inner.put(rd.hiddenInput("specAction", FILE_SPECACTION), "");
+    inner.put(rd.hiddenInput("getFile", "1"), "");
+    AbsEnt form = rd.horizontalForm(inner, "Получить файл контроллеров", "images/ok.png");
+    form.setAttribute(EnumAttrType.style, "");
+    return form.render();
+  }
+  
+  
   private String showLink(String name) throws Exception {
     Map<String, Object> linkParams = new HashMap();
     linkParams.put("name", name);
