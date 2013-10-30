@@ -23,4 +23,12 @@ public interface Renderrable {
   public void setApplication(AbstractApplication app);
   public void setRender(Render rd);
   public void setParams(Map<String, Object> prms);
+  
+  /**
+   * возвращает контент файла
+   * @return 
+   */
+  public byte[] getFileContent();
+  
+  public String getFileName();
 }

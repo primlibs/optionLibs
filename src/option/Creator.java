@@ -28,15 +28,21 @@ public final class Creator {
   protected String redirectAction="";
   protected String redirectSpecAction = "";
   protected Map<String, Object> redirectParams=new HashMap<String, Object>();
-  
+  protected byte[] fileContent;
+  protected String fileName;
   
   public static final String OPTION_OBJECT_NAME="optionEnt";
   public static final String CONTROLLER_OBJECT_NAME="controllerEnt";
   public static final String PAIR_OBJECT_NAME="pairEnt";
   public static final String MODEL_OBJECT_NAME="modelEnt";
+  public static final String DOWNLOAD_OBJECT_NAME="download";
 
   public Boolean isRedirect() {
     return redirect;
+  }
+
+  public String getFileName() {
+    return fileName;
   }
 
   public String getRedirectObject() {
@@ -104,6 +110,8 @@ public final class Creator {
     rbl.setParams(innerRequest);
     //выполнение
     rbl.run();
+    this.fileContent = rbl.getFileContent();
+    this.fileName = rbl.getFileName();
     //переадресация
     if(rbl.isRedirect()){
       redirect = true;
@@ -120,6 +128,10 @@ public final class Creator {
       return MyString.getStackExeption(ex);
     }
   }
+   
+   public byte[] getFileContent() {
+     return fileContent;
+   }
   
   private Renderrable getPath(AbstractApplication app,String object,String action,String specAction,Map<String, Object> innerRequest, Render rd){
     if(object.equals(MODEL_OBJECT_NAME)){
@@ -128,6 +140,8 @@ public final class Creator {
       return OptionAbstract.getPair(app, rd,action,specAction);
     }else if(object.equals(CONTROLLER_OBJECT_NAME)){
       return OptionAbstract.getController(app, rd,action,specAction);
+    }else if(object.equals(DOWNLOAD_OBJECT_NAME)){
+      return OptionAbstract.getDownload(app, rd,action,specAction);
     }else{
       return OptionAbstract.getOption(app, rd,action,specAction);
     }

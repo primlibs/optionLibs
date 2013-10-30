@@ -509,13 +509,14 @@ public class ControllerEnt extends OptionAbstract {
 
       str += (getAddControllerForm());
 
+      // вывод списка контроллеров
       if (name == null) {
         TreeMap<String, StructureController> map = new TreeMap<String, StructureController>(ck.getControllers());
         for (String Name : map.keySet()) {
           str += (showLink(Name));
         }
       } else {
-
+        // вывод одного контроллера
         str += href(object, action, "", "Перейти к общему списку", new HashMap()) + "</br></br>";
         StructureController cr = ck.getController(name);
         str += ("<div class=controller_head id=" + name + " > ");

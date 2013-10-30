@@ -32,12 +32,18 @@ public abstract class OptionAbstract implements Renderrable{
   protected String action="";
   protected String specAction="";
   protected String object="";
+  protected byte[] fileContent;
+  protected String fileName;
 
   @Override
   public String getRedirectObject() {
     return redirectObject;
   }
 
+  public String getFileName() {
+    return fileName;
+  }
+  
   @Override
   public String getRedirectAction() {
     return redirectAction;
@@ -91,6 +97,10 @@ public abstract class OptionAbstract implements Renderrable{
     return PairEnt.getInstance(app, rd, action, specAction);
   }
   
+  public static Renderrable getDownload(AbstractApplication app,Render rd,String action,String specAction){
+    return DownloadEnt.getInstance(app, rd, action, specAction);
+  }
+  
   public Boolean setRedirect(String object,String action,String specAction){
     if(MyString.NotNull(object)){
       isRedirect=true;
@@ -118,7 +128,10 @@ public abstract class OptionAbstract implements Renderrable{
     return href.render();
   }
   
-
+  @Override
+ public byte[] getFileContent() {
+   return fileContent;
+ }
   
   
 }
