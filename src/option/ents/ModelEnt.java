@@ -4,12 +4,12 @@
  */
 package option.ents;
 
-import option.modelEnts.AddStructure;
-import option.modelEnts.AddValidator;
-import option.modelEnts.AllStructure;
-import option.modelEnts.ChangeStructure;
-import option.modelEnts.ChangeValidator;
-import option.modelEnts.OneStructure;
+import option.ents.modelEnts.AddStructure;
+import option.ents.modelEnts.AddValidator;
+import option.ents.modelEnts.AllStructure;
+import option.ents.modelEnts.ChangeStructure;
+import option.ents.modelEnts.ChangeValidator;
+import option.ents.modelEnts.OneStructure;
 import prim.AbstractApplication;
 import prim.libs.MyString;
 import web.Render;

@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package option.modelEnts;
+package option.ents.modelEnts;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
