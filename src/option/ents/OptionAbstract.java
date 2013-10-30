@@ -11,6 +11,7 @@ import option.Renderrable;
 import option.Renderrable;
 import prim.AbstractApplication;
 import prim.libs.MyString;
+import warehouse.WarehouseSingleton;
 import web.Render;
 import web.fabric.AbsEnt;
 import web.fabric.EnumAttrType;
@@ -97,9 +98,6 @@ public abstract class OptionAbstract implements Renderrable{
     return PairEnt.getInstance(app, rd, action, specAction);
   }
   
-  public static Renderrable getDownload(AbstractApplication app,Render rd,String action,String specAction){
-    return DownloadEnt.getInstance(app, rd, action, specAction);
-  }
   
   public Boolean setRedirect(String object,String action,String specAction){
     if(MyString.NotNull(object)){
@@ -148,5 +146,8 @@ public abstract class OptionAbstract implements Renderrable{
    return fileContent;
  }
   
+  protected void refreshWarehouseSingleton() throws Exception {
+    WarehouseSingleton.getInstance().getNewKeeper(app);
+  }
   
 }

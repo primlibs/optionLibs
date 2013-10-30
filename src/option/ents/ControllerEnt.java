@@ -4,20 +4,25 @@
  */
 package option.ents;
 
+import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import prim.AbstractApplication;
 import prim.libs.MyString;
 import prim.libs.primXml;
+import prim.modelStructure.Structure;
+import prim.modelStructure.StructureFabric;
 import prim.service.ServiceFactory;
 import warehouse.OptionsKeeper;
 import warehouse.controllerStructure.ControllerKeeper;
@@ -26,6 +31,7 @@ import warehouse.controllerStructure.ControllerOrigin;
 import warehouse.controllerStructure.ControllerService;
 import warehouse.controllerStructure.ServiceParameter;
 import warehouse.controllerStructure.StructureController;
+import warehouse.modelKeeper.ModelStructureKeeper;
 import web.Render;
 import web.fabric.AbsEnt;
 import web.fabric.EnumAttrType;
@@ -36,8 +42,10 @@ import web.fabric.EnumAttrType;
  */
 public class ControllerEnt extends OptionAbstract {
 
+  private List<String> errors = new ArrayList();
   private LinkedHashMap<String, Object> servicesMap;
-  private final String FILE_SPECACTION = "getControllerFiles";
+  private final String DOWNLOAD_FILE_SPECACTION = "downloadControllerFiles";
+  private final String UPLOAD_FILE_SPECACTION = "uploadControllerFiles";
   private String str = "";
 
   private ControllerEnt(AbstractApplication app, Render rd, String action, String specAction) {
@@ -66,12 +74,21 @@ public class ControllerEnt extends OptionAbstract {
       ck.setDataFromBase();
 
 
-      // вернуть файл моделей
-      if (specAction.equals(FILE_SPECACTION)) {
+      // вернуть файл контроллеров
+      if (specAction.equals(DOWNLOAD_FILE_SPECACTION)) {
         getControllersFile();
         return true;
       }
       
+      // загрузить файл контроллеров
+      if (specAction.equals(UPLOAD_FILE_SPECACTION)) {
+        uploadControllersFile();
+        redirectObject = object;
+        redirectAction = action;
+        isRedirect = true;
+        return true;
+      }
+
       HashMap<String, ArrayList<String>> hs = new HashMap<String, ArrayList<String>>();
 
       Collection<String> classes;
@@ -468,7 +485,7 @@ public class ControllerEnt extends OptionAbstract {
         ck.saveController(params.get("cName").toString().trim());
         ck.setDataFromBase();
       }
-      
+
       /*
        изменить источник на вsходе
        */
@@ -510,6 +527,8 @@ public class ControllerEnt extends OptionAbstract {
         title = "Cnt " + name;
       }
 
+      str += errors;
+      
       str += (getAddControllerForm());
 
       // вывод списка контроллеров
@@ -543,12 +562,12 @@ public class ControllerEnt extends OptionAbstract {
           ControllerMethod cm = ck.getControllers().get(name).getMethod(Action);
           str += ("<div class=controllerMethodAll>");
           str += ("<div class=controllerMethod>");
-          
+
           linkParams = new HashMap();
           linkParams.put("cName", name);
           linkParams.put("cAction", Action);
           linkParams.put("deleteMeth", "1");
-            
+
           str += ("<div style='float:left;'>" + changeMethodForm(name, Action, cm.getAlias(), cm.getDescription(), cm.getHidden()) + "</div><div style='float:left;'> " + href(object, action, "", "Удалить", linkParams, "", "onclick=\"return confirmDelete();\"") + "<font color=brown onclick=\"hide('" + name + Action + "1');\" >Отображение</font></div>");
           str += ("</br>");
           str += ("<div style='clear:both;'>" + getAddServiceForm(name, Action) + "</div>");
@@ -650,8 +669,10 @@ public class ControllerEnt extends OptionAbstract {
       }
 
       str += (ck.getErrors());
-      
-      str += controllersForm();
+
+      str += downloadForm();
+
+      str += uploadForm();
 
     } catch (Exception e) {
       str += MyString.getStackExeption(e);
@@ -659,7 +680,59 @@ public class ControllerEnt extends OptionAbstract {
     return status;
   }
 
-   private void getControllersFile() throws Exception {
+  // методы получения данных ---------------------------------------------------------------------------------------------------------
+  private void uploadControllersFile() throws Exception {
+    // получить элементы из файла xml
+    Map<String, String> filesMap = (HashMap<String, String>) params.get("_FILEARRAY_");
+    if (filesMap.size() > 0) {
+      File file = null;
+      Document doc = null;
+      for (String path : filesMap.keySet()) {
+        file = new File(path);
+      }
+      if (file != null) {
+        try {
+          doc = primXml.getDocumentByFile(file);
+        } catch (Exception e) {
+          errors.add("Файл не является файлом XML или имеет неправильную структуру");
+        }
+        if (doc != null) {
+          NodeList list = doc.getChildNodes();
+          Element root = (Element) list.item(0);
+          NodeList controllersNodeList = root.getElementsByTagName(StructureController.ELEMENT_NAME);
+
+          ControllerKeeper ck = app.getKeeper().getControllerKeeper();
+          ck.setDataFromBase();
+
+          Map<String, StructureController> controllers = ck.getControllers();
+          // для каждого элемента
+          for (int i = 0; i < controllersNodeList.getLength(); i++) {
+            Element cntElement = (Element) controllersNodeList.item(i);
+            // создать модель
+            StructureController newCnt = StructureController.getFromXml(cntElement);
+            String name = newCnt.getName();
+            // если модели с таким именем нет в списке
+            if (!controllers.containsKey(name)) {
+              // добавить
+              controllers.put(name, newCnt);
+              ck.saveController(name);
+            } else {
+              // если контроллер с таким именем уже есть
+              // если поставлена галочка заменять
+              if (params.get("replace") != null) {
+                // то обновить
+                controllers.put(name, newCnt);
+                ck.saveController(name);
+              }
+            }
+            refreshWarehouseSingleton();
+          }
+        }
+      }
+    }
+  }
+
+  private void getControllersFile() throws Exception {
     ControllerKeeper ck = app.getKeeper().getControllerKeeper();
     ck.setDataFromBase();
     Map<String, StructureController> controllers = ck.getControllers();
@@ -685,8 +758,33 @@ public class ControllerEnt extends OptionAbstract {
     fileContent = primXml.documentToString(doc).getBytes("UTF-8");
     fileName = "controllers.xml";
   }
-   
-  private String controllersForm() throws Exception {
+
+  // методы вывода рендера ------------------------------------------------------------------------------------------------------------
+  /**
+   * форма для загрузки
+   *
+   * @return
+   * @throws Exception
+   */
+  private String uploadForm() throws Exception {
+    Map<AbsEnt, String> inner = new LinkedHashMap();
+    inner.put(rd.fileInput("file", null, "Выберите файл"), "");
+    inner.put(rd.checkBox("replace", null), "Заменять существующие");
+    inner.put(rd.hiddenInput("action", action), "");
+    inner.put(rd.hiddenInput("object", object), "");
+    inner.put(rd.hiddenInput("specAction", UPLOAD_FILE_SPECACTION), "");
+    AbsEnt form = rd.horizontalForm(inner, "Загрузить файл контроллеров", null, true, null);
+    form.setAttribute(EnumAttrType.style, "");
+    return form.render();
+  }
+
+  /**
+   * форма для скачивания файлов
+   *
+   * @return
+   * @throws Exception
+   */
+  private String downloadForm() throws Exception {
     ControllerKeeper ck = app.getKeeper().getControllerKeeper();
     ck.setDataFromBase();
     Map<String, StructureController> controllers = ck.getControllers();
@@ -698,14 +796,13 @@ public class ControllerEnt extends OptionAbstract {
     inner.put(rd.multipleCombo(controllersNames, null, "controllers", 10), "Контроллеры");
     inner.put(rd.hiddenInput("action", action), "");
     inner.put(rd.hiddenInput("object", object), "");
-    inner.put(rd.hiddenInput("specAction", FILE_SPECACTION), "");
+    inner.put(rd.hiddenInput("specAction", DOWNLOAD_FILE_SPECACTION), "");
     inner.put(rd.hiddenInput("getFile", "1"), "");
     AbsEnt form = rd.horizontalForm(inner, "Получить файл контроллеров", "images/ok.png");
     form.setAttribute(EnumAttrType.style, "");
     return form.render();
   }
-  
-  
+
   private String showLink(String name) throws Exception {
     Map<String, Object> linkParams = new HashMap();
     linkParams.put("name", name);

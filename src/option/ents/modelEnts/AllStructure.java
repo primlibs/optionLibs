@@ -4,10 +4,12 @@
  */
 package option.ents.modelEnts;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import javax.xml.parsers.DocumentBuilder;
@@ -17,11 +19,14 @@ import option.ents.ModelEnt;
 import option.objects.ModuleError;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import prim.AbstractApplication;
 import prim.libs.MyString;
 import prim.libs.primXml;
 import prim.modelStructure.Field;
 import prim.modelStructure.Structure;
+import prim.modelStructure.StructureFabric;
+import warehouse.WarehouseSingleton;
 import warehouse.controllerStructure.ControllerKeeper;
 import warehouse.controllerStructure.ControllerMethod;
 import warehouse.controllerStructure.ControllerOrigin;
@@ -43,8 +48,10 @@ import web.pair.SequenceObject;
  */
 public class AllStructure extends ModelEnt {
 
-  private final String FILE_SPECACTION = "getModelFiles";
+  private final String DOWNLOAD_FILE_SPECACTION = "downloadModelFiles";
+  private final String UPLOAD_FILE_SPECACTION = "uploadModelFiles";
   private String content = "";
+  private List<String> errors = new ArrayList();
 
   public AllStructure(AbstractApplication app, Render rd, String action, String specAction) {
     super(app, rd, action, specAction);
@@ -60,13 +67,24 @@ public class AllStructure extends ModelEnt {
     try {
 
       // вернуть файл моделей
-      if (specAction.equals(FILE_SPECACTION)) {
+      if (specAction.equals(DOWNLOAD_FILE_SPECACTION)) {
         getModelsFile();
+        return true;
+      }
+
+      // загрузить файл моделей
+      if (specAction.equals(UPLOAD_FILE_SPECACTION)) {
+        uploadModelsFile();
+        redirectObject = "modelEnt";
+        redirectAction = "AllStructure";
+        isRedirect = true;
         return true;
       }
 
       if (params.get("modelName") != null && !"".equals(params.get("modelName")) && specAction.equals("modulate")) {
         String modelName = params.get("modelName").toString();
+
+        content += errors;
 
         ModuleError result;
         content += "</br>Модуляция контроллера........";
@@ -157,7 +175,8 @@ public class AllStructure extends ModelEnt {
       }
       content += "</table>";
 
-      content += modelsForm();
+      content += downloadForm(mss);
+      content += uploadForm();
 
     } catch (Exception e) {
       content += MyString.getStackExeption(e);
@@ -165,9 +184,14 @@ public class AllStructure extends ModelEnt {
     return true;
   }
 
-  // матоды отображения ----------------------------------------------------------------------------------------------------------
-  private String modelsForm() throws Exception {
-    ModelStructureKeeper mss = app.getKeeper().getModelStructureKeeper();
+  // методы отображения ----------------------------------------------------------------------------------------------------------
+  /**
+   * форма для скачивания файла
+   *
+   * @return
+   * @throws Exception
+   */
+  private String downloadForm(ModelStructureKeeper mss) throws Exception {
     Map<String, Structure> structureMap = mss.getStructureMap();
     Map<String, Object> modelNames = new TreeMap();
     for (String name : structureMap.keySet()) {
@@ -180,9 +204,27 @@ public class AllStructure extends ModelEnt {
     inner.put(rd.multipleCombo(modelNames, null, "models", 10), "Модели");
     inner.put(rd.hiddenInput("action", action), "");
     inner.put(rd.hiddenInput("object", object), "");
-    inner.put(rd.hiddenInput("specAction", FILE_SPECACTION), "");
+    inner.put(rd.hiddenInput("specAction", DOWNLOAD_FILE_SPECACTION), "");
     inner.put(rd.hiddenInput("getFile", "1"), "");
     AbsEnt form = rd.horizontalForm(inner, "Получить файл моделей", "images/ok.png");
+    form.setAttribute(EnumAttrType.style, "");
+    return form.render();
+  }
+
+  /**
+   * форма для загрузки
+   *
+   * @return
+   * @throws Exception
+   */
+  private String uploadForm() throws Exception {
+    Map<AbsEnt, String> inner = new LinkedHashMap();
+    inner.put(rd.fileInput("file", null, "Выберите файл"), "");
+    inner.put(rd.checkBox("replace", null), "Заменять существующие");
+    inner.put(rd.hiddenInput("action", action), "");
+    inner.put(rd.hiddenInput("object", object), "");
+    inner.put(rd.hiddenInput("specAction", UPLOAD_FILE_SPECACTION), "");
+    AbsEnt form = rd.horizontalForm(inner, "Загрузить файл моделей", null, true, null);
     form.setAttribute(EnumAttrType.style, "");
     return form.render();
   }
@@ -218,6 +260,60 @@ public class AllStructure extends ModelEnt {
 
     fileContent = primXml.documentToString(doc).getBytes("UTF-8");
     fileName = "models.xml";
+  }
+
+  private void uploadModelsFile() throws Exception {
+    // получить элементы из файла xml
+    Map<String, String> filesMap = (HashMap<String, String>) params.get("_FILEARRAY_");
+    if (filesMap.size() > 0) {
+      File file = null;
+      Document doc = null;
+      for (String path : filesMap.keySet()) {
+        file = new File(path);
+      }
+      if (file != null) {
+        try {
+          doc = primXml.getDocumentByFile(file);
+        } catch (Exception e) {
+          errors.add("Файл не является файлом XML или имеет неправильную структуру");
+        }
+        if (doc != null) {
+          NodeList list = doc.getChildNodes();
+          Element root = (Element) list.item(0);
+          NodeList modelsNodeList = root.getElementsByTagName(Structure.ELEMENT_NAME);
+
+          // получить все модели из ModelStructureManager
+          ModelStructureKeeper mss = app.getKeeper().getModelStructureKeeper();
+
+          Map<String, Structure> models = mss.getStructureMap();
+          // для каждого элемента
+          for (int i = 0; i < modelsNodeList.getLength(); i++) {
+            Element modelElement = (Element) modelsNodeList.item(i);
+            // создать модель
+            Structure newStructure = StructureFabric.getStructureFromXml(modelElement);
+            if (!newStructure.isSystem()) {
+              String name = newStructure.getName();
+              // если модели с таким именем нет в списке
+              if (!models.containsKey(name)) {
+                // добавить
+                mss.addStructure(name, newStructure);
+              } else {
+                // если модель с таким именем уже есть
+                // если поставлена галочка заменять
+                Structure oldStructure = models.get(name);
+                if (!oldStructure.isSystem()) {
+                  if (params.get("replace") != null) {
+                    // то обновить
+                    mss.updateStructure(name, newStructure);
+                  }
+                }
+              }
+              refreshWarehouseSingleton();
+            }
+          }
+        }
+      }
+    }
   }
 
   private ModuleError modulateController(String modelName) {

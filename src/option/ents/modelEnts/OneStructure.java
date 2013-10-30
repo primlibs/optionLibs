@@ -176,8 +176,6 @@ public class OneStructure extends ModelEnt {
   public Boolean run() throws Exception {
     boolean status = true;
 
-    str += "a" + specAction + "a";
-
     // изменить поле
     if (params.get("submit") != null && params.get("fieldName") != null) {
       ModelStructureManager manager = new ModelStructureManager(app);

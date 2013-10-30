@@ -35,7 +35,6 @@ public final class Creator {
   public static final String CONTROLLER_OBJECT_NAME="controllerEnt";
   public static final String PAIR_OBJECT_NAME="pairEnt";
   public static final String MODEL_OBJECT_NAME="modelEnt";
-  public static final String DOWNLOAD_OBJECT_NAME="download";
 
   public Boolean isRedirect() {
     return redirect;
@@ -140,8 +139,6 @@ public final class Creator {
       return OptionAbstract.getPair(app, rd,action,specAction);
     }else if(object.equals(CONTROLLER_OBJECT_NAME)){
       return OptionAbstract.getController(app, rd,action,specAction);
-    }else if(object.equals(DOWNLOAD_OBJECT_NAME)){
-      return OptionAbstract.getDownload(app, rd,action,specAction);
     }else{
       return OptionAbstract.getOption(app, rd,action,specAction);
     }

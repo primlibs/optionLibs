@@ -4,6 +4,7 @@
  */
 package option.ents;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import option.objects.PairController;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import prim.AbstractApplication;
 import prim.libs.MyString;
 import prim.libs.primXml;
@@ -52,8 +54,10 @@ public class PairEnt extends OptionAbstract {
   private ArrayList<Pair> activePairs;
   private String formAction = "";
   private String str = "";
-  private final String FILE_SPECACTION = "getPairFiles";
-  
+  private final String DOWNLOAD_FILE_SPECACTION = "downloadPairFiles";
+  private final String UPLOAD_FILE_SPECACTION = "uploadPairFiles";
+  private List<String> errors = new ArrayList();
+
   private PairEnt(AbstractApplication app, Render rd, String action, String specAction) {
     this.object = "pairEnt";
     setApplication(app);
@@ -82,11 +86,20 @@ public class PairEnt extends OptionAbstract {
 
 
     // вернуть файл моделей
-      if (specAction.equals(FILE_SPECACTION)) {
-        getPairsFile();
+    if (specAction.equals(DOWNLOAD_FILE_SPECACTION)) {
+      getPairsFile();
+      return true;
+    }
+    
+    // загрузить файл пар
+      if (specAction.equals(UPLOAD_FILE_SPECACTION)) {
+        uploadPairsFile();
+        redirectObject = object;
+        redirectAction = action;
+        isRedirect = true;
         return true;
       }
-    
+
     try {
 
       // если послана форма
@@ -225,18 +238,23 @@ public class PairEnt extends OptionAbstract {
       str += ("</link><script type='text/javascript' src='./script.js'></script>");
 
       // форма поиска
+      str += errors;
       str += searchForm();
 
       str += (content);
       str += (ps.getErrors());
       str += (PairObject.message);
+
+      str += uploadForm();
+
     } catch (Exception e) {
       MyString.getStackExeption(e);
     }
     return status;
   }
-  
-   private void getPairsFile() throws Exception {
+
+  // методы получения данных --------------------------------------------------------------------------------------------------------
+  private void getPairsFile() throws Exception {
 
     WarehouseSingleton.getInstance().getNewKeeper(app);
     PairKeeper ps = app.getKeeper().getPairKeeper();
@@ -249,18 +267,75 @@ public class PairEnt extends OptionAbstract {
 
     if (params.get("pairObject") != null && params.get("pairAction") != null) {
 
-        String pairObject = params.get("pairObject").toString();
-        String pairAction = params.get("pairAction").toString();
+      String pairObject = params.get("pairObject").toString();
+      String pairAction = params.get("pairAction").toString();
 
-        Pair pair = ps.searchOnePair(pairObject, pairAction);
+      Pair pair = ps.searchOnePair(pairObject, pairAction);
 
-        pair.getSelfInXml(doc, root);
-      
+      pair.getSelfInXml(doc, root);
+
     }
     fileContent = primXml.documentToString(doc).getBytes("UTF-8");
     fileName = "pairs.xml";
   }
+
+  private void uploadPairsFile() throws Exception {
+    // получить элементы из файла xml
+    Map<String, String> filesMap = (HashMap<String, String>) params.get("_FILEARRAY_");
+    if (filesMap.size() > 0) {
+      File file = null;
+      Document doc = null;
+      for (String path : filesMap.keySet()) {
+        file = new File(path);
+      }
+      if (file != null) {
+        try {
+          doc = primXml.getDocumentByFile(file);
+        } catch (Exception e) {
+          errors.add("Файл не является файлом XML или имеет неправильную структуру");
+        }
+        if (doc != null) {
+          NodeList list = doc.getChildNodes();
+          Element root = (Element) list.item(0);
+
+          Pair newPair = PairObject.getPairFromXml(root);
+          String pairObject = newPair.getObject();
+          String pairAction = newPair.getAction();
+          PairKeeper pk = app.getKeeper().getPairKeeper();
+
+          // для всех вложенных пар
+          // проверить, есть ли в списке такая пара
+          // если нет такой пары
+            // то ок
+          // если есть такая пара
+            // если поставлена галочка заменить
+              // то удалить пару из singleton
+            // иначе
+              // удалить пару из новой пары
+          
+          // если пары с таким именем нет в списке
+          if (!pk.containsPair(pairObject, pairAction)) {
+            // добавить
+            pk.getPair().addPair(newPair);
+          } else {
+            // если пара с таким именем уже есть
+            // если поставлена галочка заменять
+            if (params.get("replace") != null) {
+              // то обновить
+              pk.removePair(pairObject, pairAction);
+              pk.getPair().addPair(newPair);
+            }
+          }
+          pk.SaveCollectionInFile();
+          refreshWarehouseSingleton();
+        }
+      }
+    }
+  }
   
+  
+
+  // методы отображения ------------------------------------------------------------------------------------------------------------
   private String fileForm(String pairAction, String pairObject) throws Exception {
     WarehouseSingleton.getInstance().getNewKeeper(app);
     PairKeeper ps = app.getKeeper().getPairKeeper();
@@ -275,7 +350,7 @@ public class PairEnt extends OptionAbstract {
     inner.put(rd.hiddenInput("pairObject", pairObject), "");
     inner.put(rd.hiddenInput("action", action), "");
     inner.put(rd.hiddenInput("object", object), "");
-    inner.put(rd.hiddenInput("specAction", FILE_SPECACTION), "");
+    inner.put(rd.hiddenInput("specAction", DOWNLOAD_FILE_SPECACTION), "");
     inner.put(rd.hiddenInput("getFile", "1"), "");
     AbsEnt form = rd.horizontalForm(inner, "Скачать файл", null);
     form.setAttribute(EnumAttrType.style, "");
@@ -477,6 +552,24 @@ public class PairEnt extends OptionAbstract {
     str += "</div>";
 
     return str;
+  }
+
+  /**
+   * форма для загрузки
+   *
+   * @return
+   * @throws Exception
+   */
+  private String uploadForm() throws Exception {
+    Map<AbsEnt, String> inner = new LinkedHashMap();
+    inner.put(rd.fileInput("file", null, "Выберите файл"), "");
+    inner.put(rd.checkBox("replace", null), "Заменять существующие");
+    inner.put(rd.hiddenInput("action", action), "");
+    inner.put(rd.hiddenInput("object", object), "");
+    inner.put(rd.hiddenInput("specAction", UPLOAD_FILE_SPECACTION), "");
+    AbsEnt form = rd.horizontalForm(inner, "Загрузить файл пары", null, true, null);
+    form.setAttribute(EnumAttrType.style, "");
+    return form.render();
   }
 
   private String addPairForm(String object, String action) throws Exception {
