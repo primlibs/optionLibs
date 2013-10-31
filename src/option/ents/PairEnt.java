@@ -303,19 +303,10 @@ public class PairEnt extends OptionAbstract {
           String pairAction = newPair.getAction();
           PairKeeper pk = app.getKeeper().getPairKeeper();
 
-          // для всех вложенных пар
-          // проверить, есть ли в списке такая пара
-          // если нет такой пары
-            // то ок
-          // если есть такая пара
-            // если поставлена галочка заменить
-              // то удалить пару из singleton
-            // иначе
-              // удалить пару из новой пары
-          
           // если пары с таким именем нет в списке
           if (!pk.containsPair(pairObject, pairAction)) {
             // добавить
+            checkChildrenPairs(pk, newPair);
             pk.getPair().addPair(newPair);
           } else {
             // если пара с таким именем уже есть
@@ -323,6 +314,7 @@ public class PairEnt extends OptionAbstract {
             if (params.get("replace") != null) {
               // то обновить
               pk.removePair(pairObject, pairAction);
+              checkChildrenPairs(pk, newPair);
               pk.getPair().addPair(newPair);
             }
           }
@@ -330,6 +322,31 @@ public class PairEnt extends OptionAbstract {
           refreshWarehouseSingleton();
         }
       }
+    }
+  }
+  
+  private void checkChildrenPairs(PairKeeper pk, Pair newPair) {
+    List<Pair> pairs = newPair.getAllPairsClone();
+    for (Pair p: pairs) {
+      checkPair(pk, newPair, p.getObject(), p.getAction());
+    }
+  }
+  
+  /**
+   * проверить, есть ли уже пара с таким action и object
+   */
+  private void checkPair(PairKeeper pk, Pair newPair, String pairObject, String pairAction) {
+    // если есть такая пара
+    if (pk.containsPair(pairObject, pairAction)) {
+        // если поставлена галочка заменить
+       if (params.get("replace") != null) {
+          // то удалить пару из singleton
+         pk.removePair(pairObject, pairAction);
+       } else {
+        // иначе
+          // удалить пару из новой пары
+         newPair.removePair(pairObject, pairAction);
+       }
     }
   }
   
