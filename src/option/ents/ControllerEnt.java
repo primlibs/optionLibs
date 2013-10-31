@@ -91,7 +91,7 @@ public class ControllerEnt extends OptionAbstract {
       }
 
       servicesMap = getServiceMap();
-      
+
       if (specAction.equals(CHECK_SPECACTION)) {
         List<String> incorrect = checkControllers(ck);
         str += showCheckResult(incorrect);
@@ -498,9 +498,9 @@ public class ControllerEnt extends OptionAbstract {
       str += downloadForm();
 
       str += uploadForm();
-      
+
       str += checkForm();
-      
+
       str += (getAddControllerForm());
 
       // вывод списка контроллеров
@@ -530,43 +530,46 @@ public class ControllerEnt extends OptionAbstract {
         str += ("<div class=controller_body id=" + name + "1 " + dispCnt + ">");
         str += (getAddMethodForm(name));
         str += ("<div class=controllerMethods>");
-        for (String Action : ck.getControllers().get(name).getControllersMethods().keySet()) {
-          ControllerMethod cm = ck.getControllers().get(name).getMethod(Action);
+        
+        TreeMap<String, ControllerMethod> methodsMap = new TreeMap(ck.getControllers().get(name).getControllersMethods());
+        // вывод методов
+        for (String action: methodsMap.keySet()) {
+          ControllerMethod cm = methodsMap.get(action);
           str += ("<div class=controllerMethodAll>");
           str += ("<div class=controllerMethod>");
 
           linkParams = new HashMap();
           linkParams.put("cName", name);
-          linkParams.put("cAction", Action);
+          linkParams.put("cAction", action);
           linkParams.put("deleteMeth", "1");
 
-          str += ("<div style='float:left;'>" + changeMethodForm(name, Action, cm.getAlias(), cm.getDescription(), cm.getHidden()) + "</div><div style='float:left;'> " + href(object, action, "", "Удалить", linkParams, "", "onclick=\"return confirmDelete();\"") + "<font color=brown onclick=\"hide('" + name + Action + "1');\" >Отображение</font></div>");
+          str += ("<div style='float:left;'>" + changeMethodForm(name, action, cm.getAlias(), cm.getDescription(), cm.getHidden()) + "</div><div style='float:left;'> " + href(object, action, "", "Удалить", linkParams, "", "onclick=\"return confirmDelete();\"") + "<font color=brown onclick=\"hide('" + name + action + "1');\" >Отображение</font></div>");
           str += ("</br>");
-          str += ("<div style='clear:both;'>" + getAddServiceForm(name, Action) + "</div>");
+          str += ("<div style='clear:both;'>" + getAddServiceForm(name, action) + "</div>");
           str += ("</div>");
           String dispServ;
-          if (cName != null && cAction != null && name.equals(cName) && Action.equals(cAction)) {
+          if (cName != null && cAction != null && name.equals(cName) && action.equals(cAction)) {
             dispServ = "";
           } else {
             dispServ = "style=\"display:none;\"";
           }
 
-          str += ("<div class=controllerServices id=" + name + Action + "1 " + dispServ + ">");
+          str += ("<div class=controllerServices id=" + name + action + "1 " + dispServ + ">");
           for (ControllerService clS : cm.getServiceList()) {
             str += ("<div class=controllerService>");
             str += ("<div class=service>");
-            str += (changeServiceAction(clS.getServiceName(), clS.getServiceAction(), name, Action, cm.getServiceList().indexOf(clS)));
+            str += (changeServiceAction(clS.getServiceName(), clS.getServiceAction(), name, action, cm.getServiceList().indexOf(clS)));
             str += ("</br>");
             linkParams = new HashMap();
             linkParams.put("cName", name);
-            linkParams.put("cAction", Action);
+            linkParams.put("cAction", action);
             linkParams.put("servIndex", cm.getServiceList().indexOf(clS));
             linkParams.put("delServMeth", "1");
             str += href(object, action, "", "Удалить", linkParams, "", "onclick=\"return confirmDelete();\"");
 
             linkParams = new HashMap();
             linkParams.put("cName", name);
-            linkParams.put("cAction", Action);
+            linkParams.put("cAction", action);
             linkParams.put("servIndex", cm.getServiceList().indexOf(clS));
             linkParams.put("upServMeth", "1");
             str += href(object, action, "", "Поднять", linkParams);
@@ -574,7 +577,7 @@ public class ControllerEnt extends OptionAbstract {
 
             linkParams = new HashMap();
             linkParams.put("cName", name);
-            linkParams.put("cAction", Action);
+            linkParams.put("cAction", action);
             linkParams.put("servIndex", cm.getServiceList().indexOf(clS));
             linkParams.put("downServMeth", "1");
             str += href(object, action, "", "Опустить", linkParams);
@@ -589,12 +592,12 @@ public class ControllerEnt extends OptionAbstract {
               str += ("<tr>");
               str += ("<td>" + innerName + "</td>");
               str += ("<td>" + clS.getInnerParams().get(innerName).getAlias() + "</td>");
-              str += ("<td>" + changeSourseInner(name, Action, cm.getServiceList().indexOf(clS), innerName, clS.getInnerParams().get(innerName).getOrigin()) + "</td>");
+              str += ("<td>" + changeSourseInner(name, action, cm.getServiceList().indexOf(clS), innerName, clS.getInnerParams().get(innerName).getOrigin()) + "</td>");
               str += ("<td>");
 
               linkParams = new HashMap();
               linkParams.put("cName", name);
-              linkParams.put("cAction", Action);
+              linkParams.put("cAction", action);
               linkParams.put("servIndex", cm.getServiceList().indexOf(clS));
               linkParams.put("paramName", innerName);
               linkParams.put("delInnerParam", "1");
@@ -603,7 +606,7 @@ public class ControllerEnt extends OptionAbstract {
               str += ("</tr>");
             }
             str += ("</table>");
-            str += (getAddInnerParamsForm(name, Action, cm.getServiceList().indexOf(clS)));
+            str += (getAddInnerParamsForm(name, action, cm.getServiceList().indexOf(clS)));
             str += ("</div>");
             str += ("<div class=outerParams>");
             str += ("Параметры на выходе:");
@@ -613,12 +616,12 @@ public class ControllerEnt extends OptionAbstract {
               str += ("<tr>");
               str += ("<td>" + outerName + "</td>");
               str += ("<td>" + clS.getOuterParams().get(outerName).getAlias() + "</td>");
-              str += ("<td>" + changeSourseOuter(name, Action, cm.getServiceList().indexOf(clS), outerName, clS.getOuterParams().get(outerName).getOrigin()) + "</td>");
+              str += ("<td>" + changeSourseOuter(name, action, cm.getServiceList().indexOf(clS), outerName, clS.getOuterParams().get(outerName).getOrigin()) + "</td>");
               str += ("<td>");
 
               linkParams = new HashMap();
               linkParams.put("cName", name);
-              linkParams.put("cAction", Action);
+              linkParams.put("cAction", action);
               linkParams.put("servIndex", cm.getServiceList().indexOf(clS));
               linkParams.put("paramName", outerName);
               linkParams.put("delOuterParam", "1");
@@ -628,7 +631,7 @@ public class ControllerEnt extends OptionAbstract {
               str += ("</tr>");
             }
             str += ("</table>");
-            str += (getAddOuterParamsForm(name, Action, cm.getServiceList().indexOf(clS)));
+            str += (getAddOuterParamsForm(name, action, cm.getServiceList().indexOf(clS)));
             str += ("</div>");
             str += ("</div>");
             str += ("</div>");
@@ -642,7 +645,7 @@ public class ControllerEnt extends OptionAbstract {
 
       str += (ck.getErrors());
 
-      
+
 
     } catch (Exception e) {
       str += MyString.getStackExeption(e);
@@ -651,11 +654,12 @@ public class ControllerEnt extends OptionAbstract {
   }
 
   // методы получения данных ---------------------------------------------------------------------------------------------------------
-  
   /**
-   * получить список сервисов. Формат массива: ключи - имя сервиса : имя метода. Значения - то же самое
+   * получить список сервисов. Формат массива: ключи - имя сервиса : имя метода.
+   * Значения - то же самое
+   *
    * @return
-   * @throws Exception 
+   * @throws Exception
    */
   private LinkedHashMap<String, Object> getServiceMap() throws Exception {
     HashMap<String, ArrayList<String>> hs = new HashMap<String, ArrayList<String>>();
@@ -736,20 +740,38 @@ public class ControllerEnt extends OptionAbstract {
             Element cntElement = (Element) controllersNodeList.item(i);
             // создать модель
             StructureController newCnt = StructureController.getFromXml(cntElement);
-            String name = newCnt.getName();
+            String controllerName = newCnt.getName();
             // если модели с таким именем нет в списке
-            if (!controllers.containsKey(name)) {
+            if (!controllers.containsKey(controllerName)) {
               // добавить
-              controllers.put(name, newCnt);
-              ck.saveController(name);
+              controllers.put(controllerName, newCnt);
+              ck.saveController(controllerName);
             } else {
               // если контроллер с таким именем уже есть
               // если поставлена галочка заменять
               if (params.get("replace") != null) {
                 // то обновить
-                controllers.put(name, newCnt);
-                ck.saveController(name);
+                controllers.put(controllerName, newCnt);
+                ck.saveController(controllerName);
               }
+              // если поставлена галочка - добавлять методы
+              if (params.get("add") != null) {
+                // получить старый контроллер
+                StructureController oldCnt = controllers.get(controllerName);
+                // получить методы из нового контроллера
+                Map<String, ControllerMethod> newMethods = newCnt.getControllersMethods();
+                // для каждого метода из нового
+                for (String newMethodName : newMethods.keySet()) {
+                  // если такого метода нет в старом 
+                  if (!oldCnt.getControllersMethods().containsKey(newMethodName)) {
+                    // добавить
+                    ControllerMethod newMethod = newMethods.get(newMethodName);
+                    oldCnt.getControllersMethods().put(newMethodName, newMethod);
+                  }
+                }
+                ck.saveController(controllerName);
+              }
+              
             }
             refreshWarehouseSingleton();
           }
@@ -812,7 +834,7 @@ public class ControllerEnt extends OptionAbstract {
           String fullName = serviceName + ":" + serviceAction;
           // если нет
           if (!servicesMap.containsKey(fullName)) {
-          // добавить метод в список
+            // добавить метод в список
             incorrect.add("Контроллер: " + controllerName + ", Метод контроллера: " + methodName + ", сервис: " + fullName);
           }
         }
@@ -866,7 +888,7 @@ public class ControllerEnt extends OptionAbstract {
     if (incorrect.isEmpty()) {
       str += "Несоответствий не найдено";
     }
-    for (String s: incorrect) {
+    for (String s : incorrect) {
       str += s + "<br/>";
     }
     return str;
@@ -882,6 +904,7 @@ public class ControllerEnt extends OptionAbstract {
     Map<AbsEnt, String> inner = new LinkedHashMap();
     inner.put(rd.fileInput("file", null, "Выберите файл"), "");
     inner.put(rd.checkBox("replace", null), "Заменять существующие");
+    inner.put(rd.checkBox("add", null), "Добавлять методы к существующим");
     inner.put(rd.hiddenInput("action", action), "");
     inner.put(rd.hiddenInput("object", object), "");
     inner.put(rd.hiddenInput("specAction", UPLOAD_FILE_SPECACTION), "");
@@ -930,7 +953,7 @@ public class ControllerEnt extends OptionAbstract {
 
   /**
    * форма добавления контроллера
-   * 
+   *
    * @return
    * @throws Exception
    */
