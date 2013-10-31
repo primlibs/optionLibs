@@ -46,6 +46,7 @@ public class ControllerEnt extends OptionAbstract {
   private LinkedHashMap<String, Object> servicesMap;
   private final String DOWNLOAD_FILE_SPECACTION = "downloadControllerFiles";
   private final String UPLOAD_FILE_SPECACTION = "uploadControllerFiles";
+  private final String CHECK_SPECACTION = "checkControllers";
   private String str = "";
 
   private ControllerEnt(AbstractApplication app, Render rd, String action, String specAction) {
@@ -79,7 +80,7 @@ public class ControllerEnt extends OptionAbstract {
         getControllersFile();
         return true;
       }
-      
+
       // загрузить файл контроллеров
       if (specAction.equals(UPLOAD_FILE_SPECACTION)) {
         uploadControllersFile();
@@ -89,47 +90,12 @@ public class ControllerEnt extends OptionAbstract {
         return true;
       }
 
-      HashMap<String, ArrayList<String>> hs = new HashMap<String, ArrayList<String>>();
-
-      Collection<String> classes;
-      OptionsKeeper os = app.getKeeper().getOptionKeeper();
-      classes = ServiceFactory.scan(os.getBiPath());
-      for (String clName : classes) {
-        Class cls = Class.forName("bi." + clName);
-        ArrayList<String> al = new ArrayList<String>();
-        hs.put(clName, al);
-        Method[] m = cls.getMethods();
-        for (Method mm : m) {
-          al.add(mm.getName());
-        }
-      }
-
-      ArrayList<String> checkList = new ArrayList<String>();
-      checkList.add("wait");
-      checkList.add("setRequest");
-      checkList.add("getConnection");
-      checkList.add("toString");
-      checkList.add("equals");
-      checkList.add("hashCode");
-      checkList.add("getClass");
-      checkList.add("notify");
-      checkList.add("notifyAll");
-      checkList.add("setStructure");
-      checkList.add("getActionResult");
-      checkList.add("setConnection");
-      checkList.add("setField");
-      checkList.add("setAuthorizedUserId");
-      checkList.add("setRightsObject");
-      checkList.add("getActionResult");
-
-
-      servicesMap = new LinkedHashMap<String, Object>();
-      for (String str : hs.keySet()) {
-        for (String str2 : hs.get(str)) {
-          if (!checkList.contains(str2)) {
-            servicesMap.put(str + ":" + str2, str + ":" + str2);
-          }
-        }
+      servicesMap = getServiceMap();
+      
+      if (specAction.equals(CHECK_SPECACTION)) {
+        List<String> incorrect = checkControllers(ck);
+        str += showCheckResult(incorrect);
+        return true;
       }
 
       /**
@@ -528,6 +494,12 @@ public class ControllerEnt extends OptionAbstract {
       }
 
       str += errors;
+
+      str += downloadForm();
+
+      str += uploadForm();
+      
+      str += checkForm();
       
       str += (getAddControllerForm());
 
@@ -670,9 +642,7 @@ public class ControllerEnt extends OptionAbstract {
 
       str += (ck.getErrors());
 
-      str += downloadForm();
-
-      str += uploadForm();
+      
 
     } catch (Exception e) {
       str += MyString.getStackExeption(e);
@@ -681,6 +651,62 @@ public class ControllerEnt extends OptionAbstract {
   }
 
   // методы получения данных ---------------------------------------------------------------------------------------------------------
+  
+  /**
+   * получить список сервисов. Формат массива: ключи - имя сервиса : имя метода. Значения - то же самое
+   * @return
+   * @throws Exception 
+   */
+  private LinkedHashMap<String, Object> getServiceMap() throws Exception {
+    HashMap<String, ArrayList<String>> hs = new HashMap<String, ArrayList<String>>();
+
+    Collection<String> classes;
+    OptionsKeeper os = app.getKeeper().getOptionKeeper();
+    classes = ServiceFactory.scan(os.getBiPath());
+    for (String clName : classes) {
+      Class cls = Class.forName("bi." + clName);
+      ArrayList<String> al = new ArrayList<String>();
+      hs.put(clName, al);
+      Method[] m = cls.getMethods();
+      for (Method mm : m) {
+        al.add(mm.getName());
+      }
+    }
+
+    ArrayList<String> checkList = new ArrayList<String>();
+    checkList.add("wait");
+    checkList.add("setRequest");
+    checkList.add("getConnection");
+    checkList.add("toString");
+    checkList.add("equals");
+    checkList.add("hashCode");
+    checkList.add("getClass");
+    checkList.add("notify");
+    checkList.add("notifyAll");
+    checkList.add("setStructure");
+    checkList.add("getActionResult");
+    checkList.add("setConnection");
+    checkList.add("setField");
+    checkList.add("setAuthorizedUserId");
+    checkList.add("setRightsObject");
+    checkList.add("getActionResult");
+
+    LinkedHashMap<String, Object> map = new LinkedHashMap<String, Object>();
+    for (String str : hs.keySet()) {
+      for (String str2 : hs.get(str)) {
+        if (!checkList.contains(str2)) {
+          map.put(str + ":" + str2, str + ":" + str2);
+        }
+      }
+    }
+    return map;
+  }
+
+  /**
+   * загрузка файла контроллеров
+   *
+   * @throws Exception
+   */
   private void uploadControllersFile() throws Exception {
     // получить элементы из файла xml
     Map<String, String> filesMap = (HashMap<String, String>) params.get("_FILEARRAY_");
@@ -732,6 +758,11 @@ public class ControllerEnt extends OptionAbstract {
     }
   }
 
+  /**
+   * вернуть файл контроллеров
+   *
+   * @throws Exception
+   */
   private void getControllersFile() throws Exception {
     ControllerKeeper ck = app.getKeeper().getControllerKeeper();
     ck.setDataFromBase();
@@ -759,7 +790,88 @@ public class ControllerEnt extends OptionAbstract {
     fileName = "controllers.xml";
   }
 
+  /**
+   * проверка контроллеров
+   */
+  private List<String> checkControllers(ControllerKeeper ck) {
+    List<String> incorrect = new ArrayList();
+    // список контроллеров и методов, где есть несоответствия
+    // получить список всех контроллеров
+    TreeMap<String, StructureController> controllers = new TreeMap(ck.getControllers());
+    // получить список всех сервисов в приложении
+    // проверить каждый метод контроллера - есть ли такой сервис. 
+    for (String controllerName : controllers.keySet()) {
+      StructureController cnt = controllers.get(controllerName);
+      TreeMap<String, ControllerMethod> methods = new TreeMap(cnt.getControllersMethods());
+      for (String methodName : methods.keySet()) {
+        ControllerMethod method = methods.get(methodName);
+        List<ControllerService> serviceList = method.getServiceList();
+        for (ControllerService service : serviceList) {
+          String serviceName = service.getServiceName();
+          String serviceAction = service.getServiceAction();
+          String fullName = serviceName + ":" + serviceAction;
+          // если нет
+          if (!servicesMap.containsKey(fullName)) {
+          // добавить метод в список
+            incorrect.add("Контроллер: " + controllerName + ", Метод контроллера: " + methodName + ", сервис: " + fullName);
+          }
+        }
+      }
+    }
+    return incorrect;
+  }
+
+  /**
+   * проверка, существуют ли все параметры с именами
+   *
+   * @param name
+   * @return
+   */
+  Boolean checkParam(ArrayList<String> name) {
+    Boolean res = true;
+    for (String param : name) {
+      if (res == true && params.get(param) != null && !"".equals(params.get(param).toString())) {
+        res = true;
+      } else {
+        res = false;
+      }
+    }
+    return res;
+  }
+
   // методы вывода рендера ------------------------------------------------------------------------------------------------------------
+  /**
+   * форма - проверить контроллеры
+   *
+   * @return
+   */
+  private String checkForm() throws Exception {
+    Map<AbsEnt, String> inner = new LinkedHashMap();
+    inner.put(rd.hiddenInput("action", action), "");
+    inner.put(rd.hiddenInput("object", object), "");
+    inner.put(rd.hiddenInput("specAction", CHECK_SPECACTION), "");
+    AbsEnt form = rd.horizontalForm(inner, "Проверить контроллеры", null);
+    form.setAttribute(EnumAttrType.style, "");
+    return form.render();
+  }
+
+  /**
+   * вывести результат проверки контроллеров
+   *
+   * @return
+   */
+  private String showCheckResult(List<String> incorrect) {
+    // вывести список
+    String str = "Список контроллеров, в которых используются сервисы, отсутствующие в системе. <br/><br/>";
+    if (incorrect.isEmpty()) {
+      str += "Несоответствий не найдено";
+    }
+    for (String s: incorrect) {
+      str += s + "<br/>";
+    }
+    return str;
+  }
+
   /**
    * форма для загрузки
    *
@@ -793,22 +905,35 @@ public class ControllerEnt extends OptionAbstract {
       controllersNames.put(name, name);
     }
     Map<AbsEnt, String> inner = new LinkedHashMap();
-    inner.put(rd.multipleCombo(controllersNames, null, "controllers", 10), "Контроллеры");
+    inner.put(rd.multipleCombo(controllersNames, null, "controllers", 5), "Контроллеры");
     inner.put(rd.hiddenInput("action", action), "");
     inner.put(rd.hiddenInput("object", object), "");
     inner.put(rd.hiddenInput("specAction", DOWNLOAD_FILE_SPECACTION), "");
     inner.put(rd.hiddenInput("getFile", "1"), "");
-    AbsEnt form = rd.horizontalForm(inner, "Получить файл контроллеров", "images/ok.png");
+    AbsEnt form = rd.horizontalForm(inner, "Скачать файл", null);
     form.setAttribute(EnumAttrType.style, "");
     return form.render();
   }
 
+  /**
+   * ссылка на контроллер
+   *
+   * @param name
+   * @return
+   * @throws Exception
+   */
   private String showLink(String name) throws Exception {
     Map<String, Object> linkParams = new HashMap();
     linkParams.put("name", name);
     return href(object, action, "", name, linkParams) + "</br>";
   }
 
+  /**
+   * форма добавления контроллера
+   * 
+   * @return
+   * @throws Exception
+   */
   String getAddControllerForm() throws Exception {
     LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
     hs.put(rd.textInput("cntrlName", "", "Название"), "");
@@ -819,10 +944,18 @@ public class ControllerEnt extends OptionAbstract {
     hs.put(rd.textArea("metDescr", "", "Описание метода"), "");
     AbsEnt form = rd.horizontalForm(hs, "Добавить контроллер", "images/add.png");
     form.setAttribute(EnumAttrType.action, "");
+    form.setAttribute(EnumAttrType.style, "");
     form.addEnt(rd.hiddenInput("addCntrl", "addCntrl"));
     return form.render();
   }
 
+  /**
+   * форма добавления метода
+   *
+   * @param contr
+   * @return
+   * @throws Exception
+   */
   String getAddMethodForm(String contr) throws Exception {
     LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
     hs.put(rd.textInput("methName", "", "Метод"), "Метод");
@@ -835,6 +968,14 @@ public class ControllerEnt extends OptionAbstract {
     return form.render();
   }
 
+  /**
+   * форма добавления сервиса
+   *
+   * @param contr
+   * @param Action
+   * @return
+   * @throws Exception
+   */
   String getAddServiceForm(String contr, String Action) throws Exception {
     TreeMap<String, Object> tree = new TreeMap<String, Object>(servicesMap);
     servicesMap = new LinkedHashMap<String, Object>(tree);
@@ -848,6 +989,15 @@ public class ControllerEnt extends OptionAbstract {
     return form.render();
   }
 
+  /**
+   * форма добавления параметра inner
+   *
+   * @param contr
+   * @param Action
+   * @param Index
+   * @return
+   * @throws Exception
+   */
   String getAddInnerParamsForm(String contr, String Action, Integer Index) throws Exception {
     LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
     hs.put(rd.textInput("paramName", "", "Параметр"), "");
@@ -861,6 +1011,15 @@ public class ControllerEnt extends OptionAbstract {
     return form.render();
   }
 
+  /**
+   * форма добавления параметра outer
+   *
+   * @param contr
+   * @param Action
+   * @param Index
+   * @return
+   * @throws Exception
+   */
   String getAddOuterParamsForm(String contr, String Action, Integer Index) throws Exception {
     LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
     hs.put(rd.textInput("paramName", "", "Параметр"), "");
@@ -874,6 +1033,17 @@ public class ControllerEnt extends OptionAbstract {
     return form.render();
   }
 
+  /**
+   * форма изменения источника параметра inner
+   *
+   * @param contr
+   * @param Action
+   * @param Index
+   * @param paramName
+   * @param srcCode
+   * @return
+   * @throws Exception
+   */
   String changeSourseInner(String contr, String Action, Integer Index, String paramName, ControllerOrigin srcCode) throws Exception {
     String result = "";
     LinkedHashMap<String, Object> ls = new LinkedHashMap<String, Object>();
@@ -896,6 +1066,17 @@ public class ControllerEnt extends OptionAbstract {
     return form.render();
   }
 
+  /**
+   * форма изменения источника параметра outer
+   *
+   * @param contr
+   * @param Action
+   * @param Index
+   * @param paramName
+   * @param srcCode
+   * @return
+   * @throws Exception
+   */
   String changeSourseOuter(String contr, String Action, Integer Index, String paramName, ControllerOrigin srcCode) throws Exception {
     String result = "";
     LinkedHashMap<String, Object> ls = new LinkedHashMap<String, Object>();
@@ -915,6 +1096,16 @@ public class ControllerEnt extends OptionAbstract {
     return form.render();
   }
 
+  /**
+   *
+   * @param serviceName
+   * @param serviceAction
+   * @param cntrlName
+   * @param cntrlAction
+   * @param ind
+   * @return
+   * @throws Exception
+   */
   String changeServiceAction(String serviceName, String serviceAction, String cntrlName, String cntrlAction, Integer ind) throws Exception {
     String result = "";
 
@@ -931,6 +1122,15 @@ public class ControllerEnt extends OptionAbstract {
     return form.render();
   }
 
+  /**
+   * форма изменения контроллера
+   *
+   * @param cntrlName
+   * @param alias
+   * @param description
+   * @return
+   * @throws Exception
+   */
   String changeControllerForm(String cntrlName, String alias, String description) throws Exception {
     String result = "";
     if (alias == null || "".equals(alias)) {
@@ -951,6 +1151,17 @@ public class ControllerEnt extends OptionAbstract {
     return form.render();
   }
 
+  /**
+   * форма изменения метода
+   *
+   * @param cntrlName
+   * @param methName
+   * @param alias
+   * @param description
+   * @param hidden
+   * @return
+   * @throws Exception
+   */
   String changeMethodForm(String cntrlName, String methName, String alias, String description, Boolean hidden) throws Exception {
     String result = "";
     LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
@@ -964,17 +1175,5 @@ public class ControllerEnt extends OptionAbstract {
     form.addEnt(rd.hiddenInput("methName", methName));
     form.setAttribute(EnumAttrType.action, "");
     return form.render();
-  }
-
-  Boolean checkParam(ArrayList<String> name) {
-    Boolean res = true;
-    for (String param : name) {
-      if (res == true && params.get(param) != null && !"".equals(params.get(param).toString())) {
-        res = true;
-      } else {
-        res = false;
-      }
-    }
-    return res;
   }
 }

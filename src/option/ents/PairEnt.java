@@ -26,6 +26,8 @@ import prim.libs.primXml;
 import prim.service.ServiceFactory;
 import warehouse.WarehouseSingleton;
 import warehouse.controllerStructure.ControllerKeeper;
+import warehouse.controllerStructure.ControllerMethod;
+import warehouse.controllerStructure.ControllerService;
 import warehouse.controllerStructure.StructureController;
 import warehouse.pair.PairKeeper;
 import web.Render;
@@ -56,6 +58,7 @@ public class PairEnt extends OptionAbstract {
   private String str = "";
   private final String DOWNLOAD_FILE_SPECACTION = "downloadPairFiles";
   private final String UPLOAD_FILE_SPECACTION = "uploadPairFiles";
+  private final String CHECK_SPECACTION = "checkPairs";
   private List<String> errors = new ArrayList();
 
   private PairEnt(AbstractApplication app, Render rd, String action, String specAction) {
@@ -84,21 +87,37 @@ public class PairEnt extends OptionAbstract {
     controllers = new TreeMap<String, Object>();
     ArrayList<String> errors = new ArrayList<String>();
 
+    rendersMethods.put("0", "--");
+    rendersMethods.putAll(getRenders());
+
+    controllers.put("0", "не выбрано");
+    controllers.putAll(getControllers());
 
     // вернуть файл моделей
     if (specAction.equals(DOWNLOAD_FILE_SPECACTION)) {
       getPairsFile();
       return true;
     }
-    
+
     // загрузить файл пар
-      if (specAction.equals(UPLOAD_FILE_SPECACTION)) {
-        uploadPairsFile();
-        redirectObject = object;
-        redirectAction = action;
-        isRedirect = true;
-        return true;
-      }
+    if (specAction.equals(UPLOAD_FILE_SPECACTION)) {
+      uploadPairsFile();
+      redirectObject = object;
+      redirectAction = action;
+      isRedirect = true;
+      return true;
+    }
+
+    //перегружаем пары на случай изменений
+    WarehouseSingleton.getInstance().getNewKeeper(app);
+    PairKeeper ps = app.getKeeper().getPairKeeper();
+    Pair pair = ps.getPair();
+
+    if (specAction.equals(CHECK_SPECACTION)) {
+      List<String> incorrect = checkIncorrectPairs(ps);
+      str += showCheckResult(incorrect);
+      return true;
+    }
 
     try {
 
@@ -128,13 +147,9 @@ public class PairEnt extends OptionAbstract {
         }
       }
 
-      rendersMethods.put("0", "--");
-      rendersMethods.putAll(getRenders());
 
-      //перегружаем пары на случай изменений
-      WarehouseSingleton.getInstance().getNewKeeper(app);
-      PairKeeper ps = app.getKeeper().getPairKeeper();
-      Pair pair = ps.getPair();
+
+
 
       // получить список всех пар
       allPairsToString.put("0", "не выбрано");
@@ -150,18 +165,7 @@ public class PairEnt extends OptionAbstract {
 
       // получить список всех контроллеров и методов
       //ControllerKeeper cs = ControllerKeeper.getInstance(SettingOptions.set("project"));
-      ControllerKeeper cs = app.getKeeper().getControllerKeeper();
-      controllers.put("0", "не выбрано");
 
-      for (String controllerName : cs.getControllers().keySet()) {
-        StructureController clr = cs.getControllers().get(controllerName);
-        if (params.get("pairObject") != null && controllerName.equals(params.get("pairObject").toString())) {
-          for (String methodName : clr.getControllersMethods().keySet()) {
-            String controllerMethod = controllerName + ":" + methodName;
-            controllers.put(controllerMethod, controllerMethod);
-          }
-        }
-      }
 
       String content = "";
       if (pair != null) {
@@ -240,6 +244,7 @@ public class PairEnt extends OptionAbstract {
       // форма поиска
       str += errors;
       str += searchForm();
+      str += checkForm();
 
       str += (content);
       str += (ps.getErrors());
@@ -254,6 +259,11 @@ public class PairEnt extends OptionAbstract {
   }
 
   // методы получения данных --------------------------------------------------------------------------------------------------------
+  /**
+   * получить файл с парами
+   *
+   * @throws Exception
+   */
   private void getPairsFile() throws Exception {
 
     WarehouseSingleton.getInstance().getNewKeeper(app);
@@ -279,6 +289,80 @@ public class PairEnt extends OptionAbstract {
     fileName = "pairs.xml";
   }
 
+  /**
+   * получить список рендеров. Формат списка: ключ - объект : метод. Значение -
+   * то же.
+   *
+   * @return
+   * @throws Exception
+   */
+  private TreeMap<String, Object> getRenders() throws Exception {
+    Collection<String> classes;
+    classes = ServiceFactory.scan(app.getRenderPath());
+    TreeMap<String, Object> servicesMap = new TreeMap<String, Object>();
+    HashMap<String, ArrayList<String>> hs = new HashMap<String, ArrayList<String>>();
+    for (String clName : classes) {
+      Class cls = Class.forName("renders.entities." + clName);
+      ArrayList<String> al = new ArrayList<String>();
+      hs.put(clName, al);
+      Method[] m = cls.getMethods();
+      for (Method mm : m) {
+        al.add(mm.getName());
+      }
+    }
+
+    ArrayList<String> checkList = new ArrayList<String>();
+    Class cls = Class.forName("renders.BaseRender");
+    Method[] m = cls.getMethods();
+    for (Method mm : m) {
+      if (!mm.getName().equals("renderOneEntity")
+              && !mm.getName().equals("renderAddEntityForm")
+              && !mm.getName().equals("renderChangeEntityForm")
+              && !mm.getName().equals("renderEntityList")
+              && !mm.getName().equals("addFiles")
+              && !mm.getName().equals("showAllFiles")) {
+        checkList.add(mm.getName());
+      }
+    }
+
+    for (String str : hs.keySet()) {
+      for (String str2 : hs.get(str)) {
+        if (!checkList.contains(str2)) {
+          servicesMap.put(str + ":" + str2, str + ":" + str2);
+        }
+      }
+    }
+    return servicesMap;
+  }
+
+  /**
+   * получить список контроллеров. Формат списка: ключ - объект : метод.
+   * Значение - то же.
+   *
+   * @return
+   * @throws Exception
+   */
+  private TreeMap<String, Object> getControllers() throws Exception {
+    TreeMap<String, Object> map = new TreeMap();
+    ControllerKeeper cs = app.getKeeper().getControllerKeeper();
+
+    for (String controllerName : cs.getControllers().keySet()) {
+      StructureController clr = cs.getControllers().get(controllerName);
+      if (params.get("pairObject") != null && controllerName.equals(params.get("pairObject").toString())) {
+        for (String methodName : clr.getControllersMethods().keySet()) {
+          String controllerMethod = controllerName + ":" + methodName;
+          map.put(controllerMethod, controllerMethod);
+        }
+      }
+    }
+    return map;
+  }
+
+  /**
+   * загрузить файл с парами
+   *
+   * @throws Exception
+   */
   private void uploadPairsFile() throws Exception {
     // получить элементы из файла xml
     Map<String, String> filesMap = (HashMap<String, String>) params.get("_FILEARRAY_");
@@ -324,33 +408,78 @@ public class PairEnt extends OptionAbstract {
       }
     }
   }
-  
+
+  /**
+   * проверка пар
+   *
+   * @param pk
+   * @param newPair
+   */
   private void checkChildrenPairs(PairKeeper pk, Pair newPair) {
     List<Pair> pairs = newPair.getAllPairsClone();
-    for (Pair p: pairs) {
+    for (Pair p : pairs) {
       checkPair(pk, newPair, p.getObject(), p.getAction());
     }
   }
-  
+
   /**
    * проверить, есть ли уже пара с таким action и object
    */
   private void checkPair(PairKeeper pk, Pair newPair, String pairObject, String pairAction) {
     // если есть такая пара
     if (pk.containsPair(pairObject, pairAction)) {
-        // если поставлена галочка заменить
-       if (params.get("replace") != null) {
-          // то удалить пару из singleton
-         pk.removePair(pairObject, pairAction);
-       } else {
+      // если поставлена галочка заменить
+      if (params.get("replace") != null) {
+        // то удалить пару из singleton
+        pk.removePair(pairObject, pairAction);
+      } else {
         // иначе
-          // удалить пару из новой пары
-         newPair.removePair(pairObject, pairAction);
-       }
+        // удалить пару из новой пары
+        newPair.removePair(pairObject, pairAction);
+      }
     }
   }
-  
-  
+
+  /**
+   * проверка пар на наличие пар с некорректными значениями
+   */
+  private List<String> checkIncorrectPairs(PairKeeper pk) {
+    List<String> incorrect = new ArrayList();
+    // получить список рендеров 
+    // получить список контроллеров
+    // получить список всех пар
+    List<Pair> pairList = pk.getAllPairs();
+    TreeMap<String, Pair> pairMap = new TreeMap();
+    for (Pair p : pairList) {
+      pairMap.put(p.getObject() + ":" + p.getAction(), p);
+    }
+    // каждую пару
+    for (Pair p : pairMap.values()) {
+      // проверить
+      // если не соответствует
+      // добавить в список
+      String pairName = p.getAction() + ":" + p.getObject();
+      Map<String, Sequence> seqMap = p.getSequenceClone();
+      for (String seqName : seqMap.keySet()) {
+        Sequence seq = seqMap.get(seqName);
+        String methodName = seq.getAppMethodName();
+        String objectName = seq.getAppObjectName();
+        String controllerName = objectName + ":" + methodName;
+        String trueRender = seq.getTrueRender();
+        String falseRender = seq.getFalseRender();
+        if (!controllers.containsKey(controllerName)) {
+          incorrect.add("Пара :" + pairName + ", Sequence: " + seqName + ", контроллер: " + controllerName);
+        }
+        if (!renders.containsKey(trueRender)) {
+          incorrect.add("Пара :" + pairName + ", Sequence: " + seqName + ", trueRender: " + trueRender);
+        }
+        if (!renders.containsKey(falseRender)) {
+          incorrect.add("Пара :" + pairName + ", Sequence: " + seqName + ", falseRender: " + trueRender);
+        }
+      }
+    }
+    return incorrect;
+  }
 
   // методы отображения ------------------------------------------------------------------------------------------------------------
   private String fileForm(String pairAction, String pairObject) throws Exception {
@@ -374,6 +503,45 @@ public class PairEnt extends OptionAbstract {
     return form.render();
   }
 
+  /**
+   * форма - проверить пары
+   *
+   * @return
+   */
+  private String checkForm() throws Exception {
+    Map<AbsEnt, String> inner = new LinkedHashMap();
+    inner.put(rd.hiddenInput("action", action), "");
+    inner.put(rd.hiddenInput("object", object), "");
+    inner.put(rd.hiddenInput("specAction", CHECK_SPECACTION), "");
+    AbsEnt form = rd.horizontalForm(inner, "Проверить пары", null);
+    form.setAttribute(EnumAttrType.style, "");
+    return form.render();
+  }
+
+  /**
+   * вывести результат проверки контроллеров
+   *
+   * @return
+   */
+  private String showCheckResult(List<String> incorrect) {
+    // вывести список
+    String str = "Список пар, в которых используются контроллеры или рендеры, отсутствующие в системе. <br/><br/>";
+    if (incorrect.isEmpty()) {
+      str += "Несоответствий не найдено";
+    }
+    for (String s : incorrect) {
+      str += s + "<br/>";
+    }
+    return str;
+  }
+
+  /**
+   * ссылка на пару
+   *
+   * @param pair
+   * @return
+   * @throws Exception
+   */
   private String showLink(Pair pair) throws Exception {
     Map<String, Object> linkParams = new HashMap();
     linkParams.put("pairAction", pair.getAction());
@@ -381,6 +549,12 @@ public class PairEnt extends OptionAbstract {
     return href(object, action, "", pair.getObject() + ":" + pair.getAction(), linkParams) + "</br>";
   }
 
+  /**
+   * форма поиска
+   *
+   * @return
+   * @throws Exception
+   */
   private String searchForm() throws Exception {
     Map<AbsEnt, String> hs = new LinkedHashMap();
     hs.put(rd.textInput("searchObject", params.get("searchObject"), "Object"), "");
@@ -589,6 +763,14 @@ public class PairEnt extends OptionAbstract {
     return form.render();
   }
 
+  /**
+   * форма добавления пары
+   *
+   * @param object
+   * @param action
+   * @return
+   * @throws Exception
+   */
   private String addPairForm(String object, String action) throws Exception {
     LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
     hs.put(rd.textInput("newObject", "", "Object"), "Object");
@@ -608,6 +790,13 @@ public class PairEnt extends OptionAbstract {
     return form.render();
   }
 
+  /**
+   * форма изменения пары
+   *
+   * @param pair
+   * @return
+   * @throws Exception
+   */
   private String changePairForm(Pair pair) throws Exception {
     LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
     hs.put(rd.checkBox("def", Boolean.parseBoolean(MyString.getString(pair.getDef())), null), "Default");
@@ -621,6 +810,13 @@ public class PairEnt extends OptionAbstract {
 
   }
 
+  /**
+   * форма перемещения пары
+   *
+   * @param pair
+   * @return
+   * @throws Exception
+   */
   private String movePairForm(Pair pair) throws Exception {
     List<Pair> pairs = allPairs;
     pairs.removeAll(pair.getAllParentСlone());
@@ -643,6 +839,13 @@ public class PairEnt extends OptionAbstract {
     return form.render();
   }
 
+  /**
+   * форма удаления пары
+   *
+   * @param pair
+   * @return
+   * @throws Exception
+   */
   private String removePairForm(Pair pair) throws Exception {
     Pair parent = pair.getParent();
     LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
@@ -661,6 +864,14 @@ public class PairEnt extends OptionAbstract {
 
   }
 
+  /**
+   * форма добавления sequence
+   *
+   * @param object
+   * @param action
+   * @return
+   * @throws Exception
+   */
   private String addSeqForm(String object, String action) throws Exception {
     LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
     hs.put(rd.textInput("seqName", "", "Название Sequence"), "Название Sequence");
@@ -681,6 +892,15 @@ public class PairEnt extends OptionAbstract {
     return form.render();
   }
 
+  /**
+   * форма изменения sequence
+   *
+   * @param pair
+   * @param seq
+   * @param seqName
+   * @return
+   * @throws Exception
+   */
   private String changeSeqForm(Pair pair, Sequence seq, String seqName) throws Exception {
     String str = "";
     str = str + "Название Sequence: " + seqName;
@@ -710,6 +930,14 @@ public class PairEnt extends OptionAbstract {
     return str;
   }
 
+  /**
+   * форма удаления sequence
+   *
+   * @param pair
+   * @param seqName
+   * @return
+   * @throws Exception
+   */
   private String removeSeqForm(Pair pair, String seqName) throws Exception {
     Pair parent = pair.getParent();
     LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
@@ -722,46 +950,5 @@ public class PairEnt extends OptionAbstract {
     form.addEnt(rd.hiddenInput("actionName", pair.getAction()));
     form.setAttribute(EnumAttrType.action, formAction);
     return form.render();
-  }
-
-  private TreeMap<String, Object> getRenders() throws Exception {
-    Collection<String> classes;
-    classes = ServiceFactory.scan(app.getRenderPath());
-    TreeMap<String, Object> servicesMap = new TreeMap<String, Object>();
-    HashMap<String, ArrayList<String>> hs = new HashMap<String, ArrayList<String>>();
-    for (String clName : classes) {
-      Class cls = Class.forName("renders.entities." + clName);
-      ArrayList<String> al = new ArrayList<String>();
-      hs.put(clName, al);
-      Method[] m = cls.getMethods();
-      for (Method mm : m) {
-        al.add(mm.getName());
-      }
-    }
-
-
-    ArrayList<String> checkList = new ArrayList<String>();
-    Class cls = Class.forName("renders.BaseRender");
-    Method[] m = cls.getMethods();
-    for (Method mm : m) {
-      if (!mm.getName().equals("renderOneEntity")
-              && !mm.getName().equals("renderAddEntityForm")
-              && !mm.getName().equals("renderChangeEntityForm")
-              && !mm.getName().equals("renderEntityList")
-              && !mm.getName().equals("addFiles")
-              && !mm.getName().equals("showAllFiles")) {
-        checkList.add(mm.getName());
-      }
-    }
-
-
-    for (String str : hs.keySet()) {
-      for (String str2 : hs.get(str)) {
-        if (!checkList.contains(str2)) {
-          servicesMap.put(str + ":" + str2, str + ":" + str2);
-        }
-      }
-    }
-    return servicesMap;
   }
 }
