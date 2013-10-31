@@ -43,8 +43,6 @@ import web.pair.Sequence;
  */
 public class PairEnt extends OptionAbstract {
 
-  // все рендеры, для вывода в форме
-  private TreeMap<String, Object> renders;
   // все пары, для вывода в форме
   private TreeMap<String, Object> allPairsToString;
   private List<Pair> allPairs = new ArrayList<Pair>();
@@ -83,7 +81,6 @@ public class PairEnt extends OptionAbstract {
     boolean status = true;
     activePairs = new ArrayList<Pair>();
     allPairsToString = new TreeMap<String, Object>();
-    renders = new TreeMap<String, Object>();
     controllers = new TreeMap<String, Object>();
     ArrayList<String> errors = new ArrayList<String>();
 
@@ -337,7 +334,8 @@ public class PairEnt extends OptionAbstract {
 
   /**
    * получить список контроллеров. Формат списка: ключ - объект : метод.
-   * Значение - то же.
+   * Значение - то же. Возвращаются не все контроллеры, а только те, которые
+   * подходят к данной паре
    *
    * @return
    * @throws Exception
@@ -353,6 +351,26 @@ public class PairEnt extends OptionAbstract {
           String controllerMethod = controllerName + ":" + methodName;
           map.put(controllerMethod, controllerMethod);
         }
+      }
+    }
+    return map;
+  }
+
+  /**
+   * получить список всех контроллеров
+   *
+   * @return
+   * @throws Exception
+   */
+  private TreeMap<String, Object> getAllControllers() throws Exception {
+    TreeMap<String, Object> map = new TreeMap();
+    ControllerKeeper cs = app.getKeeper().getControllerKeeper();
+
+    for (String controllerName : cs.getControllers().keySet()) {
+      StructureController clr = cs.getControllers().get(controllerName);
+      for (String methodName : clr.getControllersMethods().keySet()) {
+        String controllerMethod = controllerName + ":" + methodName;
+        map.put(controllerMethod, controllerMethod);
       }
     }
     return map;
@@ -443,7 +461,7 @@ public class PairEnt extends OptionAbstract {
   /**
    * проверка пар на наличие пар с некорректными значениями
    */
-  private List<String> checkIncorrectPairs(PairKeeper pk) {
+  private List<String> checkIncorrectPairs(PairKeeper pk) throws Exception {
     List<String> incorrect = new ArrayList();
     // получить список рендеров 
     // получить список контроллеров
@@ -458,23 +476,27 @@ public class PairEnt extends OptionAbstract {
       // проверить
       // если не соответствует
       // добавить в список
-      String pairName = p.getAction() + ":" + p.getObject();
+      String pairName = p.getObject() + ":" + p.getAction();
       Map<String, Sequence> seqMap = p.getSequenceClone();
       for (String seqName : seqMap.keySet()) {
         Sequence seq = seqMap.get(seqName);
         String methodName = seq.getAppMethodName();
         String objectName = seq.getAppObjectName();
-        String controllerName = objectName + ":" + methodName;
+        String controllerName = "";
+        if (!objectName.isEmpty() && !methodName.isEmpty()) {
+          controllerName = objectName + ":" + methodName;
+        }
         String trueRender = seq.getTrueRender();
         String falseRender = seq.getFalseRender();
-        if (!controllers.containsKey(controllerName)) {
-          incorrect.add("Пара :" + pairName + ", Sequence: " + seqName + ", контроллер: " + controllerName);
+        TreeMap<String,Object> controllerMap = getAllControllers();
+        if (!controllerName.isEmpty() && !controllerMap.containsKey(controllerName)) {
+          incorrect.add("Пара: " + pairName + ", Sequence: " + seqName + ", контроллер: " + controllerName);
         }
-        if (!renders.containsKey(trueRender)) {
-          incorrect.add("Пара :" + pairName + ", Sequence: " + seqName + ", trueRender: " + trueRender);
+        if (!trueRender.isEmpty() && !rendersMethods.containsKey(trueRender)) {
+          incorrect.add("Пара: " + pairName + ", Sequence: " + seqName + ", trueRender: " + trueRender);
         }
-        if (!renders.containsKey(falseRender)) {
-          incorrect.add("Пара :" + pairName + ", Sequence: " + seqName + ", falseRender: " + trueRender);
+        if (!falseRender.isEmpty() && !rendersMethods.containsKey(falseRender)) {
+          incorrect.add("Пара: " + pairName + ", Sequence: " + seqName + ", falseRender: " + falseRender);
         }
       }
     }
@@ -482,6 +504,14 @@ public class PairEnt extends OptionAbstract {
   }
 
   // методы отображения ------------------------------------------------------------------------------------------------------------
+  
+  /**
+   * форма для загрузки файла
+   * @param pairAction
+   * @param pairObject
+   * @return
+   * @throws Exception 
+   */
   private String fileForm(String pairAction, String pairObject) throws Exception {
     WarehouseSingleton.getInstance().getNewKeeper(app);
     PairKeeper ps = app.getKeeper().getPairKeeper();

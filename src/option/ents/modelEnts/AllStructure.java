@@ -50,6 +50,7 @@ public class AllStructure extends ModelEnt {
 
   private final String DOWNLOAD_FILE_SPECACTION = "downloadModelFiles";
   private final String UPLOAD_FILE_SPECACTION = "uploadModelFiles";
+  private final String CHECK_SPECACTION = "checkModels";
   private String content = "";
   private List<String> errors = new ArrayList();
 
@@ -78,6 +79,17 @@ public class AllStructure extends ModelEnt {
         redirectObject = "modelEnt";
         redirectAction = "AllStructure";
         isRedirect = true;
+        return true;
+      }
+
+      ModelStructureKeeper mss = app.getKeeper().getModelStructureKeeper();
+
+      TreeMap<String, Structure> structureMap = new TreeMap<String, Structure>(mss.getStructureMap());
+      ArrayList<String> systemMap = new ArrayList<String>();
+
+      if (specAction.equals(CHECK_SPECACTION)) {
+        List<String> incorrect = checkIncorrectModels(mss);
+        content += showCheckResult(incorrect);
         return true;
       }
 
@@ -111,12 +123,10 @@ public class AllStructure extends ModelEnt {
       }
 
       content += "<br/>" + href(Creator.MODEL_OBJECT_NAME, "AddStructure", "", "Добавить новый тип данных", new HashMap()) + "<br/>";
+      content += checkForm();
       content += "<h1>Модели данных</h1>";
 
-      ModelStructureKeeper mss = app.getKeeper().getModelStructureKeeper();
 
-      TreeMap<String, Structure> structureMap = new TreeMap<String, Structure>(mss.getStructureMap());
-      ArrayList<String> systemMap = new ArrayList<String>();
       // показать список
 
       content += "<table border=1>";
@@ -184,52 +194,33 @@ public class AllStructure extends ModelEnt {
     return true;
   }
 
-  // методы отображения ----------------------------------------------------------------------------------------------------------
+  // методы получения данных -----------------------------------------------------------------------------------------------------------
   /**
-   * форма для скачивания файла
-   *
-   * @return
-   * @throws Exception
+   * проверка пар на наличие пар с некорректными значениями
    */
-  private String downloadForm(ModelStructureKeeper mss) throws Exception {
+  private List<String> checkIncorrectModels(ModelStructureKeeper mss) throws Exception {
+    List<String> incorrect = new ArrayList();
+    // получить список моделей
     Map<String, Structure> structureMap = mss.getStructureMap();
-    Map<String, Object> modelNames = new TreeMap();
-    for (String name : structureMap.keySet()) {
-      Structure struct = structureMap.get(name);
-      if (!struct.isSystem()) {
-        modelNames.put(name, name);
+    for (String modelName : structureMap.keySet()) {
+      // для каждой модели
+      // получить список полей
+      Structure struct = structureMap.get(modelName);
+      Map<String, Field> fields = struct.getCloneFields();
+      // для каждого поля
+      for (String fieldName : fields.keySet()) {
+        Field field = fields.get(fieldName);
+        // если есть связь с моделью, которой нет в списке
+        String relation = field.getRelations();
+        // то добавить в список некорректных
+        if (relation != null && !relation.trim().isEmpty() && !structureMap.containsKey(relation.trim())) {
+          incorrect.add("Модель: " + modelName + ", поле:" + fieldName + ", зависимость: " + relation);
+        }
       }
     }
-    Map<AbsEnt, String> inner = new LinkedHashMap();
-    inner.put(rd.multipleCombo(modelNames, null, "models", 10), "Модели");
-    inner.put(rd.hiddenInput("action", action), "");
-    inner.put(rd.hiddenInput("object", object), "");
-    inner.put(rd.hiddenInput("specAction", DOWNLOAD_FILE_SPECACTION), "");
-    inner.put(rd.hiddenInput("getFile", "1"), "");
-    AbsEnt form = rd.horizontalForm(inner, "Получить файл моделей", "images/ok.png");
-    form.setAttribute(EnumAttrType.style, "");
-    return form.render();
+    return incorrect;
   }
 
-  /**
-   * форма для загрузки
-   *
-   * @return
-   * @throws Exception
-   */
-  private String uploadForm() throws Exception {
-    Map<AbsEnt, String> inner = new LinkedHashMap();
-    inner.put(rd.fileInput("file", null, "Выберите файл"), "");
-    inner.put(rd.checkBox("replace", null), "Заменять существующие");
-    inner.put(rd.hiddenInput("action", action), "");
-    inner.put(rd.hiddenInput("object", object), "");
-    inner.put(rd.hiddenInput("specAction", UPLOAD_FILE_SPECACTION), "");
-    AbsEnt form = rd.horizontalForm(inner, "Загрузить файл моделей", null, true, null);
-    form.setAttribute(EnumAttrType.style, "");
-    return form.render();
-  }
-
-  // методы получения данных -----------------------------------------------------------------------------------------------------------
   /**
    * получить файл моделей
    *
@@ -262,6 +253,11 @@ public class AllStructure extends ModelEnt {
     fileName = "models.xml";
   }
 
+  /**
+   * загрузить файлы моделей
+   *
+   * @throws Exception
+   */
   private void uploadModelsFile() throws Exception {
     // получить элементы из файла xml
     Map<String, String> filesMap = (HashMap<String, String>) params.get("_FILEARRAY_");
@@ -316,6 +312,12 @@ public class AllStructure extends ModelEnt {
     }
   }
 
+  /**
+   * создать контроллеры
+   *
+   * @param modelName
+   * @return
+   */
   private ModuleError modulateController(String modelName) {
     ModuleError result = new ModuleError();
     ArrayList<String> banParams = new ArrayList<String>();
@@ -463,6 +465,14 @@ public class AllStructure extends ModelEnt {
     return result;
   }
 
+  /**
+   * создать пары
+   *
+   * @param modelName
+   * @param pairName
+   * @return
+   * @throws Exception
+   */
   private ModuleError modulatePairs(String modelName, String pairName) throws Exception {
     ModuleError result = new ModuleError();
 
@@ -528,5 +538,82 @@ public class AllStructure extends ModelEnt {
 
     ps.SaveCollectionInFile();
     return result;
+  }
+
+  // методы отображения ----------------------------------------------------------------------------------------------------------
+  /**
+   * форма для скачивания файла
+   *
+   * @return
+   * @throws Exception
+   */
+  private String downloadForm(ModelStructureKeeper mss) throws Exception {
+    Map<String, Structure> structureMap = mss.getStructureMap();
+    Map<String, Object> modelNames = new TreeMap();
+    for (String name : structureMap.keySet()) {
+      Structure struct = structureMap.get(name);
+      if (!struct.isSystem()) {
+        modelNames.put(name, name);
+      }
+    }
+    Map<AbsEnt, String> inner = new LinkedHashMap();
+    inner.put(rd.multipleCombo(modelNames, null, "models", 10), "Модели");
+    inner.put(rd.hiddenInput("action", action), "");
+    inner.put(rd.hiddenInput("object", object), "");
+    inner.put(rd.hiddenInput("specAction", DOWNLOAD_FILE_SPECACTION), "");
+    inner.put(rd.hiddenInput("getFile", "1"), "");
+    AbsEnt form = rd.horizontalForm(inner, "Получить файл моделей", "images/ok.png");
+    form.setAttribute(EnumAttrType.style, "");
+    return form.render();
+  }
+
+  /**
+   * форма для загрузки
+   *
+   * @return
+   * @throws Exception
+   */
+  private String uploadForm() throws Exception {
+    Map<AbsEnt, String> inner = new LinkedHashMap();
+    inner.put(rd.fileInput("file", null, "Выберите файл"), "");
+    inner.put(rd.checkBox("replace", null), "Заменять существующие");
+    inner.put(rd.hiddenInput("action", action), "");
+    inner.put(rd.hiddenInput("object", object), "");
+    inner.put(rd.hiddenInput("specAction", UPLOAD_FILE_SPECACTION), "");
+    AbsEnt form = rd.horizontalForm(inner, "Загрузить файл моделей", null, true, null);
+    form.setAttribute(EnumAttrType.style, "");
+    return form.render();
+  }
+
+  /**
+   * форма - проверить пары
+   *
+   * @return
+   */
+  private String checkForm() throws Exception {
+    Map<AbsEnt, String> inner = new LinkedHashMap();
+    inner.put(rd.hiddenInput("action", action), "");
+    inner.put(rd.hiddenInput("object", object), "");
+    inner.put(rd.hiddenInput("specAction", CHECK_SPECACTION), "");
+    AbsEnt form = rd.horizontalForm(inner, "Проверить модели", null);
+    form.setAttribute(EnumAttrType.style, "");
+    return form.render();
+  }
+
+  /**
+   * вывести результат проверки контроллеров
+   *
+   * @return
+   */
+  private String showCheckResult(List<String> incorrect) {
+    // вывести список
+    String str = "Список моделей, в которых найдены завивисмости с моделями, отсутствующими в системе <br/><br/>";
+    if (incorrect.isEmpty()) {
+      str += "Несоответствий не найдено";
+    }
+    for (String s : incorrect) {
+      str += s + "<br/>";
+    }
+    return str;
   }
 }
