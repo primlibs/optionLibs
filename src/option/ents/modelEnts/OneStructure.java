@@ -59,7 +59,13 @@ public class OneStructure extends ModelEnt {
         str += "Название таблицы: " + struct.getTableName() + "<br/>";
         str += "Алиас таблицы: " + struct.getTableAlias() + "<br/>";
         str += "Первичный ключ таблицы: " + struct.getPrimaryAlias() + "<br/>";
-        str += "Разрешена ли работа с файлами: " + (struct.isFileWork() ? " да " : "нет");
+        str += "Разрешена ли работа с файлами: " + (struct.isFileWork() ? " да " : "нет") + "<br/>";
+        if (!struct.isSystem()) {
+          Field userDataTypeId = struct.getField("user_data_type_id");
+          if (userDataTypeId != null) {
+            str += "user_data_type_id: " + userDataTypeId.getDef();
+          }
+        }
         str += " <br/> <br/>";
         TreeMap<String, Field> map = new TreeMap(struct.getCloneFields());
 
