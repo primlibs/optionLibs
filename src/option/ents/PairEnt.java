@@ -242,12 +242,13 @@ public class PairEnt extends OptionAbstract {
       str += errors;
       str += searchForm();
       str += checkForm();
+      str += uploadForm();
 
       str += (content);
       str += (ps.getErrors());
       str += (PairObject.message);
 
-      str += uploadForm();
+      
 
     } catch (Exception e) {
       MyString.getStackExeption(e);
