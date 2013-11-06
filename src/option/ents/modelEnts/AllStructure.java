@@ -459,6 +459,111 @@ public class AllStructure extends ModelEnt {
         result.setMessage("Создан метод удаления для контроллера " + modelName);
       }
 
+      //метод просмотра файлов
+      method = "showAllFiles";
+      if (!cs.hasMethod(modelName, method) && modelStructure != null && modelStructure.isFileWork() == true) {
+        ControllerMethod cm = new ControllerMethod();
+        cm.setAlias("Просмотр списка файлов");
+        cm.setDescription("Просмотр списка файлов");
+        css = cm.addControllerService();
+        css.setServiceName("files");
+        css.setServiceAction("showFilesModel");
+        for (Field fi : modelStructure.getCloneFields().values()) {
+          if (fi.getAlias().equals(modelStructure.getPrimaryAlias())) {
+            cp = css.addInnerParams(fi.getAlias());
+            cp.setOrigin(ControllerOrigin.Request);
+            cp.setAlias("model_id");
+          }
+        }
+        cs.addMethod(modelName, method, cm);
+        if (cs.saveController(modelName) != true) {
+          throw new Exception("Не удалось сохранить контроллер просмотра файлов");
+        }
+        result.setMessage("Создан метод просмотра файлов для контроллера " + modelName);
+      }
+      //метод добавления файлов
+      method = "addFiles";
+      if (!cs.hasMethod(modelName, method) && modelStructure != null && modelStructure.isFileWork() == true) {
+        ControllerMethod cm = new ControllerMethod();
+        cm.setAlias("Добавление файлов");
+        cm.setDescription("Добавление файлов");
+        css = cm.addControllerService();
+        css.setServiceName(modelName);
+        css.setServiceAction("saveFiles");
+        for (Field fi : modelStructure.getCloneFields().values()) {
+          if (fi.getAlias().equals(modelStructure.getPrimaryAlias())) {
+            cp = css.addInnerParams(fi.getAlias());
+            cp.setOrigin(ControllerOrigin.Request);
+            cp.setAlias(fi.getAlias());
+            cp = css.addOuterParams(fi.getAlias());
+            cp.setOrigin(ControllerOrigin.Input);
+            cp.setAlias(fi.getAlias());
+          }
+        }
+        cp = css.addInnerParams("_FILEARRAY_");
+        cp.setOrigin(ControllerOrigin.Request);
+        cp.setAlias("_FILEARRAY_");
+        cs.addMethod(modelName, method, cm);
+        if (cs.saveController(modelName) != true) {
+          throw new Exception("Не удалось сохранить контроллер сохранения файлов");
+        }
+        result.setMessage("Создан метод сохранения файлов для контроллера " + modelName);
+      }
+
+      //метод удаления файла
+      method = "delFile";
+      if (!cs.hasMethod(modelName, method) && modelStructure != null && modelStructure.isFileWork() == true) {
+        ControllerMethod cm = new ControllerMethod();
+        cm.setAlias("Удаление файлов");
+        cm.setDescription("Удаление файлов");
+        css = cm.addControllerService();
+        css.setServiceName(modelName);
+        css.setServiceAction("deleteFile");
+        for (Field fi : modelStructure.getCloneFields().values()) {
+          if (fi.getAlias().equals(modelStructure.getPrimaryAlias())) {
+            cp = css.addInnerParams(fi.getAlias());
+            cp.setOrigin(ControllerOrigin.Request);
+            cp.setAlias(fi.getAlias());
+            cp = css.addOuterParams(fi.getAlias());
+            cp.setOrigin(ControllerOrigin.Input);
+            cp.setAlias(fi.getAlias());
+          }
+        }
+        cp = css.addInnerParams("file_id");
+        cp.setOrigin(ControllerOrigin.Request);
+        cp.setAlias("file_id");
+        cs.addMethod(modelName, method, cm);
+        if (cs.saveController(modelName) != true) {
+          throw new Exception("Не удалось сохранить контроллер удаления файлов");
+        }
+        result.setMessage("Создан метод удаления файлов для контроллера " + modelName);
+      }
+      //метод прочтения файла
+      method = "getFile";
+      if (!cs.hasMethod(modelName, method) && modelStructure != null && modelStructure.isFileWork() == true) {
+        ControllerMethod cm = new ControllerMethod();
+        cm.setAlias("Получение файлов");
+        cm.setDescription("Получение файлов");
+        css = cm.addControllerService();
+        css.setServiceName(modelName);
+        css.setServiceAction("getFile");
+        for (Field fi : modelStructure.getCloneFields().values()) {
+          if (fi.getAlias().equals(modelStructure.getPrimaryAlias())) {
+            cp = css.addInnerParams(fi.getAlias());
+            cp.setOrigin(ControllerOrigin.Request);
+            cp.setAlias(fi.getAlias());
+          }
+        }
+        cp = css.addInnerParams("file_id");
+        cp.setOrigin(ControllerOrigin.Request);
+        cp.setAlias("file_id");
+        cs.addMethod(modelName, method, cm);
+        if (cs.saveController(modelName) != true) {
+          throw new Exception("Не удалось сохранить контроллер получения файлов");
+        }
+        result.setMessage("Создан метод получения файлов для контроллера " + modelName);
+      }
+
     } catch (Exception e) {
       result.setError(e.getMessage());
     }
@@ -511,8 +616,6 @@ public class AllStructure extends ModelEnt {
       pair.addPair(deletePair);
     }
 
-
-
     method = "add";
     if (!ps.containsPair(modelName, method)) {
       Pair addPair = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair);
@@ -525,8 +628,6 @@ public class AllStructure extends ModelEnt {
       pair.addPair(addPair);
     }
 
-
-
     method = "showOne";
     if (!ps.containsPair(modelName, method)) {
       Pair showPair = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair);
@@ -535,6 +636,50 @@ public class AllStructure extends ModelEnt {
       pair.addPair(showPair);
     }
 
+    if (ModelStructure.isFileWork() == true) {
+      //создание пары
+      //метод просмотра файлов
+      method = "showAllFiles";
+      if (!ps.containsPair(modelName, method)) {
+        Pair showAllFiles = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair);
+        showAllFiles.setDef(Boolean.TRUE);
+        Sequence showSeq = SequenceObject.getInstance("default", modelName, method, modelName + ":" + method, modelName + ":" + method, null, null, null, null);;
+        showAllFiles.setSequence(showSeq);
+        pair.addPair(showAllFiles);
+      }
+      //метод добавления файлов
+      method = "addFiles";
+      if (!ps.containsPair(modelName, method)) {
+        Pair addFiles = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair);
+        Sequence showSeq = SequenceObject.getInstance("default", modelName, method, modelName + ":" + method, modelName + ":" + method, null, null, null, null);;
+        addFiles.setSequence(showSeq);
+        
+        Sequence addSeq = SequenceObject.getInstance("addFiles", modelName, method, null, modelName + ":" + method, modelName + ":search", null, null, null);;
+        addFiles.setSequence(addSeq);
+        
+        pair.addPair(addFiles);
+      }
+      
+      //метод удаления файла
+      method = "delFile";
+      if (!ps.containsPair(modelName, method)) {
+        Pair deletePair = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair);
+        deletePair.setDef(Boolean.TRUE);
+        Sequence deleteSeq = SequenceObject.getInstance("default", modelName, method, null, null, modelName + ":search", modelName + ":search", null, null);;
+        deletePair.setSequence(deleteSeq);
+        pair.addPair(deletePair);
+      }
+      //метод прочтения файла
+      method = "getFile";
+      if (!ps.containsPair(modelName, method)) {
+        Pair readFilePair = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair);
+        readFilePair.setDef(Boolean.TRUE);
+        Sequence seq = SequenceObject.getInstance("default", modelName, method, null, null, modelName + ":search", modelName + ":search", null, null);;
+        readFilePair.setSequence(seq);
+        pair.addPair(readFilePair);
+      }
+
+    }
 
     ps.SaveCollectionInFile();
     return result;
