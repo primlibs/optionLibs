@@ -75,7 +75,7 @@ public class AddStructure extends ModelEnt {
 
       String alias = (params.get("alias") != null ? params.get("alias").toString().trim() : null);
       String primaryName = (params.get("primaryName") != null ? params.get("primaryName").toString().trim() : null);
-      String fileWork = (params.get("fileWork") != null ? params.get("fileWork").toString() : "");
+      String fileWork = (params.get("fileWork") != null ? params.get("fileWork").toString() : null);
 
       ModelStructureManager manager = new ModelStructureManager(app);
       status = manager.addStructure(alias, primaryName, fileWork);
