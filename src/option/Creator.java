@@ -75,32 +75,6 @@ public final class Creator {
     return new Creator(app,object,action,specAction,innerRequest,rd);
   }
   
-  /*
-  public String run(){
-    try{
-    //маршрутизация
-    String result="";
-    Renderrable rbl= getPath(app,object,action,specAction,innerRequest,rd);
-    rbl.setParams(innerRequest);
-    //выполнение
-    rbl.run();
-    //переадресация
-    if(rbl.isRedirect()){
-      this.object=rbl.getRedirectObject();
-      this.action=rbl.getRedirectAction();
-      this.specAction=rbl.getRedirectSpecAction();
-      this.innerRequest=rbl.getRedirectParams();
-      result=run();
-    }else{
-      result=rbl.render();
-    }
-    //ответ
-    return result;
-    }catch(Exception ex){
-      return MyString.getStackExeption(ex);
-    }
-  */
-  
    public String run(){
     try{
     //маршрутизация
