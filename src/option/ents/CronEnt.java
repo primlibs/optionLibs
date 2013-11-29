@@ -70,7 +70,7 @@ public class CronEnt extends OptionAbstract {
   public Boolean run() throws Exception {
     boolean status = true;
     try{
-      CronSingleton ck = CronSingleton.getInstance(app);
+      CronSingleton ck = CronSingleton.getInstanceNew(app);
       String servName= MyString.getString(params.get("servName"));
       if(action.equals("add")&&!servName.equals("")){
         Integer coNew=ck.setCronObject();
