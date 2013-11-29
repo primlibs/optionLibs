@@ -80,7 +80,7 @@ public class CronEnt extends OptionAbstract {
       }else if(action.equals("delete")&&!servName.equals("")){
         for(CronObject co:ck.getCronlist()){
           if(co.getServiceName().equals(servName)){
-            ck.getCronlist().remove(ck);
+            ck.getCronlist().remove(co);
           }
         }
         ck.SaveCollectionInFile();
