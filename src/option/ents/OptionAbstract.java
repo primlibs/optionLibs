@@ -98,6 +98,10 @@ public abstract class OptionAbstract implements Renderrable{
     return PairEnt.getInstance(app, rd, action, specAction);
   }
   
+  public static Renderrable getCron(AbstractApplication app,Render rd,String action,String specAction){
+    return CronEnt.getInstance(app, rd, action, specAction);
+  }
+  
   
   public Boolean setRedirect(String object,String action,String specAction){
     if(MyString.NotNull(object)){

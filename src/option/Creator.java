@@ -35,6 +35,7 @@ public final class Creator {
   public static final String CONTROLLER_OBJECT_NAME="controllerEnt";
   public static final String PAIR_OBJECT_NAME="pairEnt";
   public static final String MODEL_OBJECT_NAME="modelEnt";
+  public static final String CRON_OBJECT_NAME="cronEnt";
 
   public Boolean isRedirect() {
     return redirect;
@@ -75,32 +76,6 @@ public final class Creator {
     return new Creator(app,object,action,specAction,innerRequest,rd);
   }
   
-  /*
-  public String run(){
-    try{
-    //маршрутизация
-    String result="";
-    Renderrable rbl= getPath(app,object,action,specAction,innerRequest,rd);
-    rbl.setParams(innerRequest);
-    //выполнение
-    rbl.run();
-    //переадресация
-    if(rbl.isRedirect()){
-      this.object=rbl.getRedirectObject();
-      this.action=rbl.getRedirectAction();
-      this.specAction=rbl.getRedirectSpecAction();
-      this.innerRequest=rbl.getRedirectParams();
-      result=run();
-    }else{
-      result=rbl.render();
-    }
-    //ответ
-    return result;
-    }catch(Exception ex){
-      return MyString.getStackExeption(ex);
-    }
-  */
-  
    public String run(){
     try{
     //маршрутизация
@@ -139,6 +114,8 @@ public final class Creator {
       return OptionAbstract.getPair(app, rd,action,specAction);
     }else if(object.equals(CONTROLLER_OBJECT_NAME)){
       return OptionAbstract.getController(app, rd,action,specAction);
+    }else if(object.equals(CRON_OBJECT_NAME)){
+      return OptionAbstract.getCron(app, rd,action,specAction);
     }else{
       return OptionAbstract.getOption(app, rd,action,specAction);
     }
