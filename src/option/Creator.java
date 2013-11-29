@@ -35,6 +35,7 @@ public final class Creator {
   public static final String CONTROLLER_OBJECT_NAME="controllerEnt";
   public static final String PAIR_OBJECT_NAME="pairEnt";
   public static final String MODEL_OBJECT_NAME="modelEnt";
+  public static final String CRON_OBJECT_NAME="cronEnt";
 
   public Boolean isRedirect() {
     return redirect;
@@ -113,6 +114,8 @@ public final class Creator {
       return OptionAbstract.getPair(app, rd,action,specAction);
     }else if(object.equals(CONTROLLER_OBJECT_NAME)){
       return OptionAbstract.getController(app, rd,action,specAction);
+    }else if(object.equals(CRON_OBJECT_NAME)){
+      return OptionAbstract.getCron(app, rd,action,specAction);
     }else{
       return OptionAbstract.getOption(app, rd,action,specAction);
     }
