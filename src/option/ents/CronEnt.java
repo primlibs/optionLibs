@@ -24,6 +24,7 @@ import prim.AbstractApplication;
 import prim.libs.MyString;
 import prim.libs.primXml;
 import prim.service.ServiceFactory;
+import warehouse.OptionsKeeper;
 import warehouse.WarehouseSingleton;
 import warehouse.controllerStructure.ControllerKeeper;
 import warehouse.controllerStructure.ControllerMethod;
@@ -70,15 +71,28 @@ public class CronEnt extends OptionAbstract {
     boolean status = true;
     try{
       CronSingleton ck = CronSingleton.getInstance(app);
-      if(action.equals("add")){
-        
-      }else if(action.equals("delete")){
-        
+      String servName= MyString.getString(params.get("servName"));
+      if(action.equals("add")&&!servName.equals("")){
+        Integer coNew=ck.setCronObject();
+        CronObject cobj=ck.getCronObject(coNew);
+        cobj.setServiceName(servName);
+        ck.SaveCollectionInFile();
+      }else if(action.equals("delete")&&!servName.equals("")){
+        for(CronObject co:ck.getCronlist()){
+          if(co.getServiceName().equals(servName)){
+            ck.getCronlist().remove(ck);
+          }
+        }
+        ck.SaveCollectionInFile();
       }
       AbsEnt date=rd.table("","",null);
-      
+      Map<AbsEnt,String> mp1=new HashMap();
+      mp1.put(rd.combo(getServiceMap(),null, "servName"), "");
+      rd.tr(date, rd.rightForm(true, object, "add", null, mp1, "Добавить", rd.getRenderConstant().ADD_IMGPH, false));
       for(CronObject co:ck.getCronlist()){
-        rd.tr(date, co.getServiceName());
+        Map<AbsEnt,String> mp=new HashMap();
+        mp.put(rd.hiddenInput("servName", co.getServiceName()), "");
+        rd.tr(date, co.getServiceName(),rd.rightForm(true, object, "delete", null, mp, "Удалить", rd.getRenderConstant().DEL_IMGPH, false));
       }      
       str+=date.render();
     } catch (Exception e) {
@@ -87,4 +101,57 @@ public class CronEnt extends OptionAbstract {
     return status;
   }
 
+    // методы получения данных ---------------------------------------------------------------------------------------------------------
+  /**
+   * получить список сервисов. Формат массива: ключи - имя сервиса : имя метода.
+   * Значения - то же самое
+   *
+   * @return
+   * @throws Exception
+   */
+  private LinkedHashMap<String, Object> getServiceMap() throws Exception {
+    HashMap<String, ArrayList<String>> hs = new HashMap<String, ArrayList<String>>();
+
+    Collection<String> classes;
+    OptionsKeeper os = app.getKeeper().getOptionKeeper();
+    classes = ServiceFactory.scan(os.getBiPath());
+    for (String clName : classes) {
+      Class cls = Class.forName("bi." + clName);
+      ArrayList<String> al = new ArrayList<String>();
+      hs.put(clName, al);
+      Method[] m = cls.getMethods();
+      for (Method mm : m) {
+        al.add(mm.getName());
+      }
+    }
+
+    ArrayList<String> checkList = new ArrayList<String>();
+    checkList.add("wait");
+    checkList.add("setRequest");
+    checkList.add("getConnection");
+    checkList.add("toString");
+    checkList.add("equals");
+    checkList.add("hashCode");
+    checkList.add("getClass");
+    checkList.add("notify");
+    checkList.add("notifyAll");
+    checkList.add("setStructure");
+    checkList.add("getActionResult");
+    checkList.add("setConnection");
+    checkList.add("setField");
+    checkList.add("setAuthorizedUserId");
+    checkList.add("setRightsObject");
+    checkList.add("getActionResult");
+
+    LinkedHashMap<String, Object> map = new LinkedHashMap<String, Object>();
+    for (String str : hs.keySet()) {
+      for (String str2 : hs.get(str)) {
+        if (!checkList.contains(str2)) {
+          map.put(str + ":" + str2, str + ":" + str2);
+        }
+      }
+    }
+    return map;
+  }
+  
 }
