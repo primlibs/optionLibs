@@ -730,7 +730,8 @@ public class PairEnt extends OptionAbstract {
       str += "</div>";
     }
 
-    for (String seqName : pair.getSequenceClone().keySet()) {
+    TreeMap<String, Sequence> seqMap = new TreeMap(pair.getSequenceClone());
+    for (String seqName : seqMap.keySet()) {
       if (!seqName.equals("default")) {
         Sequence seq = pair.getSequenceClone().get(seqName);
         str += "<div class='seq_one'>";
