@@ -175,8 +175,8 @@ public class AllStructure extends ModelEnt {
         Map<String, Object> oneStructureParams = new HashMap();
         oneStructureParams.put("structureAlias", name);
         content += "<tr><td>" + href(Creator.MODEL_OBJECT_NAME, "OneStructure", "", name, oneStructureParams) + "</td><td>";
-
-        AbsEnt form = rd.form("./AllStructure?action=modulate");
+        rd.setBaseLinkPath(rd.getBaseLinkPath()+"./AllStructure?action=modulate");
+        AbsEnt form = rd.form(false);
         form.addEnt(rd.formSubmit("Смоделировать приложение", "images/refresh.png"));
         form.addEnt(rd.hiddenInput("modelName", name));
         form.setAttribute(EnumAttrType.action, "");
