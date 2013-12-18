@@ -71,15 +71,15 @@ public class CronEnt extends OptionAbstract {
     boolean status = true;
     try{
       CronSingleton ck = CronSingleton.getInstanceNew(app);
-      String servName= MyString.getString(params.get("servName"));
-      if(action.equals("add")&&!servName.equals("")){
+      String cntName= MyString.getString(params.get("cntName"));
+      if(action.equals("add")&&!cntName.equals("")){
         Integer coNew=ck.setCronObject();
         CronObject cobj=ck.getCronObject(coNew);
-        cobj.setServiceName(servName);
+        cobj.setServiceName(cntName);
         ck.SaveCollectionInFile();
-      }else if(action.equals("delete")&&!servName.equals("")){
+      }else if(action.equals("delete")&&!cntName.equals("")){
         for(CronObject co:ck.getCronlist()){
-          if(co.getServiceName().equals(servName)){
+          if(co.getServiceName().equals(cntName)){
             ck.getCronlist().remove(co);
           }
         }
@@ -87,11 +87,11 @@ public class CronEnt extends OptionAbstract {
       }
       AbsEnt date=rd.table("","",null);
       Map<AbsEnt,String> mp1=new HashMap();
-      mp1.put(rd.combo(getServiceMap(),null, "servName"), "");
+      mp1.put(rd.combo(getControllers(),null, "cntName"), "");
       rd.tr(date, rd.rightForm(true, object, "add", null, mp1, "Добавить", rd.getRenderConstant().ADD_IMGPH, false));
       for(CronObject co:ck.getCronlist()){
         Map<AbsEnt,String> mp=new HashMap();
-        mp.put(rd.hiddenInput("servName", co.getServiceName()), "");
+        mp.put(rd.hiddenInput("cntName", co.getServiceName()), "");
         rd.tr(date, co.getServiceName(),rd.rightForm(true, object, "delete", null, mp, "Удалить", rd.getRenderConstant().DEL_IMGPH, false));
       }      
       str+=date.render();
@@ -109,6 +109,7 @@ public class CronEnt extends OptionAbstract {
    * @return
    * @throws Exception
    */
+  /*
   private LinkedHashMap<String, Object> getServiceMap() throws Exception {
     HashMap<String, ArrayList<String>> hs = new HashMap<String, ArrayList<String>>();
 
@@ -148,6 +149,23 @@ public class CronEnt extends OptionAbstract {
       for (String str2 : hs.get(str)) {
         if (!checkList.contains(str2)) {
           map.put(str + ":" + str2, str + ":" + str2);
+        }
+      }
+    }
+    return map;
+  }
+  */
+  
+  private TreeMap<String, Object> getControllers() throws Exception {
+    TreeMap<String, Object> map = new TreeMap();
+    ControllerKeeper cs = app.getKeeper().getControllerKeeper();
+
+    for (String controllerName : cs.getControllers().keySet()) {
+      StructureController clr = cs.getControllers().get(controllerName);
+      if (params.get("pairObject") != null && controllerName.equals(params.get("pairObject").toString())) {
+        for (String methodName : clr.getControllersMethods().keySet()) {
+          String controllerMethod = controllerName + ":" + methodName;
+          map.put(controllerMethod, controllerMethod);
         }
       }
     }
