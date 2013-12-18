@@ -9,7 +9,9 @@ import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,11 +81,21 @@ public class CronEnt extends OptionAbstract {
         ck.SaveCollectionInFile();
       // удаление контроллера
       } else if (action.equals("delete") && !cntName.equals("")) {
-        for (CronObject co : ck.getCronlist()) {
+        List<CronObject> cronList = Collections.synchronizedList(ck.getCronlist());
+        Iterator<CronObject> iter = cronList.iterator();
+        while (iter.hasNext()) {
+          CronObject co = iter.next();
+          if (co.getServiceName().equals(cntName)) {
+            iter.remove();
+          }
+        }
+        /*
+        for (CronObject co : cronList) {
           if (co.getServiceName().equals(cntName)) {
             ck.getCronlist().remove(co);
           }
         }
+        */
         ck.SaveCollectionInFile();
       }
       AbsEnt date = rd.table("", "", null);
