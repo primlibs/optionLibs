@@ -71,11 +71,13 @@ public class CronEnt extends OptionAbstract {
     try {
       CronSingleton ck = CronSingleton.getInstanceNew(app);
       String cntName = MyString.getString(params.get("cntName"));
+      // добавлени контроллера
       if (action.equals("add") && !cntName.equals("")) {
         Integer coNew = ck.setCronObject();
         CronObject cobj = ck.getCronObject(coNew);
         cobj.setServiceName(cntName);
         ck.SaveCollectionInFile();
+      // удаление контроллера
       } else if (action.equals("delete") && !cntName.equals("")) {
         for (CronObject co : ck.getCronlist()) {
           if (co.getServiceName().equals(cntName)) {
@@ -95,7 +97,7 @@ public class CronEnt extends OptionAbstract {
       }
       str += date.render();
     } catch (Exception e) {
-      MyString.getStackExeption(e);
+      str += MyString.getStackExeption(e);
     }
     return status;
   }
