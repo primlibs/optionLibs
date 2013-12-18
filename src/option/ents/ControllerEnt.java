@@ -509,6 +509,9 @@ public class ControllerEnt extends OptionAbstract {
         for (String Name : map.keySet()) {
           str += (showLink(Name));
         }
+      // вывод списка методов в контроллере
+        
+      // вывод одного метода
       } else {
         // вывод одного контроллера
         str += href(object, action, "", "Перейти к общему списку", new HashMap()) + "</br></br>";
@@ -641,7 +644,8 @@ public class ControllerEnt extends OptionAbstract {
         }
         str += ("</div>");
         str += ("</div>");
-      }
+      } 
+      
 
       str += (ck.getErrors());
 

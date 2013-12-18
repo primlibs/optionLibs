@@ -664,7 +664,6 @@ public class AllStructure extends ModelEnt {
       method = "delFile";
       if (!ps.containsPair(modelName, method)) {
         Pair deletePair = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair);
-        deletePair.setDef(Boolean.TRUE);
         Sequence deleteSeq = SequenceObject.getInstance("default", modelName, method, null, null, modelName + ":search", modelName + ":search", null, null);;
         deletePair.setSequence(deleteSeq);
         pair.addPair(deletePair);
@@ -673,7 +672,6 @@ public class AllStructure extends ModelEnt {
       method = "getFile";
       if (!ps.containsPair(modelName, method)) {
         Pair readFilePair = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair);
-        readFilePair.setDef(Boolean.TRUE);
         Sequence seq = SequenceObject.getInstance("default", modelName, method, null, null, modelName + ":search", modelName + ":search", null, null);;
         readFilePair.setSequence(seq);
         pair.addPair(readFilePair);

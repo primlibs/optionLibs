@@ -48,7 +48,6 @@ public class CronEnt extends OptionAbstract {
 
   private String str = "";
 
-
   private CronEnt(AbstractApplication app, Render rd, String action, String specAction) {
     this.object = "cronEnt";
     setApplication(app);
@@ -69,39 +68,39 @@ public class CronEnt extends OptionAbstract {
   @Override
   public Boolean run() throws Exception {
     boolean status = true;
-    try{
+    try {
       CronSingleton ck = CronSingleton.getInstanceNew(app);
-      String servName= MyString.getString(params.get("servName"));
-      if(action.equals("add")&&!servName.equals("")){
-        Integer coNew=ck.setCronObject();
-        CronObject cobj=ck.getCronObject(coNew);
-        cobj.setServiceName(servName);
+      String cntName = MyString.getString(params.get("cntName"));
+      if (action.equals("add") && !cntName.equals("")) {
+        Integer coNew = ck.setCronObject();
+        CronObject cobj = ck.getCronObject(coNew);
+        cobj.setServiceName(cntName);
         ck.SaveCollectionInFile();
-      }else if(action.equals("delete")&&!servName.equals("")){
-        for(CronObject co:ck.getCronlist()){
-          if(co.getServiceName().equals(servName)){
+      } else if (action.equals("delete") && !cntName.equals("")) {
+        for (CronObject co : ck.getCronlist()) {
+          if (co.getServiceName().equals(cntName)) {
             ck.getCronlist().remove(co);
           }
         }
         ck.SaveCollectionInFile();
       }
-      AbsEnt date=rd.table("","",null);
-      Map<AbsEnt,String> mp1=new HashMap();
-      mp1.put(rd.combo(getServiceMap(),null, "servName"), "");
-      rd.tr(date, rd.rightForm(true, object, "add", null, mp1, "Добавить", rd.getRenderConstant().ADD_IMGPH, false));
-      for(CronObject co:ck.getCronlist()){
-        Map<AbsEnt,String> mp=new HashMap();
-        mp.put(rd.hiddenInput("servName", co.getServiceName()), "");
-        rd.tr(date, co.getServiceName(),rd.rightForm(true, object, "delete", null, mp, "Удалить", rd.getRenderConstant().DEL_IMGPH, false));
-      }      
-      str+=date.render();
+      AbsEnt date = rd.table("", "", null);
+      Map<AbsEnt, String> mp1 = new HashMap();
+      mp1.put(rd.combo(getControllers(), null, "cntName"), "");
+      rd.tr(date, rd.rightForm(true, object, "add", null, mp1, "Добавить", rd.getRenderConstant().ADD_IMGPH, false).setAttribute(EnumAttrType.action, ""));
+      for (CronObject co : ck.getCronlist()) {
+        Map<AbsEnt, String> mp = new HashMap();
+        mp.put(rd.hiddenInput("cntName", co.getServiceName()), "");
+        rd.tr(date, co.getServiceName(), rd.rightForm(true, object, "delete", null, mp, "Удалить", rd.getRenderConstant().DEL_IMGPH, false).setAttribute(EnumAttrType.action, ""));
+      }
+      str += date.render();
     } catch (Exception e) {
       MyString.getStackExeption(e);
     }
     return status;
   }
 
-    // методы получения данных ---------------------------------------------------------------------------------------------------------
+  // методы получения данных ---------------------------------------------------------------------------------------------------------
   /**
    * получить список сервисов. Формат массива: ключи - имя сервиса : имя метода.
    * Значения - то же самое
@@ -109,49 +108,63 @@ public class CronEnt extends OptionAbstract {
    * @return
    * @throws Exception
    */
-  private LinkedHashMap<String, Object> getServiceMap() throws Exception {
-    HashMap<String, ArrayList<String>> hs = new HashMap<String, ArrayList<String>>();
+  /*
+   private LinkedHashMap<String, Object> getServiceMap() throws Exception {
+   HashMap<String, ArrayList<String>> hs = new HashMap<String, ArrayList<String>>();
 
-    Collection<String> classes;
-    OptionsKeeper os = app.getKeeper().getOptionKeeper();
-    classes = ServiceFactory.scan(os.getBiPath());
-    for (String clName : classes) {
-      Class cls = Class.forName("bi." + clName);
-      ArrayList<String> al = new ArrayList<String>();
-      hs.put(clName, al);
-      Method[] m = cls.getMethods();
-      for (Method mm : m) {
-        al.add(mm.getName());
-      }
-    }
+   Collection<String> classes;
+   OptionsKeeper os = app.getKeeper().getOptionKeeper();
+   classes = ServiceFactory.scan(os.getBiPath());
+   for (String clName : classes) {
+   Class cls = Class.forName("bi." + clName);
+   ArrayList<String> al = new ArrayList<String>();
+   hs.put(clName, al);
+   Method[] m = cls.getMethods();
+   for (Method mm : m) {
+   al.add(mm.getName());
+   }
+   }
 
-    ArrayList<String> checkList = new ArrayList<String>();
-    checkList.add("wait");
-    checkList.add("setRequest");
-    checkList.add("getConnection");
-    checkList.add("toString");
-    checkList.add("equals");
-    checkList.add("hashCode");
-    checkList.add("getClass");
-    checkList.add("notify");
-    checkList.add("notifyAll");
-    checkList.add("setStructure");
-    checkList.add("getActionResult");
-    checkList.add("setConnection");
-    checkList.add("setField");
-    checkList.add("setAuthorizedUserId");
-    checkList.add("setRightsObject");
-    checkList.add("getActionResult");
+   ArrayList<String> checkList = new ArrayList<String>();
+   checkList.add("wait");
+   checkList.add("setRequest");
+   checkList.add("getConnection");
+   checkList.add("toString");
+   checkList.add("equals");
+   checkList.add("hashCode");
+   checkList.add("getClass");
+   checkList.add("notify");
+   checkList.add("notifyAll");
+   checkList.add("setStructure");
+   checkList.add("getActionResult");
+   checkList.add("setConnection");
+   checkList.add("setField");
+   checkList.add("setAuthorizedUserId");
+   checkList.add("setRightsObject");
+   checkList.add("getActionResult");
 
-    LinkedHashMap<String, Object> map = new LinkedHashMap<String, Object>();
-    for (String str : hs.keySet()) {
-      for (String str2 : hs.get(str)) {
-        if (!checkList.contains(str2)) {
-          map.put(str + ":" + str2, str + ":" + str2);
-        }
+   LinkedHashMap<String, Object> map = new LinkedHashMap<String, Object>();
+   for (String str : hs.keySet()) {
+   for (String str2 : hs.get(str)) {
+   if (!checkList.contains(str2)) {
+   map.put(str + ":" + str2, str + ":" + str2);
+   }
+   }
+   }
+   return map;
+   }
+   */
+  private TreeMap<String, Object> getControllers() throws Exception {
+    TreeMap<String, Object> map = new TreeMap();
+    ControllerKeeper cs = app.getKeeper().getControllerKeeper();
+
+    for (String controllerName : cs.getControllers().keySet()) {
+      StructureController clr = cs.getControllers().get(controllerName);
+      for (String methodName : clr.getControllersMethods().keySet()) {
+        String controllerMethod = controllerName + ":" + methodName;
+        map.put(controllerMethod, controllerMethod);
       }
     }
     return map;
   }
-  
 }

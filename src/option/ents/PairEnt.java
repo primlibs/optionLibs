@@ -26,8 +26,6 @@ import prim.libs.primXml;
 import prim.service.ServiceFactory;
 import warehouse.WarehouseSingleton;
 import warehouse.controllerStructure.ControllerKeeper;
-import warehouse.controllerStructure.ControllerMethod;
-import warehouse.controllerStructure.ControllerService;
 import warehouse.controllerStructure.StructureController;
 import warehouse.pair.PairKeeper;
 import web.Render;
@@ -683,7 +681,7 @@ public class PairEnt extends OptionAbstract {
     str += "</tr></table>";
     str += "</div>";
 
-
+    // определяем, показывать ли пару в развернутом виде
     String display = "";
     if (activePairs.contains(pair)) {
       display = "";
@@ -691,6 +689,16 @@ public class PairEnt extends OptionAbstract {
       display = "style='display:none;'";
     }
 
+    // определяем, показывать ли sequence в развернутом виде
+    String displaySeq = "";
+    if (params.get("objectName") != null && params.get("actionName") != null && params.get("objectName").toString().equals(object)
+            && params.get("actionName").toString().equals(action) && params.get("seq") != null) {
+      displaySeq = "";
+      display = "";
+    } else {
+      displaySeq = "style='display:none;'";
+    }
+    
     // основной вывод пары
     str += "<div class='pair_show' id='pair_show" + fullName + "' " + display + "'>";
 
@@ -701,15 +709,6 @@ public class PairEnt extends OptionAbstract {
     str += "<div class='seq_head'>";
     str += "<font class='display_link' onclick=\"hide('seq_show" + fullName + "');\">[Показать SEQUENCE]</font>";
     str += "</div>";
-
-    String displaySeq = "";
-
-    if (params.get("objectName") != null && params.get("actionName") != null && params.get("objectName").toString().equals(object)
-            && params.get("actionName").toString().equals(action) && params.get("seq") != null) {
-      displaySeq = "";
-    } else {
-      displaySeq = "style='display:none;'";
-    }
 
     // основная часть sequence
     str += "<div class='seq_show' id='seq_show" + fullName + "' " + displaySeq + " >";
@@ -730,7 +729,8 @@ public class PairEnt extends OptionAbstract {
       str += "</div>";
     }
 
-    for (String seqName : pair.getSequenceClone().keySet()) {
+    TreeMap<String, Sequence> seqMap = new TreeMap(pair.getSequenceClone());
+    for (String seqName : seqMap.keySet()) {
       if (!seqName.equals("default")) {
         Sequence seq = pair.getSequenceClone().get(seqName);
         str += "<div class='seq_one'>";
