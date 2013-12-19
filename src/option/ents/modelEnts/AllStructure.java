@@ -175,10 +175,12 @@ public class AllStructure extends ModelEnt {
         Map<String, Object> oneStructureParams = new HashMap();
         oneStructureParams.put("structureAlias", name);
         content += "<tr><td>" + href(Creator.MODEL_OBJECT_NAME, "OneStructure", "", name, oneStructureParams) + "</td><td>";
-        rd.setBaseLinkPath(rd.getBaseLinkPath()+"./AllStructure?action=modulate");
         AbsEnt form = rd.form(false);
         form.addEnt(rd.formSubmit("Смоделировать приложение", "images/refresh.png"));
         form.addEnt(rd.hiddenInput("modelName", name));
+        form.addEnt(rd.hiddenInput("object", object));
+        form.addEnt(rd.hiddenInput("action", action));
+        form.addEnt(rd.hiddenInput("specAction", "modulate"));
         form.setAttribute(EnumAttrType.action, "");
         content += form.render();
         content += "</td></tr>";
