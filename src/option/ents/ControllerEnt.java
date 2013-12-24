@@ -487,6 +487,7 @@ public class ControllerEnt extends OptionAbstract {
       }
 
       String name = params.get("name") != null ? params.get("name").toString() : null;
+      String methodName = params.get("methodName") != null ? params.get("methodName").toString() : null;
 
       String title = "Servlet Controller";
       if (name != null) {
@@ -509,10 +510,9 @@ public class ControllerEnt extends OptionAbstract {
         for (String Name : map.keySet()) {
           str += (showLink(Name));
         }
-      // вывод списка методов в контроллере
-        
-      // вывод одного метода
-      } else {
+        // вывод списка методов в контроллере
+
+      } else if (name != null && methodName == null) {
         // вывод одного контроллера
         str += href(object, action, "", "Перейти к общему списку", new HashMap()) + "</br></br>";
         StructureController cr = ck.getController(name);
@@ -533,10 +533,162 @@ public class ControllerEnt extends OptionAbstract {
         str += ("<div class=controller_body id=" + name + "1 " + dispCnt + ">");
         str += (getAddMethodForm(name));
         str += ("<div class=controllerMethods>");
-        
+
         TreeMap<String, ControllerMethod> methodsMap = new TreeMap(ck.getControllers().get(name).getControllersMethods());
         // вывод методов
-        for (String action: methodsMap.keySet()) {
+        for (String method : methodsMap.keySet()) {
+          Map<String, Object> methodParams = new HashMap();
+          methodParams.put("name", name);
+          methodParams.put("methodName", method);
+          String href = href(object, action, "", method, methodParams) + "</br>";
+          str += href;
+        }
+      } else if (name != null && methodName != null) {
+        str += href(object, action, "", "Перейти к общему списку", new HashMap()) + "</br></br>";
+        str += "<h2>Контроллер:" + name + ", метод:" + methodName + "</h2>";
+
+        Map<String, Object> linkParams = new HashMap();
+   
+        // вывод метода
+        TreeMap<String, ControllerMethod> methodsMap = new TreeMap(ck.getControllers().get(name).getControllersMethods());
+        for (String action : methodsMap.keySet()) {
+          if (action.equals(methodName)) {
+            ControllerMethod cm = methodsMap.get(action);
+            str += ("<div class=controllerMethodAll>");
+            str += ("<div class=controllerMethod>");
+
+            linkParams = new HashMap();
+            linkParams.put("cName", name);
+            linkParams.put("cAction", action);
+            linkParams.put("deleteMeth", "1");
+
+            str += ("<div style='float:left;'>" + changeMethodForm(name, action, cm.getAlias(), cm.getDescription(), cm.getHidden()) + "</div><div style='float:left;'> " + href(object, action, "", "Удалить", linkParams, "", "onclick=\"return confirmDelete();\"") + "<font color=brown onclick=\"hide('" + name + action + "1');\" >Отображение</font></div>");
+            str += ("</br>");
+            str += ("<div style='clear:both;'>" + getAddServiceForm(name, action) + "</div>");
+            str += ("</div>");
+            String dispServ;
+            if (cName != null && cAction != null && name.equals(cName) && action.equals(cAction)) {
+              dispServ = "";
+            } else {
+              dispServ = "style=\"display:none;\"";
+            }
+
+            str += ("<div class=controllerServices id=" + name + action + "1 " + dispServ + ">");
+            for (ControllerService clS : cm.getServiceList()) {
+              str += ("<div class=controllerService>");
+              str += ("<div class=service>");
+              str += (changeServiceAction(clS.getServiceName(), clS.getServiceAction(), name, action, cm.getServiceList().indexOf(clS)));
+              str += ("</br>");
+              linkParams = new HashMap();
+              linkParams.put("cName", name);
+              linkParams.put("cAction", action);
+              linkParams.put("servIndex", cm.getServiceList().indexOf(clS));
+              linkParams.put("delServMeth", "1");
+              str += href(object, action, "", "Удалить", linkParams, "", "onclick=\"return confirmDelete();\"");
+
+              linkParams = new HashMap();
+              linkParams.put("cName", name);
+              linkParams.put("cAction", action);
+              linkParams.put("servIndex", cm.getServiceList().indexOf(clS));
+              linkParams.put("upServMeth", "1");
+              str += href(object, action, "", "Поднять", linkParams);
+
+
+              linkParams = new HashMap();
+              linkParams.put("cName", name);
+              linkParams.put("cAction", action);
+              linkParams.put("servIndex", cm.getServiceList().indexOf(clS));
+              linkParams.put("downServMeth", "1");
+              str += href(object, action, "", "Опустить", linkParams);
+
+              str += ("</div>");
+              str += ("<div class=params>");
+              str += ("<div class=innerParams>");
+              str += ("Параметры на входе:");
+              str += ("<table>");
+              str += ("<tr><td>Имя</td><td>Алиас</td><td>Источник</td><td>Действие</td></tr>");
+              for (String innerName : clS.getInnerParams().keySet()) {
+                str += ("<tr>");
+                str += ("<td>" + innerName + "</td>");
+                str += ("<td>" + clS.getInnerParams().get(innerName).getAlias() + "</td>");
+                str += ("<td>" + changeSourseInner(name, action, cm.getServiceList().indexOf(clS), innerName, clS.getInnerParams().get(innerName).getOrigin()) + "</td>");
+                str += ("<td>");
+
+                linkParams = new HashMap();
+                linkParams.put("cName", name);
+                linkParams.put("cAction", action);
+                linkParams.put("servIndex", cm.getServiceList().indexOf(clS));
+                linkParams.put("paramName", innerName);
+                linkParams.put("delInnerParam", "1");
+                str += href(object, action, "", "Удалить", linkParams, "", "onclick=\"return confirmDelete();\"");
+                str += ("</td>");
+                str += ("</tr>");
+              }
+              str += ("</table>");
+              str += (getAddInnerParamsForm(name, action, cm.getServiceList().indexOf(clS)));
+              str += ("</div>");
+              str += ("<div class=outerParams>");
+              str += ("Параметры на выходе:");
+              str += ("<table>");
+              str += ("<tr><td>Имя</td><td>Алиас</td><td>Источник</td><td>Действие</td></tr>");
+              for (String outerName : clS.getOuterParams().keySet()) {
+                str += ("<tr>");
+                str += ("<td>" + outerName + "</td>");
+                str += ("<td>" + clS.getOuterParams().get(outerName).getAlias() + "</td>");
+                str += ("<td>" + changeSourseOuter(name, action, cm.getServiceList().indexOf(clS), outerName, clS.getOuterParams().get(outerName).getOrigin()) + "</td>");
+                str += ("<td>");
+
+                linkParams = new HashMap();
+                linkParams.put("cName", name);
+                linkParams.put("cAction", action);
+                linkParams.put("servIndex", cm.getServiceList().indexOf(clS));
+                linkParams.put("paramName", outerName);
+                linkParams.put("delOuterParam", "1");
+                str += href(object, action, "", "Удалить", linkParams, "", "onclick=\"return confirmDelete();\"");
+
+                str += ("</td>");
+                str += ("</tr>");
+              }
+              str += ("</table>");
+              str += (getAddOuterParamsForm(name, action, cm.getServiceList().indexOf(clS)));
+              str += ("</div>");
+              str += ("</div>");
+              str += ("</div>");
+            }
+            str += ("</div>");
+            str += ("</div>");
+          }
+        }
+
+      } 
+      
+      // вывод одного метода
+      /*
+      else {
+        // вывод одного контроллера
+        str += href(object, action, "", "Перейти к общему списку", new HashMap()) + "</br></br>";
+        StructureController cr = ck.getController(name);
+        str += ("<div class=controller_head id=" + name + " > ");
+
+        Map<String, Object> linkParams = new HashMap();
+        linkParams.put("cName", name);
+        linkParams.put("deleteCntrl", "1");
+        str += ("<div style='float:left;'>" + changeControllerForm(name, cr.getAlias(), cr.getDescription()) + "</div><div style='float:left;'>" + href(object, action, "", "Удалить", linkParams, "", "onclick=\"return confirmDelete();\"") + "<font color=brown onclick=\"hide('" + name + "1');\" >Отображение</font></div>");
+        str += ("</br>");
+        str += ("</div>");
+        String dispCnt;
+        if (cName != null && name.equals(cName)) {
+          dispCnt = "";
+        } else {
+          dispCnt = "style=\"display:none;\"";
+        }
+        str += ("<div class=controller_body id=" + name + "1 " + dispCnt + ">");
+        str += (getAddMethodForm(name));
+        str += ("<div class=controllerMethods>");
+
+        TreeMap<String, ControllerMethod> methodsMap = new TreeMap(ck.getControllers().get(name).getControllersMethods());
+        // вывод методов
+        for (String action : methodsMap.keySet()) {
           ControllerMethod cm = methodsMap.get(action);
           str += ("<div class=controllerMethodAll>");
           str += ("<div class=controllerMethod>");
@@ -644,8 +796,8 @@ public class ControllerEnt extends OptionAbstract {
         }
         str += ("</div>");
         str += ("</div>");
-      } 
-      
+      }
+      */
 
       str += (ck.getErrors());
 
@@ -775,7 +927,7 @@ public class ControllerEnt extends OptionAbstract {
                 }
                 ck.saveController(controllerName);
               }
-              
+
             }
             refreshWarehouseSingleton();
           }
