@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import option.Creator;
 import option.objects.PairController;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -25,6 +26,7 @@ import org.w3c.dom.NodeList;
 import prim.AbstractApplication;
 import prim.libs.MyString;
 import prim.libs.primXml;
+import prim.model.FileExecutor;
 import prim.service.ServiceFactory;
 import warehouse.OptionsKeeper;
 import warehouse.WarehouseSingleton;
@@ -52,7 +54,7 @@ public class DumpEnt extends OptionAbstract {
     private String str = "";
 
     private DumpEnt(AbstractApplication app, Render rd, String action, String specAction) {
-        this.object = "dumpEnt";
+        this.object = Creator.DUMP_OBJECT_NAME;
         setApplication(app);
         setRender(rd);
         this.action = MyString.getString(action);
@@ -72,6 +74,13 @@ public class DumpEnt extends OptionAbstract {
     public Boolean run() throws Exception {
         boolean status = true;
         if (action.equals("getFile")) {
+            if(MyString.NotNull(params.get("fileName"))){
+                File fl = new File(app.getDumpPath() + "/" + params.get("fileName"));
+                if(fl.exists()){
+                    FileExecutor fe=new FileExecutor(fl);
+                    fileContent = fe.readBytes();
+                }
+            } 
         } else {
             String dumpPth = app.getDumpPath();
             String list[] = new File(dumpPth).list();
