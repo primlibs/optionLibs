@@ -74,15 +74,27 @@ public class DumpEnt extends OptionAbstract {
     public Boolean run() throws Exception {
         boolean status = true;
         if (action.equals("getFile")) {
-            if(MyString.NotNull(params.get("fileName"))){
+            if (MyString.NotNull(params.get("fileName"))) {
                 File fl = new File(app.getDumpPath() + "/" + params.get("fileName"));
-                if(fl.exists()){
-                    FileExecutor fe=new FileExecutor(fl);
+                if (fl.exists()) {
+                    FileExecutor fe = new FileExecutor(fl);
                     fileContent = fe.readBytes();
                     fileName = MyString.getString(params.get("fileName"));
                 }
-            } 
+            }
+        } else if (action.equals("getLastDump")) {
+            
         } else {
+
+            Map<String, Object> mp1 = new HashMap<String, Object>();
+            HrefOptionInterface ho1 = rd.getHrefOption();
+            ho1.setObject(object);
+            ho1.setAction("getLastDump");
+            ho1.setNoValidateRights();
+            ho1.setName("Получить последний дамп");
+            AbsEnt hr1 = rd.href(new HashMap(), ho1);
+            str += hr1.render();
+
             String dumpPth = app.getDumpPath();
             String list[] = new File(dumpPth).list();
             AbsEnt table = rd.table("", "", "");
