@@ -79,6 +79,7 @@ public class DumpEnt extends OptionAbstract {
                 if(fl.exists()){
                     FileExecutor fe=new FileExecutor(fl);
                     fileContent = fe.readBytes();
+                    fileName = MyString.getString(params.get("fileName"));
                 }
             } 
         } else {
@@ -98,6 +99,7 @@ public class DumpEnt extends OptionAbstract {
                     ho.setTitle("Скачать");
                     ho.setNoValidateRights();
                     mp.put("fileName", list[i]);
+                    mp.put("getFile", "1");
                     AbsEnt hr = rd.href(mp, ho);
                     rd.tr(table, hr);
                 }
