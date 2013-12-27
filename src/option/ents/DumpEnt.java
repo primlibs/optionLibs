@@ -76,11 +76,21 @@ public class DumpEnt extends OptionAbstract {
             String dumpPth=app.getDumpPath();
             String list[] = new File(dumpPth).list();
             AbsEnt table=rd.table("", "", "");
-            
+            table.setId("dumptb");
+            rd.trTh(table, "Название");
             for (int i = 0; i < list.length; i++) {
-                rd.tr(table,list[i]);
+                File fl=new File(dumpPth+"/"+list[i]);
+                if(!fl.isDirectory()){
+                    rd.tr(table,list[i]);
+                }
             }
             str=table.render();
+            
+            str += "<script type='text/javascript'>$(document).ready(function()  {" +
+              "        $(\"#dumptb\").tablesorter(); " +
+              "    } " +
+              ");</script>";
+
         }
         return status ;
     }
