@@ -4,6 +4,7 @@
  */
 package backup;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +24,9 @@ public final class Backup {
     private String sqlDumpName = "";
     private String dumpDirName = "";
     private String archiveName = "";
+    private String dbUser = "";
+    private String dbPass = "";
+    private String dbName = "";
 
     private Backup() {
     }
@@ -36,7 +40,7 @@ public final class Backup {
      *
      * @param
      */
-    public void setConfigFile(String path, String name) {
+    public void addConfigFile(String path, String name) {
         if (MyString.NotNull(name, path)) {
             Boolean contain = false;
             for (Parameter pr : configFiles) {
@@ -53,8 +57,9 @@ public final class Backup {
     }
 
     /**
-     * Вернуть клон списка конфигурационных файлов где имя параметра - это путь, а
-     * значение - имя файла
+     * Вернуть клон списка конфигурационных файлов где имя параметра - это путь,
+     * а значение - имя файла
+     *
      * @return
      */
     public List<Parameter> getConfigFiles() {
@@ -65,10 +70,10 @@ public final class Backup {
         return result;
     }
 
-    
     /**
      * установить имя дампа бд
-     * @param name 
+     *
+     * @param name
      */
     public void setSqlDumpName(String name) {
         if (MyString.NotNull(name)) {
@@ -77,10 +82,11 @@ public final class Backup {
             error.add("Имя дампа не было передано");
         }
     }
-    
-     /**
+
+    /**
      * установить путь до директории дампа
-     * @param name 
+     *
+     * @param name
      */
     public void setDumpDirectoryName(String path) {
         if (MyString.NotNull(path)) {
@@ -89,16 +95,77 @@ public final class Backup {
             error.add("Директория для дампа не было передано");
         }
     }
-    
-     /**
+
+    /**
      * установить имя архива
-     * @param name 
+     *
+     * @param name
      */
     public void setArhiveName(String name) {
         if (MyString.NotNull(name)) {
             archiveName = name;
         } else {
             error.add("Имя архива не было передано");
+        }
+    }
+
+    /**
+     * установить имя архива
+     *
+     * @param name
+     */
+    public void setDbOpts(String dbName, String dbUser, String dbPass) {
+        if (MyString.NotNull(dbName, dbUser, dbPass)) {
+            this.dbName = dbName;
+            this.dbUser = dbUser;
+            this.dbPass = dbPass;
+        } else {
+            error.add("Настройки базы данных не были переданы");
+        }
+    }
+
+    public void createBackup() {
+        if (error.isEmpty()) {
+            createDir();
+        }
+        if (error.isEmpty()) {
+            makeBackupDb();
+        }
+
+    }
+
+    private void createDir() {
+        try {
+            File dir = new File(dumpDirName);
+            dir.mkdir();
+        } catch (Exception ex) {
+            error.add("Ошибка при попытке создать директорию");
+            error.add(MyString.getStackExeption(ex));
+        }
+    }
+
+    private void makeBackupDb() {
+        try {
+            if(!MyString.NotNull(dumpDirName,sqlDumpName)){
+                error.add("Не установлены путь или имя дампа бд");
+            }
+            if (MyString.NotNull(dbName, dbPass, dbUser)&&error.isEmpty()) {
+                String user = dbUser;
+                String pass = dbPass;
+                String database = dbName;
+                String command = "mysqldump --skip-opt -u" + user + " -p" + pass + " -B --create-options " + database + " -r " + dumpDirName + "/" + sqlDumpName;
+                Process proc = Runtime.getRuntime().exec(command);
+                int processComplete = proc.waitFor();
+                if (processComplete != 0) {
+                    throw new Exception("не удалось сделать дамп БД");
+                }
+            } else {
+                error.add("Параметры баз данных не установлены");
+            }
+
+        } catch (Exception ex) {
+            error.add("Ошибка при попытке создать бекап базы данных");
+            error.add(MyString.getStackExeption(ex));
         }
     }
 }
