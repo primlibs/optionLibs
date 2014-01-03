@@ -90,6 +90,7 @@ public class DumpEnt extends OptionAbstract {
             int day = cl.get(Calendar.DAY_OF_MONTH);
             OptionsKeeper ok=app.getKeeper().getOptionKeeper();
             backup.Backup bb = backup.Backup.getInstance();
+            bb.setDbOpts(ok.getDbName(), ok.getDbUser(), ok.getDbPass());
             bb.setArhiveName(year + "_" + month + "_" + day + ".tar.bz2");
             bb.setDumpDirectoryName(ok.getDumpPath(), year + "_" + month + "_" + day);
             bb.setSqlDumpName("dump_" + year + "_" + month + "_" + day + ".sql");
@@ -133,7 +134,7 @@ public class DumpEnt extends OptionAbstract {
                     rd.tr(table, hr);
                 }
             }
-            str = table.render();
+            str += table.render();
 
             str += "<script type='text/javascript'>$(document).ready(function()  {"
                     + "        $(\"#dumptb\").tablesorter(); "
