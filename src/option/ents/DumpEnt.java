@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -83,7 +84,23 @@ public class DumpEnt extends OptionAbstract {
                 }
             }
         } else if (action.equals("getLastDump")) {
-            
+            Calendar cl = Calendar.getInstance();
+            int year = cl.get(Calendar.YEAR);
+            int month = cl.get(Calendar.MONTH);
+            int day = cl.get(Calendar.DAY_OF_MONTH);
+            OptionsKeeper ok=app.getKeeper().getOptionKeeper();
+            backup.Backup bb = backup.Backup.getInstance();
+            bb.setArhiveName(year + "_" + month + "_" + day + ".tar.bz2");
+            bb.setDumpDirectoryName(ok.getDumpPath(), year + "_" + month + "_" + day);
+            bb.setSqlDumpName("dump_" + year + "_" + month + "_" + day + ".sql");
+            bb.addConfigFile(ok.getAppUserDataConfigPath(), "pair.xml");
+            bb.addConfigFile(ok.getAppUserDataConfigPath(), "systemModel.xml");
+            bb.createBackup();
+            if(bb.getError().isEmpty()){
+              str+="дамп создан";
+            }else{
+              str+=bb.getError();
+            }
         } else {
 
             Map<String, Object> mp1 = new HashMap<String, Object>();

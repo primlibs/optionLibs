@@ -176,6 +176,15 @@ public final class Backup {
     }
 
   }
+  
+  public List<String> getError(){
+    List<String> result= new ArrayList();
+    for(String err:error){
+      result.add(err);
+    }
+    return result;
+  }
+  
 
   private void createDir() {
     try {
