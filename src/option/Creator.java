@@ -37,6 +37,7 @@ public final class Creator {
   public static final String MODEL_OBJECT_NAME="modelEnt";
   public static final String CRON_OBJECT_NAME="cronEnt";
   public static final String DUMP_OBJECT_NAME="dumps";
+  public static final String IMPORT_OBJECT_NAME="importEnt";
 
   public Boolean isRedirect() {
     return redirect;
@@ -119,6 +120,8 @@ public final class Creator {
       return OptionAbstract.getCron(app, rd,action,specAction);
     }else if(object.equals(DUMP_OBJECT_NAME)){
       return OptionAbstract.getDump(app, rd,action,specAction);
+    }else if(object.equals(IMPORT_OBJECT_NAME)){
+      return OptionAbstract.getImport(app, rd,action,specAction);
     }else{
       return OptionAbstract.getOption(app, rd,action,specAction);
     }
