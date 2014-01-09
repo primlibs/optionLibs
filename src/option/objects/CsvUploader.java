@@ -5,8 +5,12 @@
 package option.objects;
 
 import com.csvreader.CsvReader;
+import com.csvreader.CsvWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -32,16 +36,19 @@ import prim.select.TableSelectFactory;
  * @author Pavel Rice
  */
 public class CsvUploader {
-  
+
   private AbstractApplication app;
   private ModelFactory modelFactory;
   private TableSelectFactory tableFactory;
   private File csv;
   private Map<String, Object> params;
   private List<String> errors = new ArrayList();
-  
-  public CsvUploader(AbstractApplication app, File csv, Map<String, Object> params) {
-  // класс получает параметры:
+  private CsvWriter writer;
+  private ByteArrayOutputStream baos;
+  private CsvReader reader;
+
+  public CsvUploader(AbstractApplication app, File csv, Map<String, Object> params) throws Exception {
+    // класс получает параметры:
     // Application
     // файл, из которого нужно скопировать данные
     // набор параметров из запроса
@@ -49,120 +56,174 @@ public class CsvUploader {
     this.modelFactory = new ModelFactory(app);
     this.csv = csv;
     this.params = params;
+    this.baos = new ByteArrayOutputStream();
+    reader = new CsvReader(new FileInputStream(csv), Charset.forName("UTF-8"));
+    this.writer = new CsvWriter(baos, reader.getDelimiter(), Charset.forName("UTF-8"));
   }
-  
+
   public List<String> getErrors() {
     return errors;
   }
-  
+
   // загрузить данные
-  public boolean uploadData() throws SQLException {
-    Connection conn = app.getConnection();
-    // открыть транзакцию
-    conn.setAutoCommit(false);
-    try {
-      // прочитать заголовки файла
-      CsvReader reader = new CsvReader(new FileInputStream(csv), Charset.forName("UTF-8"));
-      String[] headers = reader.getHeaders();
-      // для каждой строки в файле csv
-      int number = 0;
-      while (reader.readRecord()) {
-        String[] values = reader.getValues();
-          // записать строку
-          boolean ok = writeRow(values, number);
-          // если ошибка - откатить транзакцию и return
-          if (!ok || !errors.isEmpty()) {
-            conn.rollback();
-            return false;
-          }
-        number++;
-      }
-    } catch (Exception exc) {
-      errors.add(MyString.getStackExeption(exc));
-      conn.rollback();
-      return false;
+  public boolean uploadData() throws Exception {
+    // прочитать заголовки файла
+    String[] headers = reader.getHeaders();
+    // записать заголовки в файл csv
+    writeHeaders(headers);
+    // для каждой строки в файле csv
+    int number = 0;
+    while (reader.readRecord()) {
+      String[] values = reader.getValues();
+      // записать строку
+      boolean ok = uploadRow(values, number);
+      number++;
     }
-    // подтвердить транзакцию
-    conn.commit();
+    // записать всё в новый файл
+    writeNewFile();
     return true;
   }
-  
-  
-  // метод - записать строку
-  private boolean writeRow(String[] values, int rowNumber) throws Exception {
-    // получить набор заголовков, набор параметров, данные из строки
-    // создать массив моделей
-    Map<String, Model> models = new LinkedHashMap();
-    // для каждой ячейки в строке
-    int columnNumber = 0;
-    for (String value: values) {
-      // если передан такой параметр, то есть имя поля
-      if (params.containsKey("column_" + columnNumber) && params.get("column_" + columnNumber) != null) {
-        // получить название модели и название поля
-        String param = params.get("column_" + columnNumber).toString();
-        String[] str = param.split(":");
-        if (str.length == 2) {
-          String modelName = str[0];
-          String fieldName = str[1];
-          // если нет модели такого типа
-          if (!models.containsKey(modelName)) {
-            // содать модель
-            models.put(modelName, modelFactory.getModel(modelName));
-          } 
-          // взять модель такого типа
-          Model model = models.get(modelName);
-          // получить это поле из структуры
-          Structure struct = model.getStructure();
-          Set<String> fieldNames = struct.getFieldsNames();
-          // если в модели нет такого поля
-          if (!fieldNames.contains(fieldName)) {
-            // ошибка, выйти
-            errors.add("Ошибка в строке " + rowNumber + ", в модели " + modelName + " отсутствует поле " + fieldName);
-            return false;
-          } 
-          Field field = struct.getFieldClone(fieldName);
-          // если это поле ИД
-          if (fieldName.equals(struct.getPrimaryAlias())) {
-            // записать значение в модель в поле oldId
-            model.set("old_id", value);
-          }
-          // иначе если это поле ссылка на другую модель
-          else if (field.getRelations() != null && !field.getRelations().isEmpty()) {
-            String relationTableName = field.getRelations();
-            // найти в БД модель запись такого типа с таким oldId
-            int relationId = searchModel(relationTableName, value);
-            // если такая запись есть одна
-            if (relationId > 0) {
-              // ИД этой записи записать в модель в это поле
-              model.set(fieldName, relationId);
-            } else {
-            // иначе если такой записи нет или больше одного
+
+  private void writeNewFile() throws Exception {
+    byte[] bytes = baos.toByteArray();
+    //FileWriter fileWriter = new FileWriter(csv);
+    //fileWriter.w
+    FileOutputStream fos = new FileOutputStream(csv);
+    fos.write(bytes);
+  }
+
+  // записать в файл заголовки
+  private void writeHeaders(String[] headers) throws Exception {
+    for (String header : headers) {
+      writer.write(header);
+    }
+    writer.endRecord();
+  }
+
+  // загрузить данные из строки
+  private boolean uploadRow(String[] values, int rowNumber) throws Exception {
+    // очистить ошибки
+    errors.clear();
+    boolean ok = true;
+
+    // сохранить данные в модели
+    try {
+      // получить набор заголовков, набор параметров, данные из строки
+      // создать массив моделей
+      Map<String, Model> models = new LinkedHashMap();
+      // для каждой ячейки в строке
+      int columnNumber = 0;
+      for (String value : values) {
+        // если передан такой параметр, то есть имя поля
+        if (params.containsKey("column_" + columnNumber) && params.get("column_" + columnNumber) != null) {
+          // получить название модели и название поля
+          String param = params.get("column_" + columnNumber).toString();
+          String[] str = param.split(":");
+          if (str.length == 2) {
+            String modelName = str[0];
+            String fieldName = str[1];
+            // если нет модели такого типа
+            if (!models.containsKey(modelName)) {
+              // содать модель
+              models.put(modelName, modelFactory.getModel(modelName));
+            }
+            // взять модель такого типа
+            Model model = models.get(modelName);
+            // получить это поле из структуры
+            Structure struct = model.getStructure();
+            Set<String> fieldNames = struct.getFieldsNames();
+            // если в модели нет такого поля
+            if (!fieldNames.contains(fieldName)) {
               // ошибка, выйти
-              errors.add("Ошибка в строке " + rowNumber + ", в модели " + modelName + " ошибка при поиске связанной мдели для поля " + fieldName);
-              return false;
+              errors.add("Ошибка в строке " + rowNumber + ", в модели " + modelName + " отсутствует поле " + fieldName);
+              ok = false;
+              break;
+            }
+            Field field = struct.getFieldClone(fieldName);
+            // если это поле ИД
+            if (fieldName.equals(struct.getPrimaryAlias())) {
+              // записать значение в модель в поле oldId
+              model.set("old_id", value);
+            } // иначе если это поле ссылка на другую модель
+            else if (field.getRelations() != null && !field.getRelations().isEmpty()) {
+              String relationTableName = field.getRelations();
+              // найти в БД модель запись такого типа с таким oldId
+              int relationId = searchModel(relationTableName, value);
+              // если такая запись есть одна
+              if (relationId > 0) {
+                // ИД этой записи записать в модель в это поле
+                model.set(fieldName, relationId);
+              } else {
+                // иначе если такой записи нет или больше одного
+                // ошибка, выйти
+                errors.add("Ошибка в строке " + rowNumber + ", в модели " + modelName + " ошибка при поиске связанной мдели для поля " + fieldName);
+                ok = false;
+                break;
+              }
+            } // иначе
+            else {
+              // записать значение в модель в это поле
+              model.set(fieldName, value);
             }
           }
-          // иначе
-          else {
-            // записать значение в модель в это поле
-            model.set(fieldName, value);
+        }
+        columnNumber++;
+      }
+
+      // записать модели
+      if (ok) {
+        // то сохранить модели и не записывать в новый файл
+        // открыть транзакцию
+        Connection conn = app.getConnection();
+        conn.setAutoCommit(false);
+        // записывать модели по одной
+        try {
+          for (String modelName : models.keySet()) {
+            Model model = models.get(modelName);
+            Object id = saveModel(model, models);
+            // если не удалось записать
+            if (id == null) {
+              // то прервать запись
+              errors.add("Ошибка в строке " + rowNumber + ", не удалось сохранить модель " + modelName);
+              ok = false;
+              break;
+            }
           }
+        } catch (Exception exc) {
+          ok = false;
+          errors.add(MyString.getStackExeption(exc));
+        }
+        if (ok) {
+          // подтвердить транзакцию
+          conn.commit();
+        } else {
+          // откатить транзакцию
+          conn.rollback();
         }
       }
-      columnNumber++;
+    } catch (Exception exc) {
+      ok = false;
+      errors.add(MyString.getStackExeption(exc));
     }
-    // сохранить все модели
-    for (String modelName: models.keySet()) {
-      Model model = models.get(modelName);
-      Object id = saveModel(model, models);
-      if (id == null) {
-        errors.add("Ошибка в строке " + rowNumber + ", не удалось сохранить модель " + modelName);
-        return false;
-      }
-    }
-    return true;
-  }
     
+    // если статус false
+    if (ok == false) {
+      // то строку записать в новый файл + записать ошибки
+      writeRow(values);
+    }
+
+    return ok;
+  }
+
+  // записать строку в новый файл XML
+  private void writeRow(String[] values) throws Exception {
+    for (String value : values) {
+      writer.write(value);
+    }
+    writer.write(errors.toString());
+    writer.endRecord();
+  }
+
   // найти в БД запись с заданными типом и oldId
   private int searchModel(String tableName, String oldId) throws Exception {
     Table table = tableFactory.getTable(tableName);
@@ -183,11 +244,11 @@ public class CsvUploader {
       String primaryName = model.getPrimaryAlias();
       DinamicModel dinamicModel = sel.getDinamicList().get(0);
       return Integer.parseInt(dinamicModel.get(primaryName).toString());
-    } 
+    }
     // если модели нет
-      // записать ошибку
+    // записать ошибку
     // если модели больше одной
-      // записать ошибку
+    // записать ошибку
     return -1;
   }
 
@@ -197,11 +258,11 @@ public class CsvUploader {
     if (model.getPrimary() == null) {
       // для каждого поля модели
       Map<String, Field> fields = model.getStructure().getCloneFields();
-      for (String fieldName: fields.keySet()) {
+      for (String fieldName : fields.keySet()) {
         Field field = fields.get(fieldName);
         // если есть зависимость от другой модели и если поле равно null
         boolean isRelation = field.getRelations() != null && !field.getRelations().isEmpty();
-        if (isRelation && model.get(fieldName) == null) {        
+        if (isRelation && model.get(fieldName) == null) {
           // найти эту модель среди заданных
           String relationName = field.getRelations();
           // если модель найдена
@@ -220,7 +281,7 @@ public class CsvUploader {
           }
         }
         // если значения системных полей не установлены
-          // установить их
+        // установить их
         if (model.get("insert_date") == null) {
           model.set("insert_date", FormatDate.getCurrentDateInMysql());
         }
@@ -243,6 +304,4 @@ public class CsvUploader {
     // вернуть значение ИД
     return model.getPrimary();
   }
-  
-  
 }
