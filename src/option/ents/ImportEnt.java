@@ -57,8 +57,10 @@ public class ImportEnt extends OptionAbstract {
   private List<String> errors = new ArrayList();
   public final static String FILE_LIST_ACTION = "fileList";
   private final String ONE_FILE_ACTION = "oneFile";
+  private final String DELETE_FILE_SPECACTION = "deleteFile";
   private final String UPLOAD_FILE_SPECACTION = "uploadFile";
   private final String UPLOAD_DATA_SPECACTION = "uploadData";
+  private final String DOWNLOAD_FILE_SPECACTION = "downloadFile";
   private final String FILE_PATH = "csvFiles";
 
   private ImportEnt(AbstractApplication app, Render rd, String action, String specAction) {
@@ -84,19 +86,11 @@ public class ImportEnt extends OptionAbstract {
 
     // действие "один файл":
     if (action.equals(ONE_FILE_ACTION)) {
-      // если дана команда на загрузку данных
-      // то загрузить данные
-      // если отображение одного файла
-      // показать сообщения
-      // показать ошибку
-      // то отобразить данные из одного файла
       if (specAction.equals(UPLOAD_DATA_SPECACTION)) {
         uploadData();
       }
       str += errors + "<br/>";
       str += showOneFile();
-      // показать форму для загрузки данных
-      // return
     }
 
     if (action.equals(FILE_LIST_ACTION)) {
@@ -105,11 +99,16 @@ public class ImportEnt extends OptionAbstract {
       if (specAction.equals(UPLOAD_FILE_SPECACTION)) {
         // то загрузить его
         uploadFile();
+      } else if (specAction.equals(DELETE_FILE_SPECACTION)) {
+        deleteFile();
+      } else if (specAction.equals(DOWNLOAD_FILE_SPECACTION)) {
+        downloadFile();
+        return true;
       }
       // если нет никакого действия
       // показать сообщения
       // показать ошибки
-      str += errors + "</br>";
+      str += errors + "<br/>";
       // то показать форму загрузки файла
       str += uploadFileForm();
       // и показать список существующих файлов
@@ -166,7 +165,7 @@ public class ImportEnt extends OptionAbstract {
           ho.setNoValidateRights();
           mp.put("fileName", fileName);
           AbsEnt hr = rd.href(mp, ho);
-          result += hr.render() + "<br/>";
+          result += hr.render() + deleteFileForm(fileName) + downloadFileForm(fileName) + "<br/><br/>";
         }
       }
       return result;
@@ -174,6 +173,47 @@ public class ImportEnt extends OptionAbstract {
       errors.add("Ошибка: не задано свойство DumpPath");
       return "";
     }
+  }
+
+  /**
+   * форма удаления файла
+   * @param fileName
+   * @return
+   * @throws Exception 
+   */
+  private String deleteFileForm(String fileName) throws Exception {
+    FormOptionInterface fo = rd.getFormOption();
+    Map<AbsEnt, String> inner = new LinkedHashMap();
+    inner.put(rd.hiddenInput("fileName", fileName), "");
+    fo.setAction(FILE_LIST_ACTION);
+    fo.setObject(object);
+    fo.setSpecAction(DELETE_FILE_SPECACTION);
+    fo.setNoValidateRights();
+    fo.setHorisontal(false);
+    fo.setTitle("Удалить файл");
+    AbsEnt form = rd.rightForm(inner, fo);
+    return form.render();
+  }
+
+  /**
+   * форма скачивания файла
+   * @param fileName
+   * @return
+   * @throws Exception 
+   */
+  private String downloadFileForm(String fileName) throws Exception {
+    FormOptionInterface fo = rd.getFormOption();
+    Map<AbsEnt, String> inner = new LinkedHashMap();
+    inner.put(rd.hiddenInput("fileName", fileName), "");
+    inner.put(rd.hiddenInput("getFile", "1"), "");
+    fo.setAction(FILE_LIST_ACTION);
+    fo.setObject(object);
+    fo.setSpecAction(DOWNLOAD_FILE_SPECACTION);
+    fo.setNoValidateRights();
+    fo.setHorisontal(false);
+    fo.setTitle("Скачать файл");
+    AbsEnt form = rd.rightForm(inner, fo);
+    return form.render();
   }
 
   /**
@@ -186,7 +226,7 @@ public class ImportEnt extends OptionAbstract {
   private String uploadDataForm(String[] headers) throws Exception {
     ModelStructureKeeper mss = app.getKeeper().getModelStructureKeeper();
     Map<String, Structure> structureMap = mss.getStructureMap();
-    Map<String, Object> fieldNamesMap = new LinkedHashMap();
+    Map<String, Object> fieldNamesMap = new TreeMap();
     fieldNamesMap.put("", "не выбрано");
     for (String modelName : structureMap.keySet()) {
       Structure struct = structureMap.get(modelName);
@@ -204,9 +244,11 @@ public class ImportEnt extends OptionAbstract {
     // для каждого заголовка - выбор поля модели
     FormOptionInterface fo = rd.getFormOption();
     Map<AbsEnt, String> inner = new LinkedHashMap();
+    inner.put(rd.hiddenInput("fileName", params.get("fileName")), "");
     int i = 0;
     for (String header : headers) {
-      inner.put(rd.combo(fieldNamesMap, "", "column_" + i), header);
+      inner.put(rd.combo(fieldNamesMap, params.get("column_" + i), "column_" + i), header);
+      inner.put(rd.checkBox("column_old_id_" + i, params.get("column_old_id_" + i)), header + " найти old_id");
       i++;
     }
     fo.setAction(ONE_FILE_ACTION);
@@ -280,7 +322,6 @@ public class ImportEnt extends OptionAbstract {
       if (file != null) {
         // проверить, CSV ли это
         String extension = fileName.substring(fileName.lastIndexOf("."));
-        errors.add(fileName + " " + extension);
         if (!extension.equals(".csv")) {
           errors.add("Недопустимый формат файла. Файл должен быть формата csv");
           return false;
@@ -341,6 +382,38 @@ public class ImportEnt extends OptionAbstract {
       if (!ok) {
         errors.addAll(uploader.getErrors());
       }
+      errors.addAll(uploader.getMessages());
+    } else {
+      errors.add("Ошибка: не передано имя файла");
     }
   }
+  
+  /**
+   * удалить файл
+   */
+  private void deleteFile() throws Exception {
+    if (params.get("fileName") != null) {
+      String fileName = params.get("fileName").toString();
+      File csv = new File(getFileDir() + "/" + fileName);
+      csv.delete();
+    } else {
+      errors.add("Ошибка: не передано имя файла");
+    }
+  }
+  
+  /**
+   * скачать файл
+   */
+  private void downloadFile() throws Exception {
+    if (params.get("fileName") != null) {
+      String name = params.get("fileName").toString();
+      File csv = new File(getFileDir() + "/" + name);
+      FileExecutor exec = new FileExecutor(csv);
+      fileContent = exec.readBytes();
+      fileName = name;
+    } else {
+      errors.add("Ошибка: не передано имя файла");
+    }
+  }
+  
 }
