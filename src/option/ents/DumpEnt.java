@@ -38,6 +38,7 @@ import warehouse.controllerStructure.StructureController;
 import warehouse.cron.CronObject;
 import warehouse.cron.CronSingleton;
 import warehouse.pair.PairKeeper;
+import web.FormOptionInterface;
 import web.HrefOptionInterface;
 import web.Render;
 import web.fabric.AbsEnt;
@@ -102,9 +103,8 @@ public class DumpEnt extends OptionAbstract {
             } else {
                 str += bb.getError();
             }
-        //развернуть из дампа
-        }else if (action.equals("fromDump")){
-            
+            //развернуть из дампа
+        } else if (action.equals("fromDump")) {
         } else {
 
             Map<String, Object> mp1 = new HashMap<String, Object>();
@@ -115,23 +115,14 @@ public class DumpEnt extends OptionAbstract {
             ho1.setName("Получить последний дамп");
             AbsEnt hr1 = rd.href(new HashMap(), ho1);
             str += hr1.render();
-            
-            
-            Map<String, Object> mp2 = new HashMap<String, Object>();
-            HrefOptionInterface ho2 = rd.getHrefOption();
-            ho1.setObject(object);
-            ho1.setAction("fromDump");
-            ho1.setNoValidateRights();
-            ho1.setName("Развернуть из дампа");
-            AbsEnt hr2 = rd.href(new HashMap(), ho2);
-            str += hr2.render();
-            
+
+            str+=uploadFileForm();
 
             String dumpPth = app.getDumpPath();
             String list[] = new File(dumpPth).list();
             AbsEnt table = rd.table("", "", "");
             table.setId("dumptb");
-            rd.trTh(table, "Название","");
+            rd.trTh(table, "Название", "");
             if (list != null) {
                 for (int i = 0; i < list.length; i++) {
                     File fl = new File(dumpPth + "/" + list[i]);
@@ -146,7 +137,7 @@ public class DumpEnt extends OptionAbstract {
                         mp.put("fileName", list[i]);
                         mp.put("getFile", "1");
                         AbsEnt hr = rd.href(mp, ho);
-                        
+
                         Map<String, Object> mp3 = new HashMap<String, Object>();
                         HrefOptionInterface ho3 = rd.getHrefOption();
                         ho3.setObject(object);
@@ -156,8 +147,8 @@ public class DumpEnt extends OptionAbstract {
                         ho3.setNoValidateRights();
                         mp3.put("fileName", list[i]);
                         AbsEnt hr3 = rd.href(mp, ho);
- 
-                        rd.tr(table, hr,hr3);
+
+                        rd.tr(table, hr, hr3);
                     }
                 }
             }
@@ -171,6 +162,72 @@ public class DumpEnt extends OptionAbstract {
         }
         return status;
     }
+
+    private String uploadFileForm() throws Exception {
+        Map<AbsEnt, String> inner = new LinkedHashMap();
+        inner.put(rd.fileInput("file", null, "Выберите файл"), "");
+        FormOptionInterface fo = rd.getFormOption();
+        fo.setFormToUploadFiles(true);
+        fo.setNoValidateRights();
+        fo.setTitle("Загрузить файл дампа");
+        fo.setAction(action);
+        fo.setObject(object);
+        fo.setSpecAction("uploadFile");
+        AbsEnt form = rd.rightForm(inner, fo);
+        form.setAttribute(EnumAttrType.style, "");
+        return form.render();
+    }
     
     
+     // методы работы с данными ----------------------------------------------------------------------------------------------------------
+  /**
+   * загрузить файл
+   *
+   * @return
+   */
+  private boolean uploadFile() throws Exception {
+    Map<String, String> filesMap = (HashMap<String, String>) params.get("_FILEARRAY_");
+    // если загружен файл
+    if (filesMap.size() > 0) {
+      File file = null;
+      String fileName = null;
+      for (String path : filesMap.keySet()) {
+        file = new File(path);
+        fileName = filesMap.get(path);
+      }
+      if (file != null) {
+        // проверить, CSV ли это
+        String extension = fileName.substring(fileName.lastIndexOf("."));
+
+        if (!extension.equals(".tar.bz")) {
+          str+="Недопустимый формат файла. Файл должен быть формата .tar.bz";
+          return false;
+        }
+        // проверить, задано ли свойство OptionCeeper - путь к дампам БД
+        if (app.getDumpPath() != null) {
+          String path = app.getDumpPath();
+          File folder = new File(path);
+          // если не создана папка хранения файлов
+          if (!folder.exists()) {
+            // создать папку
+            folder.mkdir();
+          }
+          // сохранить файл на диске
+          FileExecutor fileExec = new FileExecutor(file);
+          boolean ok = fileExec.move(path);
+          if (ok) {
+            ok = fileExec.rename(fileName);
+          }
+          if (!ok) {
+             str+="Ошибка при сохранении файла: " + fileExec.getErrors();
+            return false;
+          }
+        } else {
+           str+="Ошибка: не задано свойство DumpPath";
+          return false;
+        }
+      }
+    }
+    return true;
+  }
 }
