@@ -88,7 +88,7 @@ public class DumpEnt extends OptionAbstract {
             int year = cl.get(Calendar.YEAR);
             int month = cl.get(Calendar.MONTH);
             int day = cl.get(Calendar.DAY_OF_MONTH);
-            OptionsKeeper ok=app.getKeeper().getOptionKeeper();
+            OptionsKeeper ok = app.getKeeper().getOptionKeeper();
             backup.Backup bb = backup.Backup.getInstance();
             bb.setDbOpts(ok.getDbName(), ok.getDbUser(), ok.getDbPass());
             bb.setArhiveName(year + "_" + month + "_" + day + ".tar.bz2");
@@ -97,10 +97,10 @@ public class DumpEnt extends OptionAbstract {
             bb.addConfigFile(ok.getAppUserDataConfigPath(), "pair.xml");
             bb.addConfigFile(ok.getAppUserDataConfigPath(), "systemModel.xml");
             bb.createBackup();
-            if(bb.getError().isEmpty()){
-              str+="дамп создан";
-            }else{
-              str+=bb.getError();
+            if (bb.getError().isEmpty()) {
+                str += "дамп создан";
+            } else {
+                str += bb.getError();
             }
         } else {
 
@@ -118,20 +118,22 @@ public class DumpEnt extends OptionAbstract {
             AbsEnt table = rd.table("", "", "");
             table.setId("dumptb");
             rd.trTh(table, "Название");
-            for (int i = 0; i < list.length; i++) {
-                File fl = new File(dumpPth + "/" + list[i]);
-                if (!fl.isDirectory()) {
-                    Map<String, Object> mp = new HashMap<String, Object>();
-                    HrefOptionInterface ho = rd.getHrefOption();
-                    ho.setObject(object);
-                    ho.setAction("getFile");
-                    ho.setName(list[i]);
-                    ho.setTitle("Скачать");
-                    ho.setNoValidateRights();
-                    mp.put("fileName", list[i]);
-                    mp.put("getFile", "1");
-                    AbsEnt hr = rd.href(mp, ho);
-                    rd.tr(table, hr);
+            if (list != null) {
+                for (int i = 0; i < list.length; i++) {
+                    File fl = new File(dumpPth + "/" + list[i]);
+                    if (!fl.isDirectory()) {
+                        Map<String, Object> mp = new HashMap<String, Object>();
+                        HrefOptionInterface ho = rd.getHrefOption();
+                        ho.setObject(object);
+                        ho.setAction("getFile");
+                        ho.setName(list[i]);
+                        ho.setTitle("Скачать");
+                        ho.setNoValidateRights();
+                        mp.put("fileName", list[i]);
+                        mp.put("getFile", "1");
+                        AbsEnt hr = rd.href(mp, ho);
+                        rd.tr(table, hr);
+                    }
                 }
             }
             str += table.render();
