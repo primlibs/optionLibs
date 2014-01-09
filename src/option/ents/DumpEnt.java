@@ -150,7 +150,7 @@ public class DumpEnt extends OptionAbstract {
                         ho3.setTitle("Развернуть");
                         ho3.setNoValidateRights();
                         mp3.put("fileName", list[i]);
-                        AbsEnt hr3 = rd.href(mp, ho);
+                        AbsEnt hr3 = rd.href(mp3, ho3);
 
                         rd.tr(table, hr, hr3);
                     }
@@ -202,8 +202,8 @@ public class DumpEnt extends OptionAbstract {
         // проверить, CSV ли это
         String extension = fileName.substring(fileName.lastIndexOf("."));
 
-        if (!extension.equals(".tar.bz")) {
-          str+="Недопустимый формат файла. Файл должен быть формата .tar.bz";
+        if (!extension.equals(".tar.bz2")) {
+          str+="Недопустимый формат файла. Файл должен быть формата .tar.bz2";
           return false;
         }
         // проверить, задано ли свойство OptionCeeper - путь к дампам БД
