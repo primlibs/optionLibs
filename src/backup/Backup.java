@@ -250,7 +250,7 @@ public final class Backup {
                     Process proc = Runtime.getRuntime().exec(command);
                     int i = proc.waitFor();
                     if (i != 0) {
-                      throw new Exception("не удалось копировать файлы настроек");
+                      throw new Exception("не удалось копировать файлы настроек "+command+" !");
                     }
                 }
             }
