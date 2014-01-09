@@ -202,8 +202,8 @@ public class DumpEnt extends OptionAbstract {
         // проверить, CSV ли это
         String extension = fileName.substring(fileName.lastIndexOf("."));
 
-        if (!extension.equals(".tar.bz2")) {
-          str+="Недопустимый формат файла. Файл должен быть формата .tar.bz2";
+        if (!extension.equals("bz2")) {
+          str+="Недопустимый формат файла. Файл должен быть формата bz2";
           return false;
         }
         // проверить, задано ли свойство OptionCeeper - путь к дампам БД
