@@ -117,7 +117,7 @@ public class DumpEnt extends OptionAbstract {
             if (killTable(app.getConnection(),ok.getDbName()) == true) {
                 backup.Backup bb = backup.Backup.getInstance();
                 bb.setDbOpts(ok.getDbName(), ok.getDbUser(), ok.getDbPass());
-                bb.setArhiveName(MyString.getString(params.get(fileName)));
+                bb.setArhiveName(MyString.getString(params.get("fileName")));
                 bb.setDumpDirectoryName(ok.getDumpPath(), ok.getDumpPath());
                 bb.setSqlDumpName("dump.sql");
                 bb.addConfigFile(ok.getAppUserDataConfigPath(), "pair.xml");
