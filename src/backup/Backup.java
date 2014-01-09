@@ -244,7 +244,7 @@ public final class Backup {
             }
             if(error.isEmpty()){
                 for(Param pm:pms){
-                    String newFilePath = pm.newPath + "/" + pm.fileName;
+                    String newFilePath = pm.newPath;
                     String oldFilePath = pm.dumpPath  + "/" + pm.fileName;
                     String command = "mv " + oldFilePath + " " + newFilePath;
                     Process proc = Runtime.getRuntime().exec(command);
