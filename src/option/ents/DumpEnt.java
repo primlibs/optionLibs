@@ -7,6 +7,8 @@ package option.ents;
 import java.io.File;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -25,6 +27,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import prim.AbstractApplication;
+import prim.db.ExecutorFabric;
+import prim.db.QueryExecutor;
 import prim.libs.MyString;
 import prim.libs.primXml;
 import prim.model.FileExecutor;
@@ -94,7 +98,7 @@ public class DumpEnt extends OptionAbstract {
             bb.setDbOpts(ok.getDbName(), ok.getDbUser(), ok.getDbPass());
             bb.setArhiveName(year + "_" + month + "_" + day + ".tar.bz2");
             bb.setDumpDirectoryName(ok.getDumpPath(), year + "_" + month + "_" + day);
-            bb.setSqlDumpName("dump_" + year + "_" + month + "_" + day + ".sql");
+            bb.setSqlDumpName("dump.sql");
             bb.addConfigFile(ok.getAppUserDataConfigPath(), "pair.xml");
             bb.addConfigFile(ok.getAppUserDataConfigPath(), "systemModel.xml");
             bb.createBackup();
@@ -104,11 +108,28 @@ public class DumpEnt extends OptionAbstract {
                 str += bb.getError();
             }
             //развернуть из дампа
-        } else if (action.equals("uploadFile")&&MyString.NotNull(params.get("fileName"))) {
-            str+="vwe";
+        } else if (action.equals("uploadFile") && MyString.NotNull(params.get("fileName"))) {
+            str += "vwe";
         } else if (action.equals("uploadFile")) {
             uploadFile();
         } else if (action.equals("fromDump")) {
+            OptionsKeeper ok = app.getKeeper().getOptionKeeper();
+            if (killTable(app.getConnection()) == true) {
+                backup.Backup bb = backup.Backup.getInstance();
+                bb.setDbOpts(ok.getDbName(), ok.getDbUser(), ok.getDbPass());
+                bb.setArhiveName(MyString.getString(params.get(fileName)));
+                bb.setDumpDirectoryName(ok.getDumpPath(), ok.getDumpPath());
+                bb.setSqlDumpName("dump.sql");
+                bb.addConfigFile(ok.getAppUserDataConfigPath(), "pair.xml");
+                bb.addConfigFile(ok.getAppUserDataConfigPath(), "systemModel.xml");
+                bb.loadDump();
+                if (bb.getError().isEmpty()) {
+                    str += "дамп создан";
+                } else {
+                    str += bb.getError();
+                }
+            }
+
         } else {
 
             Map<String, Object> mp1 = new HashMap<String, Object>();
@@ -120,7 +141,7 @@ public class DumpEnt extends OptionAbstract {
             AbsEnt hr1 = rd.href(new HashMap(), ho1);
             str += hr1.render();
 
-            str+=uploadFileForm();
+            str += uploadFileForm();
 
             String dumpPth = app.getDumpPath();
             String list[] = new File(dumpPth).list();
@@ -180,57 +201,89 @@ public class DumpEnt extends OptionAbstract {
         form.setAttribute(EnumAttrType.style, "");
         return form.render();
     }
-    
-    
-     // методы работы с данными ----------------------------------------------------------------------------------------------------------
-  /**
-   * загрузить файл
-   *
-   * @return
-   */
-  private boolean uploadFile() throws Exception {
-    Map<String, String> filesMap = (HashMap<String, String>) params.get("_FILEARRAY_");
-    // если загружен файл
-    if (filesMap.size() > 0) {
-      File file = null;
-      String fileName = null;
-      for (String path : filesMap.keySet()) {
-        file = new File(path);
-        fileName = filesMap.get(path);
-      }
-      if (file != null) {
-        // проверить, CSV ли это
-        String extension = fileName.substring(fileName.lastIndexOf("."));
 
-        if (!extension.equals(".bz2")) {
-          str+="Недопустимый формат файла. Файл должен быть формата .tar.bz2 передан "+extension;
-          return false;
+    // методы работы с данными ----------------------------------------------------------------------------------------------------------
+    /**
+     * загрузить файл
+     *
+     * @return
+     */
+    private boolean uploadFile() throws Exception {
+        Map<String, String> filesMap = (HashMap<String, String>) params.get("_FILEARRAY_");
+        // если загружен файл
+        if (filesMap.size() > 0) {
+            File file = null;
+            String fileName = null;
+            for (String path : filesMap.keySet()) {
+                file = new File(path);
+                fileName = filesMap.get(path);
+            }
+            if (file != null) {
+                // проверить, CSV ли это
+                String extension = fileName.substring(fileName.lastIndexOf("."));
+
+                if (!extension.equals(".bz2")) {
+                    str += "Недопустимый формат файла. Файл должен быть формата .tar.bz2 передан " + extension;
+                    return false;
+                }
+                // проверить, задано ли свойство OptionCeeper - путь к дампам БД
+                if (app.getDumpPath() != null) {
+                    String path = app.getDumpPath();
+                    File folder = new File(path);
+                    // если не создана папка хранения файлов
+                    if (!folder.exists()) {
+                        // создать папку
+                        folder.mkdir();
+                    }
+                    // сохранить файл на диске
+                    FileExecutor fileExec = new FileExecutor(file);
+                    boolean ok = fileExec.move(path);
+                    if (ok) {
+                        ok = fileExec.rename(fileName);
+                    }
+                    if (!ok) {
+                        str += "Ошибка при сохранении файла: " + fileExec.getErrors();
+                        return false;
+                    }
+                } else {
+                    str += "Ошибка: не задано свойство DumpPath";
+                    return false;
+                }
+            }
         }
-        // проверить, задано ли свойство OptionCeeper - путь к дампам БД
-        if (app.getDumpPath() != null) {
-          String path = app.getDumpPath();
-          File folder = new File(path);
-          // если не создана папка хранения файлов
-          if (!folder.exists()) {
-            // создать папку
-            folder.mkdir();
-          }
-          // сохранить файл на диске
-          FileExecutor fileExec = new FileExecutor(file);
-          boolean ok = fileExec.move(path);
-          if (ok) {
-            ok = fileExec.rename(fileName);
-          }
-          if (!ok) {
-             str+="Ошибка при сохранении файла: " + fileExec.getErrors();
-            return false;
-          }
-        } else {
-           str+="Ошибка: не задано свойство DumpPath";
-          return false;
-        }
-      }
+        return true;
     }
-    return true;
-  }
+
+    private Boolean killTable(Connection cn) {
+        Boolean res = true;
+
+        QueryExecutor ex = ExecutorFabric.getExecutor(cn, " show table;");
+        try {
+            cn.setAutoCommit(false);
+            ex.select();
+            if (ex.getError().isEmpty()) {
+                List<Map<String, Object>> resList = ex.getResultList();
+                for (Map<String, Object> mp : resList) {
+                    String query = " drop table " + mp.get("tbName");
+                    QueryExecutor ex1 = ExecutorFabric.getExecutor(cn, query);
+                    ex1.update();
+                    if (!ex1.getError().isEmpty()) {
+                        str += ex1.getError();
+                        res = false;
+                    }
+                }
+            } else {
+                str += ex.getError();
+                res = false;
+            }
+            if (res == true) {
+                cn.commit();
+                cn.setAutoCommit(true);
+            }
+        } catch (Exception exc) {
+            str += MyString.getStackExeption(exc);
+            res = false;
+        }
+        return res;
+    }
 }

@@ -5,10 +5,14 @@
 package backup;
 
 import java.io.File;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import prim.libs.EnumFileSearch;
 import prim.libs.FileSearch;
 import prim.libs.MyString;
@@ -204,8 +208,8 @@ public final class Backup {
             return true;
         }
         return false;
-    }
-
+    }    
+    
     // залить дамп БД
     private void loadDumpBD() throws Exception {
         if (new File(unzipDir).exists()) {
