@@ -102,6 +102,9 @@ public class DumpEnt extends OptionAbstract {
             } else {
                 str += bb.getError();
             }
+        //развернуть из дампа
+        }else if (action.equals("fromDump")){
+            
         } else {
 
             Map<String, Object> mp1 = new HashMap<String, Object>();
@@ -112,12 +115,23 @@ public class DumpEnt extends OptionAbstract {
             ho1.setName("Получить последний дамп");
             AbsEnt hr1 = rd.href(new HashMap(), ho1);
             str += hr1.render();
+            
+            
+            Map<String, Object> mp2 = new HashMap<String, Object>();
+            HrefOptionInterface ho2 = rd.getHrefOption();
+            ho1.setObject(object);
+            ho1.setAction("fromDump");
+            ho1.setNoValidateRights();
+            ho1.setName("Развернуть из дампа");
+            AbsEnt hr2 = rd.href(new HashMap(), ho2);
+            str += hr2.render();
+            
 
             String dumpPth = app.getDumpPath();
             String list[] = new File(dumpPth).list();
             AbsEnt table = rd.table("", "", "");
             table.setId("dumptb");
-            rd.trTh(table, "Название");
+            rd.trTh(table, "Название","");
             if (list != null) {
                 for (int i = 0; i < list.length; i++) {
                     File fl = new File(dumpPth + "/" + list[i]);
@@ -132,7 +146,18 @@ public class DumpEnt extends OptionAbstract {
                         mp.put("fileName", list[i]);
                         mp.put("getFile", "1");
                         AbsEnt hr = rd.href(mp, ho);
-                        rd.tr(table, hr);
+                        
+                        Map<String, Object> mp3 = new HashMap<String, Object>();
+                        HrefOptionInterface ho3 = rd.getHrefOption();
+                        ho3.setObject(object);
+                        ho3.setAction("fromDump");
+                        ho3.setName("Развернуть");
+                        ho3.setTitle("Развернуть");
+                        ho3.setNoValidateRights();
+                        mp3.put("fileName", list[i]);
+                        AbsEnt hr3 = rd.href(mp, ho);
+ 
+                        rd.tr(table, hr,hr3);
                     }
                 }
             }
@@ -146,4 +171,6 @@ public class DumpEnt extends OptionAbstract {
         }
         return status;
     }
+    
+    
 }
