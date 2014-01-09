@@ -114,7 +114,7 @@ public class DumpEnt extends OptionAbstract {
             uploadFile();
         } else if (action.equals("fromDump")) {
             OptionsKeeper ok = app.getKeeper().getOptionKeeper();
-            if (killTable(app.getConnection()) == true) {
+            if (killTable(app.getConnection(),ok.getDbName()) == true) {
                 backup.Backup bb = backup.Backup.getInstance();
                 bb.setDbOpts(ok.getDbName(), ok.getDbUser(), ok.getDbPass());
                 bb.setArhiveName(MyString.getString(params.get(fileName)));
@@ -254,17 +254,17 @@ public class DumpEnt extends OptionAbstract {
         return true;
     }
 
-    private Boolean killTable(Connection cn) {
+    private Boolean killTable(Connection cn,String dbname) {
         Boolean res = true;
 
-        QueryExecutor ex = ExecutorFabric.getExecutor(cn, " show table;");
+        QueryExecutor ex = ExecutorFabric.getExecutor(cn, " show tables;");
         try {
             cn.setAutoCommit(false);
             ex.select();
             if (ex.getError().isEmpty()) {
                 List<Map<String, Object>> resList = ex.getResultList();
                 for (Map<String, Object> mp : resList) {
-                    String query = " drop table " + mp.get("tbName");
+                    String query = " drop table " + mp.get("Tables_in_"+dbname)+";";
                     QueryExecutor ex1 = ExecutorFabric.getExecutor(cn, query);
                     ex1.update();
                     if (!ex1.getError().isEmpty()) {
