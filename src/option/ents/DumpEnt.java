@@ -104,6 +104,10 @@ public class DumpEnt extends OptionAbstract {
                 str += bb.getError();
             }
             //развернуть из дампа
+        } else if (action.equals("uploadFile")&&MyString.NotNull(params.get("fileName"))) {
+            str+="vwe";
+        } else if (action.equals("uploadFile")) {
+            uploadFile();
         } else if (action.equals("fromDump")) {
         } else {
 
@@ -170,9 +174,8 @@ public class DumpEnt extends OptionAbstract {
         fo.setFormToUploadFiles(true);
         fo.setNoValidateRights();
         fo.setTitle("Загрузить файл дампа");
-        fo.setAction(action);
+        fo.setAction("uploadFile");
         fo.setObject(object);
-        fo.setSpecAction("uploadFile");
         AbsEnt form = rd.rightForm(inner, fo);
         form.setAttribute(EnumAttrType.style, "");
         return form.render();
