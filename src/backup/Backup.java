@@ -209,7 +209,7 @@ public final class Backup {
         Process proc = Runtime.getRuntime().exec(command);
         int processComplete = proc.waitFor();
         if (processComplete != 0) {
-          throw new Exception("не удалось сделать дамп БД");
+          throw new Exception("не удалось сделать дамп БД " +"mysqldump --skip-opt -u" + user + " -p" + pass + " -B --create-options " + database + " -r " + dumpPath+"/"+innerDir + "/" + sqlDumpName);
         }
       } else {
         error.add("Параметры баз данных не установлены");
