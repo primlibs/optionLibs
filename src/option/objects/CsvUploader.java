@@ -202,6 +202,9 @@ public class CsvUploader {
           } // иначе
           else {
             // записать значение в модель в это поле
+            if (value.isEmpty()) {
+              value = null;
+            }
             model.set(fieldName, value);
           }
         }
@@ -343,6 +346,12 @@ public class CsvUploader {
     return model.getPrimary();
   }
 
+  /**
+   * проверить наличие старого ИД
+   * @param model
+   * @return
+   * @throws Exception 
+   */
   private boolean checkOldId(Model model) throws Exception {
     if (model.get("old_id") != null) {
       Object oldId = model.get("old_id");
