@@ -48,11 +48,14 @@ public class CsvUploader {
   private CsvReader reader;
   private List<String> messages = new ArrayList();
 
+  /**
+   * 
+   * @param app объект Application
+   * @param csv файл, из которого нужно загрузить данные
+   * @param params параметры из запроса
+   * @throws Exception 
+   */
   public CsvUploader(AbstractApplication app, File csv, Map<String, Object> params) throws Exception {
-    // класс получает параметры:
-    // Application
-    // файл, из которого нужно скопировать данные
-    // набор параметров из запроса
     this.app = app;
     this.modelFactory = new ModelFactory(app);
     this.tableFactory = new TableSelectFactory(app);
@@ -79,11 +82,10 @@ public class CsvUploader {
     String[] headers = reader.getHeaders();
     // записать заголовки в файл csv
     writeHeaders(headers);
-    // для каждой строки в файле csv
     int number = 0;
     while (reader.readRecord()) {
       String[] values = reader.getValues();
-      // записать строку
+      // загрузить данные из строки
       boolean ok = uploadRow(values, number);
       number++;
     }
@@ -96,8 +98,6 @@ public class CsvUploader {
   private void writeNewFile() throws Exception {
     writer.close();
     byte[] bytes = baos.toByteArray();
-    //FileWriter fileWriter = new FileWriter(csv);
-    //fileWriter.w
     FileOutputStream fos = new FileOutputStream(csv);
     fos.write(bytes);
   }
@@ -113,19 +113,16 @@ public class CsvUploader {
 
   // загрузить данные из строки
   private boolean uploadRow(String[] values, int rowNumber) throws Exception {
-    // очистить ошибки
     errors.clear();
     boolean ok = true;
 
-    // сохранить данные в модели
     try {
-      // получить набор заголовков, набор параметров, данные из строки
       // создать массив моделей
       Map<String, Model> models = new LinkedHashMap();
       // сохранить данные в моделях
       ok = loadDataInModels(models, values, rowNumber);
 
-      // записать модели
+      // сохранить модели
       if (ok) {
         ok = saveModels(models, rowNumber);
       }
@@ -135,9 +132,8 @@ public class CsvUploader {
       errors.add(MyString.getStackExeption(exc));
     }
 
-    // если статус false
     if (ok == false) {
-      // то строку записать в новый файл + записать ошибки
+      // строку записать в новый файл + записать ошибки
       writeRow(values);
     }
 
@@ -146,9 +142,6 @@ public class CsvUploader {
 
   // загрузить данные в модели
   private boolean loadDataInModels(Map<String, Model> models, String[] values, int rowNumber) throws Exception {
-    // сохранить данные в модели
-    // получить набор заголовков, набор параметров, данные из строки
-    // для каждой ячейки в строке
     boolean ok = true;
     int columnNumber = 0;
     for (String value : values) {
@@ -214,10 +207,9 @@ public class CsvUploader {
     return ok;
   }
 
+  // сохранить модели
   private boolean saveModels(Map<String, Model> models, int rowNumber) throws Exception {
-    // записать модели
     boolean ok = true;
-    // то сохранить модели и не записывать в новый файл
     // открыть транзакцию
     Connection conn = app.getConnection();
     conn.setAutoCommit(false);
@@ -247,7 +239,7 @@ public class CsvUploader {
     return ok;
   }
 
-  // записать строку в новый файл XML
+  // записать строку в новый файл CSV
   private void writeRow(String[] values) throws Exception {
     for (String value : values) {
       writer.write(value);
@@ -329,12 +321,11 @@ public class CsvUploader {
       }
       if (model.get("update_user_id") == null) {
         model.set("update_user_id", app.getRightsObject().getUserId());
-      }
-      // сохранить модель
+      }     
       // произвести поиск по old_id
-
       boolean ok = checkOldId(model);
       if (ok) {
+         // сохранить модель
         ok = model.save();
       }
       if (!ok) {

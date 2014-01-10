@@ -84,20 +84,19 @@ public class ImportEnt extends OptionAbstract {
   public Boolean run() throws Exception {
     boolean status = true;
 
-    // действие "один файл":
+    // просмотр одного файла
     if (action.equals(ONE_FILE_ACTION)) {
       if (specAction.equals(UPLOAD_DATA_SPECACTION)) {
+        // загрузить данные на сервер
         uploadData();
       }
       str += errors + "<br/>";
       str += showOneFile();
     }
 
+    // просмотр списка файлов
     if (action.equals(FILE_LIST_ACTION)) {
-      // действие "список файлов":
-      // если загружен файл
       if (specAction.equals(UPLOAD_FILE_SPECACTION)) {
-        // то загрузить его
         uploadFile();
       } else if (specAction.equals(DELETE_FILE_SPECACTION)) {
         deleteFile();
@@ -105,15 +104,9 @@ public class ImportEnt extends OptionAbstract {
         downloadFile();
         return true;
       }
-      // если нет никакого действия
-      // показать сообщения
-      // показать ошибки
       str += errors + "<br/>";
-      // то показать форму загрузки файла
       str += uploadFileForm();
-      // и показать список существующих файлов
       str += fileList();
-      // return
     }
 
     return status;
@@ -374,7 +367,6 @@ public class ImportEnt extends OptionAbstract {
    */
   private void uploadData() throws Exception {
     if (params.get("fileName") != null) {
-
       String fileName = params.get("fileName").toString();
       File csv = new File(getFileDir() + "/" + fileName);
       CsvUploader uploader = new CsvUploader(app, csv, params);
