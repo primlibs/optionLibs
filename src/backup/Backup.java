@@ -216,12 +216,12 @@ public final class Backup {
             FileSearch fs = FileSearch.findInDir(unzipDir, sqlDumpName);
             if (fs.getResult().equals(EnumFileSearch.success)) {
                 String newDumpPath = fs.getFilePath();
-                String[] command = new String[]{"/bin/sh", "-c","mysql -u" + dbUser + " -p" + dbPass + " " + dbName + " --default-character-set=utf8 < " + newDumpPath};
+                String[] command = new String[]{"/bin/sh","mysql -u" + dbUser + " -p" + dbPass + " " + dbName + " --default-character-set=utf8 < " + newDumpPath};
                 Process proc = Runtime.getRuntime().exec(command);
                 int i = proc.waitFor();
                 
                 if (i != 0) {
-                    throw new Exception("не удалось залить дамп БД "+command[2]+" !");
+                    throw new Exception("не удалось залить дамп БД "+command[1]+" !");
                 }
             }else{
                 error.add(MyString.getString(fs.getResult()));
