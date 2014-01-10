@@ -216,7 +216,7 @@ public final class Backup {
             FileSearch fs = FileSearch.findInDir(unzipDir, sqlDumpName);
             if (fs.getResult().equals(EnumFileSearch.success)) {
                 String newDumpPath = fs.getFilePath();
-                String[] command = new String[]{"/bin/sh","mysql -u" + dbUser + " -p" + dbPass + " " + dbName + " --default-character-set=utf8 < " + newDumpPath};
+                String[] command = new String[]{"mysql -u" + dbUser + " -p" + dbPass + " " + dbName + " --default-character-set=utf8 < " + newDumpPath};
                 Process proc = Runtime.getRuntime().exec(command);
                 int i = proc.waitFor();
                 
