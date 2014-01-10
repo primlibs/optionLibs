@@ -216,11 +216,12 @@ public final class Backup {
             FileSearch fs = FileSearch.findInDir(unzipDir, sqlDumpName);
             if (fs.getResult().equals(EnumFileSearch.success)) {
                 String newDumpPath = fs.getFilePath();
-                String[] command = new String[]{"/bin/sh", "-c", "mysql -u" + dbUser + " -p" + dbPass + " " + dbName + " --default-character-set=utf8 < " + newDumpPath};
+                String[] command = new String[]{"mysql -u" + dbUser + " -p" + dbPass + " " + dbName + " --default-character-set=utf8 < " + newDumpPath};
                 Process proc = Runtime.getRuntime().exec(command);
                 int i = proc.waitFor();
+                
                 if (i != 0) {
-                    throw new Exception("не удалось залить дамп БД");
+                    throw new Exception("не удалось залить дамп БД "+command[1]+" !");
                 }
             }else{
                 error.add(MyString.getString(fs.getResult()));
@@ -244,13 +245,13 @@ public final class Backup {
             }
             if(error.isEmpty()){
                 for(Param pm:pms){
-                    String newFilePath = pm.newPath + "/" + pm.fileName;
-                    String oldFilePath = pm.dumpPath  + "/" + pm.fileName;
+                    String newFilePath = pm.newPath+"/" + pm.fileName;
+                    String oldFilePath = pm.dumpPath;
                     String command = "mv " + oldFilePath + " " + newFilePath;
                     Process proc = Runtime.getRuntime().exec(command);
                     int i = proc.waitFor();
                     if (i != 0) {
-                      throw new Exception("не удалось копировать файлы настроек");
+                      throw new Exception("не удалось копировать файлы настроек "+command+" !");
                     }
                 }
             }
@@ -269,10 +270,13 @@ public final class Backup {
         } else {
             newDirName = dirName;
         }
-        String command = "tar xvf " + dumpPath + " -C " + newDirName;
+        String command = "tar xvf " + zip + " -C " + newDirName;
         Process proc = Runtime.getRuntime().exec(command);
-        proc.waitFor();
-        unzipDir = newDirName;
+        int i =proc.waitFor();
+        if (i != 0) {
+              throw new Exception("не удалось разархивировать "+command+" !");
+         }
+        unzipDir = newDirName.substring(newDirName.length()-1);
     }
 
     private void createDir() {
