@@ -5,6 +5,7 @@
 package option.ents.renders;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import web.HrefOptionInterface;
@@ -22,6 +23,12 @@ public class OptionRender {
   protected String action;
   protected String object;
   protected Render rd;
+  
+  protected Map<String, Object> requestParams = new HashMap();
+  
+  public void setRequestParams(Map<String, Object> requestParams) {
+    this.requestParams = requestParams;
+  }
   
   public OptionRender(Render render,String object,String action) {
     this.rd = render;

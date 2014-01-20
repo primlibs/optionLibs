@@ -9,8 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import prim.AbstractApplication;
+import prim.libs.FormatDate;
 import prim.libs.MyString;
 import prim.model.DinamicModel;
+import prim.model.Model;
 import prim.modelStructure.Structure;
 import prim.select.AgrTypes;
 import prim.select.OrdTypes;
@@ -25,12 +27,12 @@ import warehouse.modelKeeper.ModelStructureKeeper;
  */
 public class ModelTableService extends OptionService {
 
-  protected AbstractApplication app;
+  
   // количество записей на одну страницу в отображении списка
   private final int recordsOfPage = 20;
 
   public ModelTableService(AbstractApplication app) {
-    this.app = app;
+    super(app);
   }
 
   public int getCountPages(Object modelNameObject) throws Exception {
@@ -119,16 +121,7 @@ public class ModelTableService extends OptionService {
 
   }
 
-  private Table getTable(String modelAlias) throws Exception {
-    TableSelectFactory tf = new TableSelectFactory(app);
-    Table table = tf.getTable(modelAlias);
-    return table;
-  }
-
-  protected Select getSelect(Table... tb) throws Exception {
-    TableSelectFactory tf = new TableSelectFactory(app);
-    return tf.getSelect(tb);
-  }
+  
 
   private int getPage(Object objectPage) {
     int page = 1;
@@ -144,12 +137,24 @@ public class ModelTableService extends OptionService {
     return page;
   }
 
-  private void addModel() {
+  public void addModel(Map<String, Object> params, String modelName) throws Exception {
+    // создать модель
+    Model model = getModel(modelName);
+    // присвоить ей все параметры
+    model.set(params);
+    model.set("insert_date", FormatDate.getCurrentDateInMysql());
+    model.set("update_date", FormatDate.getCurrentDateInMysql());
+    model.set("insert_user_id", app.getRightsObject().getUserId());
+    model.set("update_user_id", app.getRightsObject().getUserId());
+    boolean ok = model.save();
+    if (!ok) {
+      errors.addAll(model.getError());
+    }
   }
 
-  private void changeModel() {
+  public void changeModel() {
   }
 
-  private void closeModel() {
+  public void closeModel() {
   }
 }

@@ -50,7 +50,7 @@ public class ModelTableRender extends OptionRender {
 
     // вывести пагинатор
     Map<String, Object> params = new HashMap();
-    params.put("name", structure.getTableAlias());
+    params.put(ModelTableEnt.NAME_PARAMETER, structure.getTableAlias());
     int page = 1;
     if (pageObject != null) {
       page = Integer.parseInt(pageObject.toString());
@@ -153,15 +153,15 @@ public class ModelTableRender extends OptionRender {
         String type = field.getType();
         // если это поле типа дата
         if (type.equalsIgnoreCase("datetime")) {
-          inner.put(rd.dateTimeInput(fieldName, "", fieldName), "");
+          inner.put(rd.dateTimeInput(fieldName, requestParams.get(fieldName), fieldName), "");
         } else if (type.equalsIgnoreCase("text")) {
-          inner.put(rd.textArea(fieldName, "", fieldName), "");
+          inner.put(rd.textArea(fieldName, requestParams.get(fieldName), fieldName), "");
         } else {
-          inner.put(rd.textInput(fieldName, "", fieldName), "");
+          inner.put(rd.textInput(fieldName, requestParams.get(fieldName), fieldName), "");
         }
       }
     }
-    inner.put(rd.hiddenInput("name", struct.getTableAlias()), "");
+    inner.put(rd.hiddenInput(ModelTableEnt.NAME_PARAMETER, struct.getTableAlias()), "");
     FormOptionInterface fo = rd.getFormOption();
     fo.setAction(ModelTableEnt.ONE_MODEL_ACTION);
     fo.setObject(object);
@@ -204,7 +204,7 @@ public class ModelTableRender extends OptionRender {
       Structure structure = structureMap.get(name);
       if (!structure.isSystem()) {
         Map<String, Object> oneStructureParams = new HashMap();
-        oneStructureParams.put("name", name);
+        oneStructureParams.put(ModelTableEnt.NAME_PARAMETER, name);
         content += href(Creator.MODELTABLE_OBJECT_NAME, ModelTableEnt.ONE_MODEL_ACTION, "", name, oneStructureParams);
         content += "<br/>";
       }
