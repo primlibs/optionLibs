@@ -110,6 +110,10 @@ public abstract class OptionAbstract implements Renderrable{
     return ImportEnt.getInstance(app, rd, action, specAction);
   }
   
+  public static Renderrable getModelTable(AbstractApplication app,Render rd,String action,String specAction){
+    return ModelTableEnt.getInstance(app, rd, action, specAction);
+  }
+  
   
   public Boolean setRedirect(String object,String action,String specAction){
     if(MyString.NotNull(object)){
