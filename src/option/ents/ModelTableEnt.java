@@ -94,6 +94,7 @@ public class ModelTableEnt extends OptionAbstract {
           redirectObject = object;
           redirectAction = action;
           redirectSpecAction = "";
+          redirectParams.put(NAME_PARAMETER, params.get(NAME_PARAMETER));
           return true;
         }
       } else if (specAction.equals(CHANGE_SPECACTION)) {
@@ -103,6 +104,7 @@ public class ModelTableEnt extends OptionAbstract {
           redirectObject = object;
           redirectAction = action;
           redirectSpecAction = "";
+          redirectParams.put(NAME_PARAMETER, params.get(NAME_PARAMETER));
           return true;
         }
       } else if (specAction.equals(CLOSE_SPECACTION)) {
@@ -112,6 +114,7 @@ public class ModelTableEnt extends OptionAbstract {
           redirectObject = object;
           redirectAction = action;
           redirectSpecAction = "";
+          redirectParams.put(NAME_PARAMETER, params.get(NAME_PARAMETER));
           return true;
         }
       }

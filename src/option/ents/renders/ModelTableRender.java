@@ -55,7 +55,7 @@ public class ModelTableRender extends OptionRender {
     if (pageObject != null) {
       page = Integer.parseInt(pageObject.toString());
     }
-    str += paginator(page, countPages, object, action, params).render();
+    str += paginator(page, countPages, object, action, params, ModelTableEnt.PAGE_PARAMETER).render();
 
     return str;
   }
@@ -97,6 +97,7 @@ public class ModelTableRender extends OptionRender {
       fo.setTitle("Изменить модель");
       Map<AbsEnt, String> inner = new LinkedHashMap();
       inner.put(rd.hiddenInput(primaryName, model.get(primaryName)), "");
+      inner.put(rd.hiddenInput(ModelTableEnt.NAME_PARAMETER, struct.getTableAlias()), "");
       // для каждого поля
       for (String fieldName : fieldsMap.keySet()) {
         // добавить в форму поле
@@ -135,6 +136,7 @@ public class ModelTableRender extends OptionRender {
       closeFo.setTitle("Закрыть модель");
       Map<AbsEnt, String> closeInner = new LinkedHashMap();
       closeInner.put(rd.hiddenInput(primaryName, model.get(primaryName)), "");
+      closeInner.put(rd.hiddenInput(ModelTableEnt.NAME_PARAMETER, struct.getTableAlias()), "");
       AbsEnt closeForm = rd.rightForm(closeInner, closeFo);
       rd.td(tr, closeForm);
     }

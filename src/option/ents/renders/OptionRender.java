@@ -63,12 +63,12 @@ public class OptionRender {
    * @return
    * @throws Exception
    */
-  public AbsEnt paginator(int page, int countPages, String object, String action, Map<String, Object> params) throws Exception {
+  public AbsEnt paginator(int page, int countPages, String object, String action, Map<String, Object> params, String pageParameterName) throws Exception {
     List<Parameter> paramsList = new ArrayList();
     for (String name : params.keySet()) {
       paramsList.add(new Parameter(name, params.get(name)));
     }
-    return paginator(page, countPages, object, action, paramsList);
+    return paginator(page, countPages, object, action, paramsList, pageParameterName);
   }
 
   /**
@@ -82,7 +82,10 @@ public class OptionRender {
    * @return
    * @throws Exception
    */
-  public AbsEnt paginator(int page, int countPages, String object, String action, List<Parameter> params) throws Exception {
+  public AbsEnt paginator(int page, int countPages, String object, String action, List<Parameter> params, String nameParameterPage) throws Exception {
+    if (nameParameterPage == null || nameParameterPage.isEmpty()) {
+      nameParameterPage = "page";
+    }
     AbsEnt div1 = rd.getFabric().get("div");
     if (countPages > 1) {
 
@@ -104,7 +107,7 @@ public class OptionRender {
         li.setValue("<< Previous");
       } else {
         li.setCss("previous");
-        pageParameter = new Parameter("page", page - 1);
+        pageParameter = new Parameter(nameParameterPage, page - 1);
         params.add(pageParameter);
         
         HrefOptionInterface ho = rd.getHrefOption();
@@ -124,7 +127,7 @@ public class OptionRender {
       if (page > 3) {
         AbsEnt li1 = rd.getFabric().get("li");
         params.remove(pageParameter);
-        pageParameter = new Parameter("page", "1");
+        pageParameter = new Parameter(nameParameterPage, "1");
         params.add(pageParameter);
         
         HrefOptionInterface ho = rd.getHrefOption();
@@ -148,7 +151,7 @@ public class OptionRender {
       if (page > 2) {
         AbsEnt li3 = rd.getFabric().get("li");
         params.remove(pageParameter);
-        pageParameter = new Parameter("page", page - 2);
+        pageParameter = new Parameter(nameParameterPage, page - 2);
         params.add(pageParameter);
         
         HrefOptionInterface ho = rd.getHrefOption();
@@ -166,7 +169,7 @@ public class OptionRender {
       if (page > 1) {
         AbsEnt li4 = rd.getFabric().get("li");
         params.remove(pageParameter);
-        pageParameter = new Parameter("page", page - 1);
+        pageParameter = new Parameter(nameParameterPage, page - 1);
         params.add(pageParameter);
         
         HrefOptionInterface ho = rd.getHrefOption();
@@ -189,7 +192,7 @@ public class OptionRender {
       if (countPages - page > 0) {
         AbsEnt li6 = rd.getFabric().get("li");
         params.remove(pageParameter);
-        pageParameter = new Parameter("page", page + 1);
+        pageParameter = new Parameter(nameParameterPage, page + 1);
         params.add(pageParameter);
         
         HrefOptionInterface ho = rd.getHrefOption();
@@ -207,7 +210,7 @@ public class OptionRender {
       if (countPages - page > 1) {
         AbsEnt li7 = rd.getFabric().get("li");
         params.remove(pageParameter);
-        pageParameter = new Parameter("page", page + 2);
+        pageParameter = new Parameter(nameParameterPage, page + 2);
         params.add(pageParameter);
         
         HrefOptionInterface ho = rd.getHrefOption();
@@ -231,7 +234,7 @@ public class OptionRender {
 
         AbsEnt li9 = rd.getFabric().get("li");
         params.remove(pageParameter);
-        pageParameter = new Parameter("page", countPages);
+        pageParameter = new Parameter(nameParameterPage, countPages);
         params.add(pageParameter);
         
         HrefOptionInterface ho = rd.getHrefOption();
@@ -254,7 +257,7 @@ public class OptionRender {
       } else {
         li10.setCss("next");
         params.remove(pageParameter);
-        pageParameter = new Parameter("page", page + 1);
+        pageParameter = new Parameter(nameParameterPage, page + 1);
         params.add(pageParameter);
         
         HrefOptionInterface ho = rd.getHrefOption();
