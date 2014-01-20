@@ -117,7 +117,7 @@ public class ModelTableRender extends OptionRender {
 
       // вывести системные поля
       for (String fieldName : fieldsMap.keySet()) {
-        if (!fieldName.equals(primaryName) && !fieldName.equals("user_data_type_id")) {
+        if (!fieldName.equals(primaryName)) {
           Field field = fieldsMap.get(fieldName);
           if (!field.isEditable() && !fieldName.equals(primaryName)) {
             rd.td(tr, model.get(fieldName));
