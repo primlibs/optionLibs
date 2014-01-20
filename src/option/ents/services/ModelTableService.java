@@ -66,6 +66,7 @@ public class ModelTableService extends OptionService {
       int start = (page - 1) * recordsOfPage;
 
       Select sel = getSelect(modelName, false, start, recordsOfPage);
+      errors.add(sel.getPrepareSelect());
       boolean ok = sel.executeSelect(app.getConnection());
       if (!ok) {
         errors.addAll(sel.getError());

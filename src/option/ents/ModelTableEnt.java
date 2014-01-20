@@ -95,6 +95,7 @@ public class ModelTableEnt extends OptionAbstract {
         // если нет ошибок
         if (service.getErrors().isEmpty()) {
           // перенаправить
+          isRedirect = true;
           redirectObject = object;
           redirectAction = action;
           redirectSpecAction = "";
