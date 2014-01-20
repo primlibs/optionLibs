@@ -35,8 +35,8 @@ public class ModelTableEnt extends OptionAbstract {
   public final static String CHANGE_SPECACTION = "changeModel";
   public final static String CLOSE_SPECACTION = "deleteModel";
   // параметры name и page получают такие значения, для того чтобы не было случайных совпадений названий этих параметров с названиями параметров моделей
-  public final static String NAME_PARAMETER = "12345670993name";
-  public final static String PAGE_PARAMETER = "14324783933page";
+  public final static String NAME_PARAMETER = "name_qwertyuiop";
+  public final static String PAGE_PARAMETER = "page_qwertyuiop";
 
   private ModelTableEnt(AbstractApplication app, Render rd, String action, String specAction) {
     this.object = Creator.MODELTABLE_OBJECT_NAME;
@@ -86,7 +86,7 @@ public class ModelTableEnt extends OptionAbstract {
   private boolean oneModel() throws Exception {
     if (MyString.NotNull(params.get(NAME_PARAMETER))) {
       String modelName = params.get(NAME_PARAMETER).toString();
-      // если specaction - добавить
+
       if (!specAction.isEmpty()) {
         if (specAction.equals(ADD_SPECACTION)) {
           // сохранить модель
