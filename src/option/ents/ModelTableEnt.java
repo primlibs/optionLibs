@@ -34,7 +34,6 @@ public class ModelTableEnt extends OptionAbstract {
   public final static String ADD_SPECACTION = "addModel";
   public final static String CHANGE_SPECACTION = "changeModel";
   public final static String CLOSE_SPECACTION = "deleteModel";
-  
   // параметры name и page получают такие значения, для того чтобы не было случайных совпадений названий этих параметров с названиями параметров моделей
   public final static String NAME_PARAMETER = "12345670993name";
   public final static String PAGE_PARAMETER = "14324783933page";
@@ -88,11 +87,16 @@ public class ModelTableEnt extends OptionAbstract {
     if (MyString.NotNull(params.get(NAME_PARAMETER))) {
       String modelName = params.get(NAME_PARAMETER).toString();
       // если specaction - добавить
-      if (specAction.equals(ADD_SPECACTION)) {
-        // сохранить модель
-        service.addModel(params, modelName);
-
-        // если нет ошибок
+      if (!specAction.isEmpty()) {
+        if (specAction.equals(ADD_SPECACTION)) {
+          // сохранить модель
+          service.addModel(params, modelName);
+          // если нет ошибок
+        } else if (specAction.equals(CHANGE_SPECACTION)) {
+          service.changeModel(params, modelName);
+        } else if (specAction.equals(CLOSE_SPECACTION)) {
+          service.closeModel(params, modelName);
+        }
         if (service.getErrors().isEmpty()) {
           // перенаправить
           isRedirect = true;
@@ -101,17 +105,8 @@ public class ModelTableEnt extends OptionAbstract {
           redirectSpecAction = "";
           return true;
           // return
-        } else {
-          errors.addAll(service.getErrors());
-        }
-
+        } 
       }
-      // specaction == изменить
-      // изменить
-      // specaction == закрыть
-      // закрыть
-      // specaction != null
-      // редирект
 
       // получить список моделей
       List<DinamicModel> modelList = service.getOneModelData(modelName, params.get(PAGE_PARAMETER));

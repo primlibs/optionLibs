@@ -27,7 +27,6 @@ import warehouse.modelKeeper.ModelStructureKeeper;
  */
 public class ModelTableService extends OptionService {
 
-  
   // количество записей на одну страницу в отображении списка
   private final int recordsOfPage = 20;
 
@@ -122,8 +121,6 @@ public class ModelTableService extends OptionService {
 
   }
 
-  
-
   private int getPage(Object objectPage) {
     int page = 1;
     if (objectPage != null) {
@@ -147,15 +144,46 @@ public class ModelTableService extends OptionService {
     model.set("update_date", FormatDate.getCurrentDateInMysql());
     model.set("insert_user_id", app.getRightsObject().getUserId());
     model.set("update_user_id", app.getRightsObject().getUserId());
-    boolean ok = model.save();
-    if (!ok) {
-      errors.addAll(model.getError());
+    if (model.getPrimary() != null && !"".equals(model.getPrimary())) {
+      errors.add("Обнаружен первичный ключ " + model.getPrimaryAlias() + model.getPrimary());
+    } else {
+      boolean ok = model.save();
+      if (!ok) {
+        errors.addAll(model.getError());
+      }
     }
   }
 
-  public void changeModel() {
+  public void changeModel(Map<String, Object> params, String modelName) throws Exception {
+    // создать модель
+    Model model = getModel(modelName);
+    // присвоить ей все параметры
+    model.set(params);
+    model.set("update_date", FormatDate.getCurrentDateInMysql());
+    model.set("update_user_id", app.getRightsObject().getUserId());
+    if (model.getPrimary() == null || "".equals(model.getPrimary())) {
+      errors.add("Не обнаружен первичный ключ " + model.getPrimaryAlias() + model.getPrimary());
+    } else {
+      boolean ok = model.save();
+      if (!ok) {
+        errors.addAll(model.getError());
+      }
+    }
   }
 
-  public void closeModel() {
+  public void closeModel(Map<String, Object> params, String modelName) throws Exception {
+    // создать модель
+    Model model = getModel(modelName);
+    // присвоить ей все параметры
+    model.set(params);
+    if (model.findByPrimary() == false) {
+      errors.add("Не обнаружен первичный ключ " + model.getPrimaryAlias() + model.getPrimary());
+    } else {
+      model.set("close_date", FormatDate.getCurrentDateInMysql());
+      boolean ok = model.save();
+      if (!ok) {
+        errors.addAll(model.getError());
+      }
+    }
   }
 }
