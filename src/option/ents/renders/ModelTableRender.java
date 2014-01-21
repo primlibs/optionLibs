@@ -18,6 +18,8 @@ import prim.modelStructure.Structure;
 import web.FormOptionInterface;
 import web.Render;
 import web.fabric.AbsEnt;
+import web.fabric.EnumAttrType;
+import web.fabric.entities.Txt;
 
 /**
  *
@@ -35,12 +37,7 @@ public class ModelTableRender extends OptionRender {
     String str = "";
     str += errors + "<br/>";
 
-    // отсортировать поля - сначала ИД, потом тип, потом остальные, потом системные поля
-    Map<String, Field> fieldsMap = new LinkedHashMap();
-    fieldsMap.put(structure.getPrimaryAlias(), structure.getCloneFields().get(structure.getPrimaryAlias()));
-    fieldsMap.put("user_data_type_id", structure.getCloneFields().get("user_data_type_id"));
-    fieldsMap.putAll(getNotSystemFields(structure));
-    fieldsMap.putAll(getSystemFields(structure));
+    Map<String, Field> fieldsMap = structure.getCloneFields();
 
     // вывести форму добавления
     str += addForm(fieldsMap, structure);
@@ -64,19 +61,29 @@ public class ModelTableRender extends OptionRender {
     // вывести таблицу
     AbsEnt table = rd.table("1", "5", "");
 
-    // вывести строку заголовков
-    // ИД
-    // тип
-    // заголовки для всех изменяемых полей
-    // ячейка для формы удаления
+    Field primaryField = getPrimaryField(struct);
+    Map<String, Field> notSystemFields = getNotSystemFields(struct);
+    Map<String, Field> systemFields = getSystemFields(struct);
 
-    /*
-     AbsEnt trHead = rd.getFabric().get("tr");
-     table.addEnt(trHead);
-     for (String fieldName: fieldsMap.keySet()) {
-     rd.td(trHead, fieldName);
-     }
-     */
+
+
+    AbsEnt trHead = rd.getFabric().get("tr");
+    table.addEnt(trHead);
+    // ИД
+    rd.td(trHead, primaryField.getAlias());
+    // несистемные поля
+    for (String fieldName : notSystemFields.keySet()) {
+      rd.td(trHead, fieldName);
+    }
+    // форма изменения
+    rd.td(trHead, "");
+    // системные поля
+    for (String fieldName : systemFields.keySet()) {
+      rd.td(trHead, fieldName);
+    }
+    // форма закрытия
+    rd.td(trHead, "");
+
 
     // вывести саму таблицу
     // для каждой модели
@@ -87,7 +94,24 @@ public class ModelTableRender extends OptionRender {
       String primaryName = struct.getPrimaryAlias();
       rd.td(tr, model.get(primaryName));
 
-      // вывести ячейку с формой изменения
+      // вывести форму изменения
+      String formId = "changeForm" + model.get(primaryName);
+      for (String fieldName : notSystemFields.keySet()) {
+        // добавить в форму поле
+        Field field = notSystemFields.get(fieldName);
+        AbsEnt formElement;
+        String type = field.getType();
+        if (type.equalsIgnoreCase("data")) {
+          formElement = rd.dateTimeInput(fieldName, model.get(fieldName), fieldName);
+        } else if (type.equalsIgnoreCase("text")) {
+          formElement = rd.textArea(fieldName, model.get(fieldName), fieldName);
+        } else {
+          formElement = rd.textInput(fieldName, model.get(fieldName), fieldName);
+        }
+        formElement.setAttribute(EnumAttrType.form, formId);
+        rd.td(tr, formElement);
+      }
+
       FormOptionInterface fo = rd.getFormOption();
       fo.setAction(ModelTableEnt.ONE_MODEL_ACTION);
       fo.setObject(object);
@@ -98,34 +122,19 @@ public class ModelTableRender extends OptionRender {
       Map<AbsEnt, String> inner = new LinkedHashMap();
       inner.put(rd.hiddenInput(primaryName, model.get(primaryName)), "");
       inner.put(rd.hiddenInput(ModelTableEnt.NAME_PARAMETER, struct.getTableAlias()), "");
-      // для каждого поля
-      for (String fieldName : fieldsMap.keySet()) {
-        // добавить в форму поле
-        Field field = fieldsMap.get(fieldName);
-        if (field.isEditable()) {
-          String type = field.getType();
-          if (type.equalsIgnoreCase("data")) {
-            inner.put(rd.dateTimeInput(fieldName, model.get(fieldName), fieldName), "");
-          } else if (type.equalsIgnoreCase("text")) {
-            inner.put(rd.textArea(fieldName, model.get(fieldName), fieldName), "");
-          } else {
-            inner.put(rd.textInput(fieldName, model.get(fieldName), fieldName), "");
-          }
-        }
-      }
-      AbsEnt changeForm = rd.rightForm(inner, fo);
+      AbsEnt changeForm = rd.rightForm(inner, fo).setAttribute(EnumAttrType.id, formId);
       rd.td(tr, changeForm);
 
       // вывести системные поля
-      for (String fieldName : fieldsMap.keySet()) {
+      for (String fieldName : systemFields.keySet()) {
         if (!fieldName.equals(primaryName)) {
-          Field field = fieldsMap.get(fieldName);
+          Field field = systemFields.get(fieldName);
           if (!field.isEditable() && !fieldName.equals(primaryName)) {
             rd.td(tr, model.get(fieldName));
           }
         }
       }
-      
+
       // вывести форму закрытия модели
       FormOptionInterface closeFo = rd.getFormOption();
       closeFo.setAction(ModelTableEnt.ONE_MODEL_ACTION);
@@ -144,10 +153,11 @@ public class ModelTableRender extends OptionRender {
   }
 
   private String addForm(Map<String, Field> fieldsMap, Structure struct) throws Exception {
+    Map<String, Field> notSystemFields = getNotSystemFields(struct);
     Map<AbsEnt, String> inner = new LinkedHashMap();
     // получить список полей таблицы
     // для каждого поля
-    for (String fieldName : fieldsMap.keySet()) {
+    for (String fieldName : notSystemFields.keySet()) {
       Field field = fieldsMap.get(fieldName);
       // если это не ИД и не системное поле
       if (field.isEditable()) {
@@ -192,11 +202,15 @@ public class ModelTableRender extends OptionRender {
     Map<String, Field> fields = struct.getCloneFields();
     for (String name : fields.keySet()) {
       Field field = fields.get(name);
-      if (!field.isEditable() && !name.equals(struct.getPrimaryAlias()) && !name.equals("user_data_type_id")) {
+      if (!field.isEditable() && !name.equals(struct.getPrimaryAlias())) {
         systemFields.put(name, field);
       }
     }
     return systemFields;
+  }
+
+  private Field getPrimaryField(Structure struct) throws Exception {
+    return struct.getCloneFields().get(struct.getPrimaryAlias());
   }
 
   public String renderModelTable(Map<String, Structure> structureMap, List<String> errors) throws Exception {
