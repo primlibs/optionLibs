@@ -76,7 +76,7 @@ public class ModelTableEnt extends OptionAbstract {
    */
   private boolean modelTable() throws Exception {
     Map<String, Structure> serviceMap = service.getModelList();
-    str = render.renderModelTable(serviceMap, service.getErrors());
+    str = render.renderModelList(serviceMap, service.getErrors());
     return true;
   }
 
