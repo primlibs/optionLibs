@@ -34,15 +34,16 @@ public class ModelTableRender extends OptionRender {
 
   /**
    * вывести данные одной модели
+   *
    * @param dmList
    * @param errors
    * @param structure
    * @param countPages
    * @param pageObject
    * @return
-   * @throws Exception 
+   * @throws Exception
    */
-  public String renderOneModel(List<DinamicModel> dmList, List<String> errors, Structure structure, int countPages, Object pageObject) throws Exception {
+  public String renderOneModel(List<DinamicModel> dmList, List<String> errors, Structure structure, int countPages, Object pageObject, Object sortableColumn) throws Exception {
 
     String str = "";
     str += "<h2>Данные по модели " + structure.getTableAlias() + "</h2>";
@@ -50,46 +51,48 @@ public class ModelTableRender extends OptionRender {
     Map<String, Field> fieldsMap = structure.getCloneFields();
 
     // вывести форму добавления
-    str += addForm(fieldsMap, structure);
-
+    if (!structure.isSystem()) {
+      str += addForm(fieldsMap, structure);
+    }
     // вывести таблицу
-    str += table(dmList, fieldsMap, structure);
+    str += table(dmList, structure);
 
     // вывести пагинатор
     Map<String, Object> params = new HashMap();
-    params.put(ModelTableEnt.NAME_PARAMETER, structure.getTableAlias());
+    params.put(ModelTableEnt.PARAMETER_NAME, structure.getTableAlias());
+    params.put(ModelTableEnt.PARAMETER_COLUMN, sortableColumn);
     int page = 1;
     if (pageObject != null) {
       page = Integer.parseInt(pageObject.toString());
     }
-    str += paginator(page, countPages, object, action, params, ModelTableEnt.PAGE_PARAMETER).render();
+    str += paginator(page, countPages, object, action, params, ModelTableEnt.PARAMETER_PAGE).render();
+    str += paginator3000(page, countPages, object, action, params, ModelTableEnt.PARAMETER_PAGE, "paginatorrr");
 
     return str;
   }
-  
+
   /**
    * вывести список всех моделей
+   *
    * @param structureMap
    * @param errors
    * @return
-   * @throws Exception 
+   * @throws Exception
    */
-   public String renderModelList(Map<String, Structure> structureMap, List<String> errors) throws Exception {
+  public String renderModelList(Map<String, Structure> structureMap, List<String> errors) throws Exception {
     String content = "";
     content += errors + "<br/>";
     for (String name : structureMap.keySet()) {
       Structure structure = structureMap.get(name);
-      if (!structure.isSystem()) {
-        Map<String, Object> oneStructureParams = new HashMap();
-        oneStructureParams.put(ModelTableEnt.NAME_PARAMETER, name);
-        content += href(Creator.MODELTABLE_OBJECT_NAME, ModelTableEnt.ONE_MODEL_ACTION, "", name, oneStructureParams);
-        content += "<br/>";
-      }
+      Map<String, Object> oneStructureParams = new HashMap();
+      oneStructureParams.put(ModelTableEnt.PARAMETER_NAME, name);
+      content += href(Creator.MODELTABLE_OBJECT_NAME, ModelTableEnt.ACTION_ONE_MODEL, "", name, oneStructureParams);
+      content += "<br/>";
     }
     return content;
   }
 
-  private String table(List<DinamicModel> modelList, Map<String, Field> fieldsMap, Structure struct) throws Exception {
+  private String table(List<DinamicModel> modelList, Structure struct) throws Exception {
     AbsEnt table = rd.table("1", "5", "");
     table.addAttribute(EnumAttrType.style, " border-collapse: collapse; ");
 
@@ -101,16 +104,16 @@ public class ModelTableRender extends OptionRender {
     AbsEnt trHead = rd.getFabric().get("tr");
     table.addEnt(trHead);
     // ИД
-    rd.td(trHead, primaryField.getAlias());
+    rd.td(trHead, getSortableFieldLink(primaryField.getAlias(), struct.getTableAlias()));
     // несистемные поля
     for (String fieldName : notSystemFields.keySet()) {
-      rd.td(trHead, fieldName);
+      rd.td(trHead, getSortableFieldLink(fieldName, struct.getTableAlias()));
     }
     // форма изменения
     rd.td(trHead, "");
     // системные поля
     for (String fieldName : systemFields.keySet()) {
-      rd.td(trHead, fieldName);
+      rd.td(trHead, getSortableFieldLink(fieldName, struct.getTableAlias()));
     }
     // форма закрытия
     rd.td(trHead, "");
@@ -126,49 +129,59 @@ public class ModelTableRender extends OptionRender {
       // вывести форму изменения
       String formId = "changeForm" + model.get(primaryName);
       for (String fieldName : notSystemFields.keySet()) {
-        // добавить в форму поле
-        Field field = notSystemFields.get(fieldName);
-        AbsEnt formElement;
-        String type = field.getType();
-        if (type.equalsIgnoreCase("datetime")) {
-          formElement = rd.dateTimeInput(fieldName, model.get(fieldName), fieldName);
-        } else if (type.equalsIgnoreCase("text")) {
-          formElement = rd.textArea(fieldName, model.get(fieldName), fieldName);
-        } else {
-          formElement = rd.textInput(fieldName, model.get(fieldName), fieldName);
-        }
-        formElement.setAttribute(EnumAttrType.form, formId);
         AbsEnt div = rd.div("", "");
-        div.addEnt(formElement);
+        Field field = notSystemFields.get(fieldName);
+
+        if (!struct.isSystem()) {
+          // добавить в форму поле
+          AbsEnt formElement;
+          String type = field.getType();
+          if (type.equalsIgnoreCase("datetime")) {
+            formElement = rd.dateTimeInput(fieldName, model.get(fieldName), fieldName);
+          } else if (type.equalsIgnoreCase("text")) {
+            formElement = rd.textArea(fieldName, model.get(fieldName), fieldName);
+          } else {
+            formElement = rd.textInput(fieldName, model.get(fieldName), fieldName);
+          }
+          formElement.setAttribute(EnumAttrType.form, formId);
+          div.addEnt(formElement);
+        } else {
+          div.addEnt(rd.txt(model.get(fieldName)));
+        }
+
         if (field.getRelations() != null && !field.getRelations().isEmpty()) {
           HrefOptionInterface ho = rd.getHrefOption();
           ho.setObject(object);
-          ho.setAction(ModelTableEnt.ONE_MODEL_ACTION);
+          ho.setAction(ModelTableEnt.ACTION_ONE_MODEL);
           ho.setName(field.getRelations());
           ho.setNoValidateRights();
           Map<String, Object> linkParams = new HashMap();
-          linkParams.put(ModelTableEnt.NAME_PARAMETER, field.getRelations());
+          linkParams.put(ModelTableEnt.PARAMETER_NAME, field.getRelations());
           linkParams.put("id", model.get(fieldName));
           AbsEnt link = rd.href(linkParams, ho);
           div.addEnt(link);
         }
-        
+
         rd.td(tr, div);
       }
 
       // форма изменения
-      FormOptionInterface fo = rd.getFormOption();
-      fo.setAction(ModelTableEnt.ONE_MODEL_ACTION);
-      fo.setObject(object);
-      fo.setSpecAction(ModelTableEnt.CHANGE_SPECACTION);
-      fo.setNoValidateRights();
-      fo.setHorisontal(true);
-      fo.setTitle("Изменить модель");
-      Map<AbsEnt, String> inner = new LinkedHashMap();
-      inner.put(rd.hiddenInput(primaryName, model.get(primaryName)), "");
-      inner.put(rd.hiddenInput(ModelTableEnt.NAME_PARAMETER, struct.getTableAlias()), "");
-      AbsEnt changeForm = rd.rightForm(inner, fo).setAttribute(EnumAttrType.id, formId);
-      rd.td(tr, changeForm);
+      if (!struct.isSystem()) {
+        FormOptionInterface fo = rd.getFormOption();
+        fo.setAction(ModelTableEnt.ACTION_ONE_MODEL);
+        fo.setObject(object);
+        fo.setSpecAction(ModelTableEnt.SPECACTION_CHANGE);
+        fo.setNoValidateRights();
+        fo.setHorisontal(true);
+        fo.setTitle("Изменить модель");
+        Map<AbsEnt, String> inner = new LinkedHashMap();
+        inner.put(rd.hiddenInput(primaryName, model.get(primaryName)), "");
+        inner.put(rd.hiddenInput(ModelTableEnt.PARAMETER_NAME, struct.getTableAlias()), "");
+        AbsEnt changeForm = rd.rightForm(inner, fo).setAttribute(EnumAttrType.id, formId);
+        rd.td(tr, changeForm);
+      } else {
+        rd.td(tr, "");
+      }
 
       // вывести системные поля
       for (String fieldName : systemFields.keySet()) {
@@ -181,20 +194,37 @@ public class ModelTableRender extends OptionRender {
       }
 
       // вывести форму закрытия модели
-      FormOptionInterface closeFo = rd.getFormOption();
-      closeFo.setAction(ModelTableEnt.ONE_MODEL_ACTION);
-      closeFo.setObject(object);
-      closeFo.setSpecAction(ModelTableEnt.CLOSE_SPECACTION);
-      closeFo.setNoValidateRights();
-      closeFo.setHorisontal(true);
-      closeFo.setTitle("Закрыть модель");
-      Map<AbsEnt, String> closeInner = new LinkedHashMap();
-      closeInner.put(rd.hiddenInput(primaryName, model.get(primaryName)), "");
-      closeInner.put(rd.hiddenInput(ModelTableEnt.NAME_PARAMETER, struct.getTableAlias()), "");
-      AbsEnt closeForm = rd.rightForm(closeInner, closeFo);
-      rd.td(tr, closeForm);
+      if (!struct.isSystem()) {
+        FormOptionInterface closeFo = rd.getFormOption();
+        closeFo.setAction(ModelTableEnt.ACTION_ONE_MODEL);
+        closeFo.setObject(object);
+        closeFo.setSpecAction(ModelTableEnt.SPECACTION_CLOSE);
+        closeFo.setNoValidateRights();
+        closeFo.setHorisontal(true);
+        closeFo.setTitle("Закрыть модель");
+        Map<AbsEnt, String> closeInner = new LinkedHashMap();
+        closeInner.put(rd.hiddenInput(primaryName, model.get(primaryName)), "");
+        closeInner.put(rd.hiddenInput(ModelTableEnt.PARAMETER_NAME, struct.getTableAlias()), "");
+        AbsEnt closeForm = rd.rightForm(closeInner, closeFo);
+        rd.td(tr, closeForm);
+      } else {
+        rd.td(tr, "");
+      }
     }
     return table.render();
+  }
+  
+  private AbsEnt getSortableFieldLink(String fieldName, String tableName) throws Exception {
+    HrefOptionInterface ho = rd.getHrefOption();
+      ho.setAction(action);
+      ho.setObject(object);
+      ho.setName(fieldName);
+      ho.setNoValidateRights();
+      ho.setTitle("Сортировать по этому столбцу");
+      Map<String, Object> params = new HashMap();
+      params.put(ModelTableEnt.PARAMETER_COLUMN, fieldName);
+      params.put(ModelTableEnt.PARAMETER_NAME, tableName);
+      return rd.href(params, ho);
   }
 
   private String addForm(Map<String, Field> fieldsMap, Structure struct) throws Exception {
@@ -213,11 +243,11 @@ public class ModelTableRender extends OptionRender {
         }
       }
     }
-    inner.put(rd.hiddenInput(ModelTableEnt.NAME_PARAMETER, struct.getTableAlias()), "");
+    inner.put(rd.hiddenInput(ModelTableEnt.PARAMETER_NAME, struct.getTableAlias()), "");
     FormOptionInterface fo = rd.getFormOption();
-    fo.setAction(ModelTableEnt.ONE_MODEL_ACTION);
+    fo.setAction(ModelTableEnt.ACTION_ONE_MODEL);
     fo.setObject(object);
-    fo.setSpecAction(ModelTableEnt.ADD_SPECACTION);
+    fo.setSpecAction(ModelTableEnt.SPECACTION_ADD);
     fo.setNoValidateRights();
     fo.setHorisontal(true);
     fo.setTitle("Добавить модель");
@@ -252,6 +282,4 @@ public class ModelTableRender extends OptionRender {
   private Field getPrimaryField(Structure struct) throws Exception {
     return struct.getCloneFields().get(struct.getPrimaryAlias());
   }
-
- 
 }

@@ -29,14 +29,15 @@ public class ModelTableEnt extends OptionAbstract {
   private List<String> errors = new ArrayList();
   ModelTableService service;
   ModelTableRender render;
-  public final static String TABLE_ACTION = "modelTable";
-  public final static String ONE_MODEL_ACTION = "oneModel";
-  public final static String ADD_SPECACTION = "addModel";
-  public final static String CHANGE_SPECACTION = "changeModel";
-  public final static String CLOSE_SPECACTION = "deleteModel";
+  public final static String ACTION_TABLE = "modelTable";
+  public final static String ACTION_ONE_MODEL = "oneModel";
+  public final static String SPECACTION_ADD = "addModel";
+  public final static String SPECACTION_CHANGE = "changeModel";
+  public final static String SPECACTION_CLOSE = "deleteModel";
   // параметры name и page получают такие значения, для того чтобы не было случайных совпадений названий этих параметров с названиями параметров моделей
-  public final static String NAME_PARAMETER = "name_12343394844";
-  public final static String PAGE_PARAMETER = "page_12355433444";
+  public final static String PARAMETER_NAME = "name_12343394844";
+  public final static String PARAMETER_PAGE = "page_12355433444";
+  public final static String PARAMETER_COLUMN = "column_12355433444";
 
   private ModelTableEnt(AbstractApplication app, Render rd, String action, String specAction) {
     this.object = Creator.MODELTABLE_OBJECT_NAME;
@@ -62,9 +63,9 @@ public class ModelTableEnt extends OptionAbstract {
   public Boolean run() throws Exception {
     boolean status = true;
 
-    if (action.equals(TABLE_ACTION)) {
+    if (action.equals(ACTION_TABLE)) {
       return modelTable();
-    } else if (action.equals(ONE_MODEL_ACTION)) {
+    } else if (action.equals(ACTION_ONE_MODEL)) {
       return oneModel();
     }
 
@@ -84,56 +85,66 @@ public class ModelTableEnt extends OptionAbstract {
    * просмотр одной модели
    */
   private boolean oneModel() throws Exception {
-    if (MyString.NotNull(params.get(NAME_PARAMETER))) {
-      String modelName = params.get(NAME_PARAMETER).toString();
+    if (MyString.NotNull(params.get(PARAMETER_NAME))) {
+      String modelName = params.get(PARAMETER_NAME).toString();
 
-      if (specAction.equals(ADD_SPECACTION)) {
+      if (specAction.equals(SPECACTION_ADD)) {
         service.addModel(params, modelName);
         if (service.getErrors().isEmpty()) {
           isRedirect = true;
           redirectObject = object;
           redirectAction = action;
           redirectSpecAction = "";
-          redirectParams.put(NAME_PARAMETER, params.get(NAME_PARAMETER));
+          redirectParams.put(PARAMETER_NAME, params.get(PARAMETER_NAME));
           return true;
         }
-      } else if (specAction.equals(CHANGE_SPECACTION)) {
+      } else if (specAction.equals(SPECACTION_CHANGE)) {
         service.changeModel(params, modelName);
         if (service.getErrors().isEmpty()) {
           isRedirect = true;
           redirectObject = object;
           redirectAction = action;
           redirectSpecAction = "";
-          redirectParams.put(NAME_PARAMETER, params.get(NAME_PARAMETER));
+          redirectParams.put(PARAMETER_NAME, params.get(PARAMETER_NAME));
           return true;
         }
-      } else if (specAction.equals(CLOSE_SPECACTION)) {
+      } else if (specAction.equals(SPECACTION_CLOSE)) {
         service.closeModel(params, modelName);
         if (service.getErrors().isEmpty()) {
           isRedirect = true;
           redirectObject = object;
           redirectAction = action;
           redirectSpecAction = "";
-          redirectParams.put(NAME_PARAMETER, params.get(NAME_PARAMETER));
+          redirectParams.put(PARAMETER_NAME, params.get(PARAMETER_NAME));
           return true;
         }
       }
 
-
-
-      // получить список моделей
-      List<DinamicModel> modelList = service.getOneModelData(modelName, params.get(PAGE_PARAMETER), params.get("id"));
-      // получить структуру, соотв. модели
-      Structure structure = service.getStructure(modelName);
+      Object page;
       int countPages = 0;
-      errors.addAll(service.getErrors());
-      if (errors.isEmpty()) {
-        // количество страниц
-        countPages = service.getCountPages(modelName, params.get("id"));
+      List<DinamicModel> modelList = new ArrayList();
+      Structure structure = service.getStructure(modelName);
+      // если передан ИД
+      if (MyString.NotNull(params.get("id"))) {
+        // получить номер страницы, который соотв. этому ИД
+        page = service.getPageById(modelName, params.get("id"));
         errors.addAll(service.getErrors());
+      } else {
+        page = params.get(PARAMETER_PAGE);
+      }
+      // получить список моделей
+      if (errors.isEmpty()) {
+        modelList = service.getOneModelData(modelName, page, params.get(PARAMETER_COLUMN), null);
+        // получить структуру, соотв. модели
+        errors.addAll(service.getErrors());
+        if (errors.isEmpty()) {
+          // количество страниц
+          countPages = service.getCountPages(modelName, null);
+          errors.addAll(service.getErrors());
+        }
       }
       render.setRequestParams(params);
-      str += render.renderOneModel(modelList, errors, structure, countPages, params.get(PAGE_PARAMETER));
+      str += render.renderOneModel(modelList, errors, structure, countPages, page, params.get(PARAMETER_COLUMN));
     } else {
       errors.add("Ошибка: не передано имя модели");
       str += errors;

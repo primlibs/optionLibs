@@ -28,7 +28,7 @@ import warehouse.modelKeeper.ModelStructureKeeper;
 public class ModelTableService extends OptionService {
 
   // количество записей на одну страницу в отображении списка
-  private final int RECORDS_OF_PAGE = 20;
+  private final Integer RECORDS_OF_PAGE = 20;
 
   public ModelTableService(AbstractApplication app) {
     super(app);
@@ -36,9 +36,10 @@ public class ModelTableService extends OptionService {
 
   /**
    * получить структуру по имени
+   *
    * @param structureName
    * @return
-   * @throws Exception 
+   * @throws Exception
    */
   public Structure getStructure(String structureName) throws Exception {
     ModelStructureKeeper mss = app.getKeeper().getModelStructureKeeper();
@@ -47,10 +48,11 @@ public class ModelTableService extends OptionService {
 
   /**
    * получить количество страниц
+   *
    * @param modelNameObject
    * @param id
    * @return
-   * @throws Exception 
+   * @throws Exception
    */
   public int getCountPages(Object modelNameObject, Object id) throws Exception {
     if (MyString.NotNull(modelNameObject)) {
@@ -63,9 +65,53 @@ public class ModelTableService extends OptionService {
   }
 
   /**
-   * возвращает список структур для всех моделей
+   * получить номер страницы, на которой должна выводится модель с заданным ИД
+   *
+   * @param modelName
+   * @param id
    * @return
-   * @throws Exception 
+   * @throws Exception
+   */
+  public int getPageById(String modelName, Object id) throws Exception {
+    if (MyString.NotNull(id)) {
+      // получить список всех моделей
+      Select sel = getSelect(modelName, false, null, null, null, null);
+      boolean ok = sel.executeSelect(app.getConnection());
+      if (ok) {
+        Structure struct = getStructure(modelName);
+        String primaryName = struct.getPrimaryAlias();
+        List<DinamicModel> dmList = sel.getDinamicList();
+        Integer pos = -1;
+        // найти среди них ИД
+        // определить его позицию
+        for (DinamicModel dm : dmList) {
+          if (dm.get(primaryName) != null && dm.get(primaryName).toString().equals(id.toString())) {
+            pos = dmList.indexOf(dm) + 1;
+            break;
+          }
+        }
+        if (pos > 1) {
+          // разделить позицию на количество записей на странице
+          // округлить до целого в большую сторону
+          double page = Math.ceil(pos.doubleValue() / RECORDS_OF_PAGE.doubleValue());
+          return (int) page;
+        } else {
+          errors.add("Модель с заданным Ид не найдена");
+        }
+      } else {
+        errors.addAll(sel.getError());
+      }
+    } else {
+      errors.add("не передан ИД модели");
+    }
+    return -1;
+  }
+
+  /**
+   * возвращает список структур для всех моделей
+   *
+   * @return
+   * @throws Exception
    */
   public Map<String, Structure> getModelList() throws Exception {
     ModelStructureKeeper mss = app.getKeeper().getModelStructureKeeper();
@@ -75,40 +121,37 @@ public class ModelTableService extends OptionService {
 
   /**
    * возвращает данные для одной модели
+   *
    * @param modelNameObject
    * @param pageObject
    * @param id
    * @return
-   * @throws Exception 
+   * @throws Exception
    */
-  public List<DinamicModel> getOneModelData(Object modelNameObject, Object pageObject, Object id) throws Exception {
+  public List<DinamicModel> getOneModelData(Object modelNameObject, Object pageObject, Object sortableColumn, Object id) throws Exception {
     if (MyString.NotNull(modelNameObject)) {
       String modelName = modelNameObject.toString();
       Structure struct = getStructure(modelName);
-      if (!struct.isSystem()) {
-        int page = getPage(pageObject);
-        int start = (page - 1) * RECORDS_OF_PAGE;
-
-        Select sel = getSelect(modelName, false, start, RECORDS_OF_PAGE, id);
-        boolean ok = sel.executeSelect(app.getConnection());
-        if (!ok) {
-          errors.addAll(sel.getError());
-        }
-        return sel.getDinamicList();
-      } else {
-        errors.add("Ошибка: нельзя изменять данные системных моделей");
+      int page = getPage(pageObject);
+      int start = (page - 1) * RECORDS_OF_PAGE;
+      Select sel = getSelect(modelName, false, start, RECORDS_OF_PAGE, sortableColumn, id);
+      boolean ok = sel.executeSelect(app.getConnection());
+      if (!ok) {
+        errors.addAll(sel.getError());
       }
+      return sel.getDinamicList();
     } else {
       errors.add("Ошибка: не передано имя модели");
     }
     return new ArrayList();
   }
-  
+
   /**
    * добавить модель
+   *
    * @param params
    * @param modelName
-   * @throws Exception 
+   * @throws Exception
    */
   public void addModel(Map<String, Object> params, String modelName) throws Exception {
     Structure struct = getStructure(modelName);
@@ -134,9 +177,10 @@ public class ModelTableService extends OptionService {
 
   /**
    * изменить модель
+   *
    * @param params
    * @param modelName
-   * @throws Exception 
+   * @throws Exception
    */
   public void changeModel(Map<String, Object> params, String modelName) throws Exception {
     Structure struct = getStructure(modelName);
@@ -160,9 +204,10 @@ public class ModelTableService extends OptionService {
 
   /**
    * закрыть модель
+   *
    * @param params
    * @param modelName
-   * @throws Exception 
+   * @throws Exception
    */
   public void closeModel(Map<String, Object> params, String modelName) throws Exception {
     Structure struct = getStructure(modelName);
@@ -185,7 +230,7 @@ public class ModelTableService extends OptionService {
 
   private int getCountPages(String modelName, int recordsOfPage, Object id) throws Exception {
     int count = 0;
-    Select countSel = getSelect(modelName, true, null, null, id);
+    Select countSel = getSelect(modelName, true, null, null, null, id);
     boolean ok = countSel.executeSelect(app.getConnection());
     if (!ok) {
       errors.addAll(countSel.getError());
@@ -200,8 +245,9 @@ public class ModelTableService extends OptionService {
     return (int) countPagesDouble;
   }
 
-  private Select getSelect(String tableName, boolean isCountSelect, Integer start, Integer recordsOfPage, Object id) throws Exception {
+  private Select getSelect(String tableName, boolean isCountSelect, Integer start, Integer recordsOfPage, Object sortableColumn, Object id) throws Exception {
     Table table = getTable(tableName);
+    Structure struct = getStructure(tableName);
     Select sel = getSelect();
     if (isCountSelect) {
       sel.select(table.getPrimary(), "count", AgrTypes.COUNT);
@@ -214,8 +260,14 @@ public class ModelTableService extends OptionService {
       sel.and(table.getPrimary().eq(id));
     }
 
-    sel.order(table.get("delete_date"), OrdTypes.ASC);
-    sel.order(table.get("insert_date"), OrdTypes.DESC);
+    if (MyString.NotNull(sortableColumn)) {
+      sel.order(table.get(sortableColumn.toString()), OrdTypes.ASC);
+    } else {
+      if (!struct.isSystem()) {
+        sel.order(table.get("delete_date"), OrdTypes.ASC);
+        sel.order(table.get("insert_date"), OrdTypes.DESC);
+      }
+    }
     if (!isCountSelect) {
       if (start != null) {
         sel.setLimitFrom(start);
@@ -242,7 +294,4 @@ public class ModelTableService extends OptionService {
     }
     return page;
   }
-
-  
-  
 }

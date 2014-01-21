@@ -19,27 +19,26 @@ import web.objects.Parameter;
  * @author Pavel Rice
  */
 public class OptionRender {
-  
+
   protected String action;
   protected String object;
   protected Render rd;
-  
   protected Map<String, Object> requestParams = new HashMap();
-  
+
   public void setRequestParams(Map<String, Object> requestParams) {
     this.requestParams = requestParams;
   }
-  
-  public OptionRender(Render render,String object,String action) {
+
+  public OptionRender(Render render, String object, String action) {
     this.rd = render;
     this.object = object;
     this.action = action;
   }
-  
-   protected String href(String object, String action, String specAction, String name, Map<String, Object> params) throws Exception {
+
+  protected String href(String object, String action, String specAction, String name, Map<String, Object> params) throws Exception {
     return rd.href(object, action, specAction, params, name, false).render();
   }
-  
+
   protected String href(String object, String action, String specAction, String name, Map<String, Object> params, String style, String js) throws Exception {
     AbsEnt href = rd.href(object, action, specAction, params, name, false);
     if (style != null && !style.isEmpty()) {
@@ -50,9 +49,8 @@ public class OptionRender {
     }
     return href.render();
   }
-  
-  
-   /**
+
+  /**
    * создает пагинатор
    *
    * @param page активная страница
@@ -69,6 +67,35 @@ public class OptionRender {
       paramsList.add(new Parameter(name, params.get(name)));
     }
     return paginator(page, countPages, object, action, paramsList, pageParameterName);
+  }
+  
+  protected String paginator3000(int page, int countPages, String object, String action, Map<String, Object> params, String nameParameterPage, String paginatorId) throws Exception {
+    List<Parameter> paramsList = new ArrayList();
+    for (String name : params.keySet()) {
+      paramsList.add(new Parameter(name, params.get(name)));
+    }
+    return paginator3000(page, countPages, object, action, paramsList, nameParameterPage, paginatorId);
+  }
+
+  protected String paginator3000(int page, int countPages, String object, String action, List<Parameter> params, String nameParameterPage, String paginatorId) throws Exception {
+    HrefOptionInterface ho = rd.getHrefOption();
+    ho.setAction(action);
+    ho.setObject(object);
+    ho.setSpecAction("");
+    ho.setNoValidateRights();
+    AbsEnt link = rd.href(params, ho);
+    String href = link.getAttribute(EnumAttrType.href);
+    return "<div class=\"paginator\" id=\"" + paginatorId + "\"></div>"
+            + "<script type=\"text/javascript\">"
+            + "paginator_example = new Paginator("
+            + "'" + paginatorId + "',"
+            + countPages + ","
+            + "10,"
+            + page + ","
+            + "'" + href + "',"
+            + "'" + nameParameterPage + "'"
+            + ");"
+            + "</script>";
   }
 
   /**
@@ -100,8 +127,8 @@ public class OptionRender {
       // вывести ссылку на предыдущую
       // если номер равен 1 то выводить не ссылку, а просто надпись
       AbsEnt li = rd.getFabric().get("li");
-      
-      
+
+
       if (page == 1) {
         li.setCss("previous-off");
         li.setValue("<< Previous");
@@ -109,7 +136,7 @@ public class OptionRender {
         li.setCss("previous");
         pageParameter = new Parameter(nameParameterPage, page - 1);
         params.add(pageParameter);
-        
+
         HrefOptionInterface ho = rd.getHrefOption();
         ho.setAction(action);
         ho.setObject(object);
@@ -121,7 +148,7 @@ public class OptionRender {
         li.addEnt(href);
       }
       ul.addEnt(li);
-      
+
       // если разница между номером и первой больше двух
       // вывести номер первой и троеточие
       if (page > 3) {
@@ -129,7 +156,7 @@ public class OptionRender {
         params.remove(pageParameter);
         pageParameter = new Parameter(nameParameterPage, "1");
         params.add(pageParameter);
-        
+
         HrefOptionInterface ho = rd.getHrefOption();
         ho.setAction(action);
         ho.setObject(object);
@@ -153,7 +180,7 @@ public class OptionRender {
         params.remove(pageParameter);
         pageParameter = new Parameter(nameParameterPage, page - 2);
         params.add(pageParameter);
-        
+
         HrefOptionInterface ho = rd.getHrefOption();
         ho.setAction(action);
         ho.setObject(object);
@@ -165,13 +192,13 @@ public class OptionRender {
         li3.addEnt(href);
         ul.addEnt(li3);
       }
-      
+
       if (page > 1) {
         AbsEnt li4 = rd.getFabric().get("li");
         params.remove(pageParameter);
         pageParameter = new Parameter(nameParameterPage, page - 1);
         params.add(pageParameter);
-        
+
         HrefOptionInterface ho = rd.getHrefOption();
         ho.setAction(action);
         ho.setObject(object);
@@ -194,7 +221,7 @@ public class OptionRender {
         params.remove(pageParameter);
         pageParameter = new Parameter(nameParameterPage, page + 1);
         params.add(pageParameter);
-        
+
         HrefOptionInterface ho = rd.getHrefOption();
         ho.setAction(action);
         ho.setObject(object);
@@ -206,13 +233,13 @@ public class OptionRender {
         li6.addEnt(href);
         ul.addEnt(li6);
       }
-      
+
       if (countPages - page > 1) {
         AbsEnt li7 = rd.getFabric().get("li");
         params.remove(pageParameter);
         pageParameter = new Parameter(nameParameterPage, page + 2);
         params.add(pageParameter);
-        
+
         HrefOptionInterface ho = rd.getHrefOption();
         ho.setAction(action);
         ho.setObject(object);
@@ -236,7 +263,7 @@ public class OptionRender {
         params.remove(pageParameter);
         pageParameter = new Parameter(nameParameterPage, countPages);
         params.add(pageParameter);
-        
+
         HrefOptionInterface ho = rd.getHrefOption();
         ho.setAction(action);
         ho.setObject(object);
@@ -259,7 +286,7 @@ public class OptionRender {
         params.remove(pageParameter);
         pageParameter = new Parameter(nameParameterPage, page + 1);
         params.add(pageParameter);
-        
+
         HrefOptionInterface ho = rd.getHrefOption();
         ho.setAction(action);
         ho.setObject(object);
@@ -271,9 +298,8 @@ public class OptionRender {
         li10.addEnt(href);
       }
       ul.addEnt(li10);
-      
+
     }
     return div1;
   }
-  
 }
