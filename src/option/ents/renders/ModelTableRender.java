@@ -32,12 +32,21 @@ public class ModelTableRender extends OptionRender {
     super(render, object, action);
   }
 
+  /**
+   * вывести данные одной модели
+   * @param dmList
+   * @param errors
+   * @param structure
+   * @param countPages
+   * @param pageObject
+   * @return
+   * @throws Exception 
+   */
   public String renderOneModel(List<DinamicModel> dmList, List<String> errors, Structure structure, int countPages, Object pageObject) throws Exception {
-    // получить список моделей
-    // получить структуру
-    String str = "";
-    str += errors + "<br/>";
 
+    String str = "";
+    str += "<h2>Данные по модели " + structure.getTableAlias() + "</h2>";
+    str += errors + "<br/>";
     Map<String, Field> fieldsMap = structure.getCloneFields();
 
     // вывести форму добавления
@@ -57,16 +66,36 @@ public class ModelTableRender extends OptionRender {
 
     return str;
   }
+  
+  /**
+   * вывести список всех моделей
+   * @param structureMap
+   * @param errors
+   * @return
+   * @throws Exception 
+   */
+   public String renderModelList(Map<String, Structure> structureMap, List<String> errors) throws Exception {
+    String content = "";
+    content += errors + "<br/>";
+    for (String name : structureMap.keySet()) {
+      Structure structure = structureMap.get(name);
+      if (!structure.isSystem()) {
+        Map<String, Object> oneStructureParams = new HashMap();
+        oneStructureParams.put(ModelTableEnt.NAME_PARAMETER, name);
+        content += href(Creator.MODELTABLE_OBJECT_NAME, ModelTableEnt.ONE_MODEL_ACTION, "", name, oneStructureParams);
+        content += "<br/>";
+      }
+    }
+    return content;
+  }
 
   private String table(List<DinamicModel> modelList, Map<String, Field> fieldsMap, Structure struct) throws Exception {
-    // вывести таблицу
     AbsEnt table = rd.table("1", "5", "");
     table.addAttribute(EnumAttrType.style, " border-collapse: collapse; ");
 
     Field primaryField = getPrimaryField(struct);
     Map<String, Field> notSystemFields = getNotSystemFields(struct);
     Map<String, Field> systemFields = getSystemFields(struct);
-
 
 
     AbsEnt trHead = rd.getFabric().get("tr");
@@ -87,8 +116,6 @@ public class ModelTableRender extends OptionRender {
     rd.td(trHead, "");
 
 
-    // вывести саму таблицу
-    // для каждой модели
     for (DinamicModel model : modelList) {
       AbsEnt tr = rd.getFabric().get("tr");
       table.addEnt(tr);
@@ -103,7 +130,7 @@ public class ModelTableRender extends OptionRender {
         Field field = notSystemFields.get(fieldName);
         AbsEnt formElement;
         String type = field.getType();
-        if (type.equalsIgnoreCase("data")) {
+        if (type.equalsIgnoreCase("datetime")) {
           formElement = rd.dateTimeInput(fieldName, model.get(fieldName), fieldName);
         } else if (type.equalsIgnoreCase("text")) {
           formElement = rd.textArea(fieldName, model.get(fieldName), fieldName);
@@ -129,6 +156,7 @@ public class ModelTableRender extends OptionRender {
         rd.td(tr, div);
       }
 
+      // форма изменения
       FormOptionInterface fo = rd.getFormOption();
       fo.setAction(ModelTableEnt.ONE_MODEL_ACTION);
       fo.setObject(object);
@@ -172,15 +200,10 @@ public class ModelTableRender extends OptionRender {
   private String addForm(Map<String, Field> fieldsMap, Structure struct) throws Exception {
     Map<String, Field> notSystemFields = getNotSystemFields(struct);
     Map<AbsEnt, String> inner = new LinkedHashMap();
-    // получить список полей таблицы
-    // для каждого поля
     for (String fieldName : notSystemFields.keySet()) {
       Field field = fieldsMap.get(fieldName);
-      // если это не ИД и не системное поле
       if (field.isEditable()) {
-        // добавить в форму поле
         String type = field.getType();
-        // если это поле типа дата
         if (type.equalsIgnoreCase("datetime")) {
           inner.put(rd.dateTimeInput(fieldName, requestParams.get(fieldName), fieldName), "");
         } else if (type.equalsIgnoreCase("text")) {
@@ -230,18 +253,5 @@ public class ModelTableRender extends OptionRender {
     return struct.getCloneFields().get(struct.getPrimaryAlias());
   }
 
-  public String renderModelTable(Map<String, Structure> structureMap, List<String> errors) throws Exception {
-    String content = "";
-    content += errors + "<br/>";
-    for (String name : structureMap.keySet()) {
-      Structure structure = structureMap.get(name);
-      if (!structure.isSystem()) {
-        Map<String, Object> oneStructureParams = new HashMap();
-        oneStructureParams.put(ModelTableEnt.NAME_PARAMETER, name);
-        content += href(Creator.MODELTABLE_OBJECT_NAME, ModelTableEnt.ONE_MODEL_ACTION, "", name, oneStructureParams);
-        content += "<br/>";
-      }
-    }
-    return content;
-  }
+ 
 }

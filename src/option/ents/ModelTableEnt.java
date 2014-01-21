@@ -128,6 +128,7 @@ public class ModelTableEnt extends OptionAbstract {
       int countPages = 0;
       errors.addAll(service.getErrors());
       if (errors.isEmpty()) {
+        // количество страниц
         countPages = service.getCountPages(modelName, params.get("id"));
         errors.addAll(service.getErrors());
       }
@@ -138,9 +139,6 @@ public class ModelTableEnt extends OptionAbstract {
       str += errors;
       return false;
     }
-    // передать в рендер
     return true;
   }
-  // методы отображения ----------------------------------------------------------------------------------------------------------------
-  // методы работы с данными ----------------------------------------------------------------------------------------------------------
 }
