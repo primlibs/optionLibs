@@ -34,10 +34,15 @@ public class ModelTableService extends OptionService {
     super(app);
   }
 
-  public int getCountPages(Object modelNameObject) throws Exception {
+  public Structure getStructure(String structureName) throws Exception {
+    ModelStructureKeeper mss = app.getKeeper().getModelStructureKeeper();
+    return mss.getStructure(structureName);
+  }
+
+  public int getCountPages(Object modelNameObject, Object id) throws Exception {
     if (MyString.NotNull(modelNameObject)) {
       String modelName = modelNameObject.toString();
-      return getCountPages(modelName, recordsOfPage);
+      return getCountPages(modelName, recordsOfPage, id);
     } else {
       errors.add("Ошибка: не передано имя модели");
       return 0;
@@ -50,36 +55,35 @@ public class ModelTableService extends OptionService {
     return structureMap;
   }
 
-  public Structure getStructure(String structureName) throws Exception {
-    ModelStructureKeeper mss = app.getKeeper().getModelStructureKeeper();
-    return mss.getStructure(structureName);
-  }
-
-  public List<DinamicModel> getOneModelData(Object modelNameObject, Object pageObject) throws Exception {
+  public List<DinamicModel> getOneModelData(Object modelNameObject, Object pageObject, Object id) throws Exception {
     // проверить входные параметры
     if (MyString.NotNull(modelNameObject)) {
       // получить список данных для этих параметров
       String modelName = modelNameObject.toString();
-      int page = getPage(pageObject);
-      // старт
-      int start = (page - 1) * recordsOfPage;
+      Structure struct = getStructure(modelName);
+      if (!struct.isSystem()) {
+        int page = getPage(pageObject);
+        // старт
+        int start = (page - 1) * recordsOfPage;
 
-      Select sel = getSelect(modelName, false, start, recordsOfPage);
-      boolean ok = sel.executeSelect(app.getConnection());
-      if (!ok) {
-        errors.addAll(sel.getError());
+        Select sel = getSelect(modelName, false, start, recordsOfPage, id);
+        boolean ok = sel.executeSelect(app.getConnection());
+        if (!ok) {
+          errors.addAll(sel.getError());
+        }
+        return sel.getDinamicList();
+      } else {
+        errors.add("Ошибка: нельзя изменять данные системных моделей");
       }
-      return sel.getDinamicList();
-
     } else {
       errors.add("Ошибка: не передано имя модели");
     }
     return new ArrayList();
   }
 
-  private int getCountPages(String modelName, int recordsOfPage) throws Exception {
+  private int getCountPages(String modelName, int recordsOfPage, Object id) throws Exception {
     int count = 0;
-    Select countSel = getSelect(modelName, true, null, null);
+    Select countSel = getSelect(modelName, true, null, null, id);
     boolean ok = countSel.executeSelect(app.getConnection());
     if (!ok) {
       errors.addAll(countSel.getError());
@@ -94,7 +98,7 @@ public class ModelTableService extends OptionService {
     return (int) countPagesDouble;
   }
 
-  private Select getSelect(String tableName, boolean isCountSelect, Integer start, Integer recordsOfPage) throws Exception {
+  private Select getSelect(String tableName, boolean isCountSelect, Integer start, Integer recordsOfPage, Object id) throws Exception {
     Table table = getTable(tableName);
     Select sel = getSelect();
     if (isCountSelect) {
@@ -104,9 +108,12 @@ public class ModelTableService extends OptionService {
     }
     sel.from(table);
     sel.and(table.getPrimary().isNotNull());
+    if (id != null && !id.toString().isEmpty()) {
+      sel.and(table.getPrimary().eq(id));
+    }
 
     sel.order(table.get("delete_date"), OrdTypes.ASC);
-    sel.order(table.get("insert_date"), OrdTypes.ASC);
+    sel.order(table.get("insert_date"), OrdTypes.DESC);
     if (!isCountSelect) {
       if (start != null) {
         sel.setLimitFrom(start);
@@ -135,54 +142,70 @@ public class ModelTableService extends OptionService {
   }
 
   public void addModel(Map<String, Object> params, String modelName) throws Exception {
-    // создать модель
-    Model model = getModel(modelName);
-    // присвоить ей все параметры
-    model.set(params);
-    model.set("insert_date", FormatDate.getCurrentDateInMysql());
-    model.set("update_date", FormatDate.getCurrentDateInMysql());
-    model.set("insert_user_id", app.getRightsObject().getUserId());
-    model.set("update_user_id", app.getRightsObject().getUserId());
-    if (model.getPrimary() != null && !"".equals(model.getPrimary())) {
-      errors.add("Обнаружен первичный ключ " + model.getPrimaryAlias() + model.getPrimary());
-    } else {
-      boolean ok = model.save();
-      if (!ok) {
-        errors.addAll(model.getError());
+    Structure struct = getStructure(modelName);
+    if (!struct.isSystem()) {
+      // создать модель
+      Model model = getModel(modelName);
+      // присвоить ей все параметры
+      model.set(params);
+      model.set("insert_date", FormatDate.getCurrentDateInMysql());
+      model.set("update_date", FormatDate.getCurrentDateInMysql());
+      model.set("insert_user_id", app.getRightsObject().getUserId());
+      model.set("update_user_id", app.getRightsObject().getUserId());
+      if (model.getPrimary() != null && !"".equals(model.getPrimary())) {
+        errors.add("Обнаружен первичный ключ " + model.getPrimaryAlias() + model.getPrimary());
+      } else {
+        boolean ok = model.save();
+        if (!ok) {
+          errors.addAll(model.getError());
+        }
       }
+    } else {
+      errors.add("Ошибка: нельзя изменять данные системных моделей");
     }
   }
 
   public void changeModel(Map<String, Object> params, String modelName) throws Exception {
-    // создать модель
-    Model model = getModel(modelName);
-    // присвоить ей все параметры
-    model.set(params);
-    model.set("update_date", FormatDate.getCurrentDateInMysql());
-    model.set("update_user_id", app.getRightsObject().getUserId());
-    if (model.getPrimary() == null || "".equals(model.getPrimary())) {
-      errors.add("Не обнаружен первичный ключ " + model.getPrimaryAlias() + model.getPrimary());
-    } else {
-      boolean ok = model.save();
-      if (!ok) {
-        errors.addAll(model.getError());
+    Structure struct = getStructure(modelName);
+    if (!struct.isSystem()) {
+      // создать модель
+      Model model = getModel(modelName);
+      // присвоить ей все параметры
+      model.set(params);
+      model.set("update_date", FormatDate.getCurrentDateInMysql());
+      model.set("update_user_id", app.getRightsObject().getUserId());
+      if (model.getPrimary() == null || "".equals(model.getPrimary())) {
+        errors.add("Не обнаружен первичный ключ " + model.getPrimaryAlias() + model.getPrimary());
+      } else {
+        boolean ok = model.save();
+        if (!ok) {
+          errors.addAll(model.getError());
+        }
       }
+    } else {
+      errors.add("Ошибка: нельзя изменять данные системных моделей");
     }
   }
 
   public void closeModel(Map<String, Object> params, String modelName) throws Exception {
-    // создать модель
-    Model model = getModel(modelName);
-    // присвоить ей все параметры
-    model.set(params);
-    if (model.findByPrimary() == false) {
-      errors.add("Не обнаружен первичный ключ " + model.getPrimaryAlias() + model.getPrimary());
-    } else {
-      model.set("delete_date", FormatDate.getCurrentDateInMysql());
-      boolean ok = model.save();
-      if (!ok) {
-        errors.addAll(model.getError());
+    Structure struct = getStructure(modelName);
+    if (!struct.isSystem()) {
+      // создать модель
+      Model model = getModel(modelName);
+      // присвоить ей все параметры
+      model.set(params);
+      if (model.findByPrimary() == false) {
+        errors.add("Не обнаружен первичный ключ " + model.getPrimaryAlias() + model.getPrimary());
+      } else {
+        model.set("delete_date", FormatDate.getCurrentDateInMysql());
+        boolean ok = model.save();
+        if (!ok) {
+          errors.addAll(model.getError());
+        }
       }
+    } else {
+      errors.add("Ошибка: нельзя изменять данные системных моделей");
     }
   }
+  
 }

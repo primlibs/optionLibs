@@ -16,6 +16,7 @@ import prim.model.DinamicModel;
 import prim.modelStructure.Field;
 import prim.modelStructure.Structure;
 import web.FormOptionInterface;
+import web.HrefOptionInterface;
 import web.Render;
 import web.fabric.AbsEnt;
 import web.fabric.EnumAttrType;
@@ -60,6 +61,7 @@ public class ModelTableRender extends OptionRender {
   private String table(List<DinamicModel> modelList, Map<String, Field> fieldsMap, Structure struct) throws Exception {
     // вывести таблицу
     AbsEnt table = rd.table("1", "5", "");
+    table.addAttribute(EnumAttrType.style, " border-collapse: collapse; ");
 
     Field primaryField = getPrimaryField(struct);
     Map<String, Field> notSystemFields = getNotSystemFields(struct);
@@ -109,7 +111,22 @@ public class ModelTableRender extends OptionRender {
           formElement = rd.textInput(fieldName, model.get(fieldName), fieldName);
         }
         formElement.setAttribute(EnumAttrType.form, formId);
-        rd.td(tr, formElement);
+        AbsEnt div = rd.div("", "");
+        div.addEnt(formElement);
+        if (field.getRelations() != null && !field.getRelations().isEmpty()) {
+          HrefOptionInterface ho = rd.getHrefOption();
+          ho.setObject(object);
+          ho.setAction(ModelTableEnt.ONE_MODEL_ACTION);
+          ho.setName(field.getRelations());
+          ho.setNoValidateRights();
+          Map<String, Object> linkParams = new HashMap();
+          linkParams.put(ModelTableEnt.NAME_PARAMETER, field.getRelations());
+          linkParams.put("id", model.get(fieldName));
+          AbsEnt link = rd.href(linkParams, ho);
+          div.addEnt(link);
+        }
+        
+        rd.td(tr, div);
       }
 
       FormOptionInterface fo = rd.getFormOption();

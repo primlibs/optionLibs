@@ -122,11 +122,15 @@ public class ModelTableEnt extends OptionAbstract {
 
 
       // получить список моделей
-      List<DinamicModel> modelList = service.getOneModelData(modelName, params.get(PAGE_PARAMETER));
+      List<DinamicModel> modelList = service.getOneModelData(modelName, params.get(PAGE_PARAMETER), params.get("id"));
       // получить структуру, соотв. модели
       Structure structure = service.getStructure(modelName);
-      int countPages = service.getCountPages(modelName);
+      int countPages = 0;
       errors.addAll(service.getErrors());
+      if (errors.isEmpty()) {
+        countPages = service.getCountPages(modelName, params.get("id"));
+        errors.addAll(service.getErrors());
+      }
       render.setRequestParams(params);
       str += render.renderOneModel(modelList, errors, structure, countPages, params.get(PAGE_PARAMETER));
     } else {

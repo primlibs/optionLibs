@@ -9,9 +9,11 @@ import java.util.List;
 import prim.AbstractApplication;
 import prim.model.Model;
 import prim.model.ModelFactory;
+import prim.modelStructure.Structure;
 import prim.select.Select;
 import prim.select.Table;
 import prim.select.TableSelectFactory;
+import warehouse.modelKeeper.ModelStructureKeeper;
 
 /**
  *
@@ -45,4 +47,7 @@ public class OptionService {
     ModelFactory modelFactory = new ModelFactory(app);
     return modelFactory.getModel(tableAlias);
   }
+  
+  
+  
 }
