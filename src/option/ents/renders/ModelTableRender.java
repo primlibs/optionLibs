@@ -65,8 +65,7 @@ public class ModelTableRender extends OptionRender {
     if (pageObject != null) {
       page = Integer.parseInt(pageObject.toString());
     }
-    str += paginator(page, countPages, object, action, params, ModelTableEnt.PARAMETER_PAGE).render();
-    str += paginator3000(page, countPages, object, action, params, ModelTableEnt.PARAMETER_PAGE, "paginatorrr");
+    str += paginator3000(page, countPages, object, action, params, ModelTableEnt.PARAMETER_PAGE, "paginator1");
 
     return str;
   }
