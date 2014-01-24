@@ -35,6 +35,7 @@ import warehouse.controllerStructure.StructureController;
 import warehouse.cron.CronObject;
 import warehouse.cron.CronSingleton;
 import warehouse.pair.PairKeeper;
+import web.FormOptionInterface;
 import web.Render;
 import web.fabric.AbsEnt;
 import web.fabric.EnumAttrType;
@@ -73,8 +74,6 @@ public class CronEnt extends OptionAbstract {
     try {
       CronSingleton ck = CronSingleton.getInstanceNew(app);
       String cntName = MyString.getString(params.get("cntName"));
-      str += action + " " + cntName;
-      str += params;
       // добавлени контроллера
       if (action.equals("add") && !cntName.equals("")) {
         Integer coNew = ck.setCronObject();
@@ -82,7 +81,7 @@ public class CronEnt extends OptionAbstract {
         cobj.setServiceName(cntName);
         boolean ok = ck.SaveCollectionInFile();
         str += ok;
-      // удаление контроллера
+        // удаление контроллера
       } else if (action.equals("delete") && !cntName.equals("")) {
         List<CronObject> cronList = Collections.synchronizedList(ck.getCronlist());
         Iterator<CronObject> iter = cronList.iterator();
@@ -93,18 +92,32 @@ public class CronEnt extends OptionAbstract {
           }
         }
         /*
-        for (CronObject co : cronList) {
-          if (co.getServiceName().equals(cntName)) {
-            ck.getCronlist().remove(co);
-          }
-        }
-        */
+         for (CronObject co : cronList) {
+         if (co.getServiceName().equals(cntName)) {
+         ck.getCronlist().remove(co);
+         }
+         }
+         */
         ck.SaveCollectionInFile();
       }
       AbsEnt date = rd.table("", "", null);
       Map<AbsEnt, String> mp1 = new HashMap();
       mp1.put(rd.combo(getControllers(), null, "cntName"), "");
-      rd.tr(date, rd.rightForm(true, object, "add", null, mp1, "Добавить", rd.getRenderConstant().ADD_IMGPH, false).setAttribute(EnumAttrType.action, ""));
+      rd.tr(date, rd.rightForm(true, object, "add", null, mp1, "Добавить", rd.getRenderConstant().ADD_IMGPH, false));
+      
+      /*
+      Map<AbsEnt, String> inner = new LinkedHashMap();
+      FormOptionInterface fo = rd.getFormOption();
+      fo.setAction("add");
+      fo.setObject(object);
+      fo.setSpecAction("");
+      fo.setNoValidateRights();
+      fo.setHorisontal(true);
+      fo.setTitle("Добавить");
+      fo.setImg(rd.getRenderConstant().ADD_IMGPH);
+      AbsEnt addForm = rd.rightForm(inner, fo);
+      */
+
       for (CronObject co : ck.getCronlist()) {
         Map<AbsEnt, String> mp = new HashMap();
         mp.put(rd.hiddenInput("cntName", co.getServiceName()), "");
