@@ -80,7 +80,6 @@ public class CronEnt extends OptionAbstract {
         CronObject cobj = ck.getCronObject(coNew);
         cobj.setServiceName(cntName);
         boolean ok = ck.SaveCollectionInFile();
-        str += ok;
         // удаление контроллера
       } else if (action.equals("delete") && !cntName.equals("")) {
         List<CronObject> cronList = Collections.synchronizedList(ck.getCronlist());
@@ -104,24 +103,11 @@ public class CronEnt extends OptionAbstract {
       Map<AbsEnt, String> mp1 = new HashMap();
       mp1.put(rd.combo(getControllers(), null, "cntName"), "");
       rd.tr(date, rd.rightForm(true, object, "add", null, mp1, "Добавить", rd.getRenderConstant().ADD_IMGPH, false));
-      
-      /*
-      Map<AbsEnt, String> inner = new LinkedHashMap();
-      FormOptionInterface fo = rd.getFormOption();
-      fo.setAction("add");
-      fo.setObject(object);
-      fo.setSpecAction("");
-      fo.setNoValidateRights();
-      fo.setHorisontal(true);
-      fo.setTitle("Добавить");
-      fo.setImg(rd.getRenderConstant().ADD_IMGPH);
-      AbsEnt addForm = rd.rightForm(inner, fo);
-      */
 
       for (CronObject co : ck.getCronlist()) {
         Map<AbsEnt, String> mp = new HashMap();
         mp.put(rd.hiddenInput("cntName", co.getServiceName()), "");
-        rd.tr(date, co.getServiceName(), rd.rightForm(true, object, "delete", null, mp, "Удалить", rd.getRenderConstant().DEL_IMGPH, false).setAttribute(EnumAttrType.action, ""));
+        rd.tr(date, co.getServiceName(), rd.rightForm(true, object, "delete", null, mp, "Удалить", rd.getRenderConstant().DEL_IMGPH, false));
       }
       str += date.render();
     } catch (Exception e) {
