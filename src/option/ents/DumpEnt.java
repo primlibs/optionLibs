@@ -101,7 +101,7 @@ public class DumpEnt extends OptionAbstract {
             bb.setSqlDumpName("dump.sql");
             bb.addConfigFile(ok.getAppUserDataConfigPath(), "pair.xml");
             bb.addConfigFile(ok.getAppUserDataConfigPath(), "systemModel.xml");
-            bb.addConfigFile("/usr/local/project", "config.xml");
+            bb.addConfigFile("/usr/local/"+app.getAppName(), "config.xml");
                 str +=ok.getAppUserDataConfigPath();
             bb.createBackup();
             if (bb.getError().isEmpty()) {
