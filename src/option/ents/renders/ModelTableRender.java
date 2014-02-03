@@ -50,10 +50,11 @@ public class ModelTableRender extends OptionRender {
     str += errors + "<br/>";
     Map<String, Field> fieldsMap = structure.getCloneFields();
 
-    // вывести форму добавления
+    str += downloadCsvForm(structure) + "<br/>";
     if (!structure.isSystem()) {
-      str += addForm(fieldsMap, structure);
+      str += addForm(fieldsMap, structure) + "<br/>";
     }
+    
     // вывести таблицу
     str += table(dmList, structure);
 
@@ -212,18 +213,18 @@ public class ModelTableRender extends OptionRender {
     }
     return table.render();
   }
-  
+
   private AbsEnt getSortableFieldLink(String fieldName, String tableName) throws Exception {
     HrefOptionInterface ho = rd.getHrefOption();
-      ho.setAction(action);
-      ho.setObject(object);
-      ho.setName(fieldName);
-      ho.setNoValidateRights();
-      ho.setTitle("Сортировать по этому столбцу");
-      Map<String, Object> params = new HashMap();
-      params.put(ModelTableEnt.PARAMETER_COLUMN, fieldName);
-      params.put(ModelTableEnt.PARAMETER_NAME, tableName);
-      return rd.href(params, ho);
+    ho.setAction(action);
+    ho.setObject(object);
+    ho.setName(fieldName);
+    ho.setNoValidateRights();
+    ho.setTitle("Сортировать по этому столбцу");
+    Map<String, Object> params = new HashMap();
+    params.put(ModelTableEnt.PARAMETER_COLUMN, fieldName);
+    params.put(ModelTableEnt.PARAMETER_NAME, tableName);
+    return rd.href(params, ho);
   }
 
   private String addForm(Map<String, Field> fieldsMap, Structure struct) throws Exception {
@@ -250,7 +251,22 @@ public class ModelTableRender extends OptionRender {
     fo.setNoValidateRights();
     fo.setHorisontal(true);
     fo.setTitle("Добавить модель");
-    AbsEnt addForm = rd.rightForm(inner, fo);
+    AbsEnt addForm = rd.rightForm(inner, fo).setAttribute(EnumAttrType.style, "");
+    return addForm.render();
+  }
+
+  private String downloadCsvForm(Structure struct) throws Exception {
+    Map<AbsEnt, String> inner = new LinkedHashMap();
+    inner.put(rd.hiddenInput(ModelTableEnt.PARAMETER_NAME, struct.getTableAlias()), "");
+    inner.put(rd.hiddenInput("getFile", "1"), "");
+    FormOptionInterface fo = rd.getFormOption();
+    fo.setAction(ModelTableEnt.ACTION_ONE_MODEL);
+    fo.setObject(object);
+    fo.setSpecAction(ModelTableEnt.SPECACTION_DOWNLOAD_CSV);
+    fo.setNoValidateRights();
+    fo.setHorisontal(true);
+    fo.setTitle("Скачать в формате CSV");
+    AbsEnt addForm = rd.rightForm(inner, fo).setAttribute(EnumAttrType.style, "");
     return addForm.render();
   }
 

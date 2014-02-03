@@ -34,6 +34,7 @@ public class ModelTableEnt extends OptionAbstract {
   public final static String SPECACTION_ADD = "addModel";
   public final static String SPECACTION_CHANGE = "changeModel";
   public final static String SPECACTION_CLOSE = "deleteModel";
+  public final static String SPECACTION_DOWNLOAD_CSV = "downloadCsv";
   // параметры name и page получают такие значения, для того чтобы не было случайных совпадений названий этих параметров с названиями параметров моделей
   public final static String PARAMETER_NAME = "name_12343394844";
   public final static String PARAMETER_PAGE = "page_12355433444";
@@ -81,6 +82,7 @@ public class ModelTableEnt extends OptionAbstract {
     return true;
   }
 
+  
   /**
    * просмотр одной модели
    */
@@ -118,6 +120,13 @@ public class ModelTableEnt extends OptionAbstract {
           redirectParams.put(PARAMETER_NAME, params.get(PARAMETER_NAME));
           return true;
         }
+      } else if (specAction.equals(SPECACTION_DOWNLOAD_CSV)) {
+        byte[] bytes = service.getCsvFile(modelName);
+        if (service.getErrors().isEmpty()) {
+          fileContent = bytes;
+          fileName = modelName + ".csv";
+          return true;
+        } 
       }
 
       Object page;

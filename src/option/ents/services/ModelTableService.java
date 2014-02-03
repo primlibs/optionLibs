@@ -4,7 +4,11 @@
  */
 package option.ents.services;
 
+import com.csvreader.CsvWriter;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -13,6 +17,7 @@ import prim.libs.FormatDate;
 import prim.libs.MyString;
 import prim.model.DinamicModel;
 import prim.model.Model;
+import prim.modelStructure.Field;
 import prim.modelStructure.Structure;
 import prim.select.AgrTypes;
 import prim.select.OrdTypes;
@@ -144,6 +149,78 @@ public class ModelTableService extends OptionService {
       errors.add("Ошибка: не передано имя модели");
     }
     return new ArrayList();
+  }
+
+  public byte[] getCsvFile(String modelName) throws Exception {
+    if (MyString.NotNull(modelName)) {
+      Structure struct = getStructure(modelName);
+      Select select = getSelect(modelName, false, null, null, null, null);
+      if (select.executeSelect(app.getConnection())) {
+        // создать writer
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        CsvWriter csvWriter = new CsvWriter(baos, ',', Charset.forName("UTF-8"));
+        try {
+          // отсортировать колонкиы
+          Field primaryField = getPrimaryField(struct);
+          Map<String, Field> notSystemFields = getNotSystemFields(struct);
+          Map<String, Field> systemFields = getSystemFields(struct);
+          Map<String, Field> fields = new LinkedHashMap();
+          fields.put(primaryField.getAlias(), primaryField);
+          fields.putAll(notSystemFields);
+          fields.putAll(systemFields);
+          // записать заголовки
+          for (String fieldName : fields.keySet()) {
+            csvWriter.write(fieldName);
+          }
+          csvWriter.endRecord();
+          // записать все остальные данные
+          for (DinamicModel model : select.getDinamicList()) {
+            for (String fieldName : fields.keySet()) {
+              String value = (model.get(fieldName) != null ? model.get(fieldName).toString() : "");
+              csvWriter.write(value);
+            }
+            csvWriter.endRecord();
+          }
+        } finally {
+          csvWriter.close();
+          baos.close();
+        }
+        return baos.toByteArray();
+      } else {
+        errors.addAll(select.getError());
+      }
+    } else {
+      errors.add("Ошибка: не передано имя модели");
+    }
+    return new byte[0];
+  }
+
+  private Map<String, Field> getNotSystemFields(Structure struct) throws Exception {
+    Map<String, Field> notSystemFields = new TreeMap();
+    Map<String, Field> fields = struct.getCloneFields();
+    for (String name : fields.keySet()) {
+      Field field = fields.get(name);
+      if (field.isEditable()) {
+        notSystemFields.put(name, field);
+      }
+    }
+    return notSystemFields;
+  }
+
+  private Map<String, Field> getSystemFields(Structure struct) throws Exception {
+    Map<String, Field> systemFields = new TreeMap();
+    Map<String, Field> fields = struct.getCloneFields();
+    for (String name : fields.keySet()) {
+      Field field = fields.get(name);
+      if (!field.isEditable() && !name.equals(struct.getPrimaryAlias())) {
+        systemFields.put(name, field);
+      }
+    }
+    return systemFields;
+  }
+
+  private Field getPrimaryField(Structure struct) throws Exception {
+    return struct.getCloneFields().get(struct.getPrimaryAlias());
   }
 
   /**
