@@ -28,6 +28,7 @@ import warehouse.WarehouseSingleton;
 import warehouse.controllerStructure.ControllerKeeper;
 import warehouse.controllerStructure.StructureController;
 import warehouse.pair.PairKeeper;
+import web.FormOptionInterface;
 import web.Render;
 import web.fabric.AbsEnt;
 import web.fabric.EnumAttrType;
@@ -54,6 +55,7 @@ public class PairEnt extends OptionAbstract {
   private String str = "";
   private final String DOWNLOAD_FILE_SPECACTION = "downloadPairFiles";
   private final String UPLOAD_FILE_SPECACTION = "uploadPairFiles";
+  private final String UPLOAD_MAIN_FILE_SPECACTION = "uploadMainPairFiles";
   private final String CHECK_SPECACTION = "checkPairs";
   private List<String> errors = new ArrayList();
 
@@ -80,7 +82,7 @@ public class PairEnt extends OptionAbstract {
     activePairs = new ArrayList<Pair>();
     allPairsToString = new TreeMap<String, Object>();
     controllers = new TreeMap<String, Object>();
-    ArrayList<String> errors = new ArrayList<String>();
+    ArrayList<String> errorList = new ArrayList<String>();
 
     rendersMethods.put("0", "--");
     rendersMethods.putAll(getRenders());
@@ -88,7 +90,7 @@ public class PairEnt extends OptionAbstract {
     controllers.put("0", "не выбрано");
     controllers.putAll(getControllers());
 
-    // вернуть файл моделей
+    // вернуть файл пар
     if (specAction.equals(DOWNLOAD_FILE_SPECACTION)) {
       getPairsFile();
       return true;
@@ -101,6 +103,16 @@ public class PairEnt extends OptionAbstract {
       redirectAction = action;
       isRedirect = true;
       return true;
+    }
+
+    if (specAction.equals(UPLOAD_MAIN_FILE_SPECACTION)) {
+      uploadMainPairFile();
+      if (errors.isEmpty()) {
+        redirectObject = object;
+        redirectAction = action;
+        isRedirect = true;
+        return true;
+      }
     }
 
     //перегружаем пары на случай изменений
@@ -134,11 +146,11 @@ public class PairEnt extends OptionAbstract {
           str += (status);
           str += (cnt.getErrors());
         } catch (Exception e) {
-          errors.add("Ошибка при вызове метода контроллера");
-          errors.add(MyString.getStackExeption(e));
+          errorList.add("Ошибка при вызове метода контроллера");
+          errorList.add(MyString.getStackExeption(e));
         }
         if (status == false) {
-          errors.addAll(cnt.getErrors());
+          errorList.addAll(cnt.getErrors());
         }
       }
 
@@ -177,8 +189,8 @@ public class PairEnt extends OptionAbstract {
           }
         }
 
-        if (!errors.isEmpty()) {
-          content += "<div class='errors'>" + errors + "</div>";
+        if (!errorList.isEmpty()) {
+          content += "<div class='errors'>" + errorList + "</div>";
         }
 
         if (params.get("pairObject") != null && !params.get("pairObject").toString().equals("")
@@ -237,19 +249,23 @@ public class PairEnt extends OptionAbstract {
       str += ("</link><script type='text/javascript' src='./script.js'></script>");
 
       // форма поиска
-      str += errors;
+      errorList.addAll(errors);
+      str += errorList;
       str += searchForm();
       str += checkForm();
       str += uploadForm();
+      str += "<br/>";
+      str += uploadMainPairForm();
+      str += "<br/>";
 
       str += (content);
       str += (ps.getErrors());
       str += (PairObject.message);
 
-      
+
 
     } catch (Exception e) {
-      MyString.getStackExeption(e);
+      str += MyString.getStackExeption(e);
     }
     return status;
   }
@@ -271,10 +287,12 @@ public class PairEnt extends OptionAbstract {
     Element root = doc.createElement("root");
     doc.appendChild(root);
 
+    String pairName = "";
     if (params.get("pairObject") != null && params.get("pairAction") != null) {
 
       String pairObject = params.get("pairObject").toString();
       String pairAction = params.get("pairAction").toString();
+      pairName = pairObject + "_" + pairAction + "_";
 
       Pair pair = ps.searchOnePair(pairObject, pairAction);
 
@@ -282,7 +300,7 @@ public class PairEnt extends OptionAbstract {
 
     }
     fileContent = primXml.documentToString(doc).getBytes("UTF-8");
-    fileName = "pairs.xml";
+    fileName = pairName + "pairs.xml";
   }
 
   /**
@@ -427,7 +445,53 @@ public class PairEnt extends OptionAbstract {
   }
 
   /**
-   * проверка пар
+   * загрузить файл с главной парой
+   *
+   * @throws Exception
+   */
+  private void uploadMainPairFile() throws Exception {
+    // получить элементы из файла xml
+    Map<String, String> filesMap = (HashMap<String, String>) params.get("_FILEARRAY_");
+    if (filesMap.size() > 0) {
+      File file = null;
+      Document doc = null;
+      for (String path : filesMap.keySet()) {
+        file = new File(path);
+      }
+      if (file != null) {
+        try {
+          doc = primXml.getDocumentByFile(file);
+        } catch (Exception e) {
+          errors.add("Файл не является файлом XML или имеет неправильную структуру");
+        }
+        if (doc != null) {
+          NodeList list = doc.getChildNodes();
+          Element root = (Element) list.item(0);
+
+          Pair newPair = PairObject.getPairFromXml(root);
+          String pairObject = newPair.getObject();
+          String pairAction = newPair.getAction();
+          PairKeeper pk = app.getKeeper().getPairKeeper();
+
+          if (pairObject.equals("app") && pairAction.equals("show")) {
+            pk.setPair(newPair);
+            str += "11111";
+            pk.SaveCollectionInFile();
+            refreshWarehouseSingleton();
+          } else {
+            errors.add("Ошибка: загружена не та пара! Надо загрузить пру с именем app:show");
+          }
+        }
+      } else {
+        errors.add("файл не передан");
+      }
+    } else {
+      errors.add("файл не передан");
+    }
+  }
+
+  /**
+   * проверка дочерних пар новой пары, есть ли такая пара в singleton
    *
    * @param pk
    * @param newPair
@@ -487,7 +551,7 @@ public class PairEnt extends OptionAbstract {
         }
         String trueRender = seq.getTrueRender();
         String falseRender = seq.getFalseRender();
-        TreeMap<String,Object> controllerMap = getAllControllers();
+        TreeMap<String, Object> controllerMap = getAllControllers();
         if (!controllerName.isEmpty() && !controllerMap.containsKey(controllerName)) {
           incorrect.add("Пара: " + pairName + ", Sequence: " + seqName + ", контроллер: " + controllerName);
         }
@@ -503,13 +567,13 @@ public class PairEnt extends OptionAbstract {
   }
 
   // методы отображения ------------------------------------------------------------------------------------------------------------
-  
   /**
    * форма для загрузки файла
+   *
    * @param pairAction
    * @param pairObject
    * @return
-   * @throws Exception 
+   * @throws Exception
    */
   private String fileForm(String pairAction, String pairObject) throws Exception {
     WarehouseSingleton.getInstance().getNewKeeper(app);
@@ -698,7 +762,7 @@ public class PairEnt extends OptionAbstract {
     } else {
       displaySeq = "style='display:none;'";
     }
-    
+
     // основной вывод пары
     str += "<div class='pair_show' id='pair_show" + fullName + "' " + display + "'>";
 
@@ -790,6 +854,25 @@ public class PairEnt extends OptionAbstract {
     inner.put(rd.hiddenInput("object", object), "");
     inner.put(rd.hiddenInput("specAction", UPLOAD_FILE_SPECACTION), "");
     AbsEnt form = rd.horizontalForm(inner, "Загрузить файл пары", null, true, null);
+    form.setAttribute(EnumAttrType.style, "");
+    return form.render();
+  }
+
+  private String uploadMainPairForm() throws Exception {
+    FormOptionInterface fo = rd.getFormOption();
+    fo.setAction(action);
+    fo.setObject(object);
+    fo.setSpecAction(UPLOAD_MAIN_FILE_SPECACTION);
+    fo.setNoValidateRights();
+    fo.setFormToUploadFiles(true);
+    fo.setHorisontal(true);
+    fo.setTitle("Загрузить главную пару");
+    fo.setJsHandler("onsubmit=\"return confirm('Вы действительно хотите заменить главную пару?');\"");
+
+    Map<AbsEnt, String> inner = new LinkedHashMap();
+    inner.put(rd.fileInput("file", null, "Выберите файл"), "");
+
+    AbsEnt form = rd.rightForm(inner, fo);
     form.setAttribute(EnumAttrType.style, "");
     return form.render();
   }
