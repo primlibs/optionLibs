@@ -12,19 +12,19 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import prim.AbstractApplication;
-import prim.libs.FormatDate;
-import prim.libs.MyString;
-import prim.model.DinamicModel;
-import prim.model.Model;
-import prim.modelStructure.Field;
-import prim.modelStructure.Structure;
-import prim.select.AgrTypes;
-import prim.select.OrdTypes;
-import prim.select.Select;
-import prim.select.Table;
-import prim.select.TableSelectFactory;
-import warehouse.modelKeeper.ModelStructureKeeper;
+import com.prim.core.AbstractApplication;
+import com.prim.support.FormatDate;
+import com.prim.support.MyString;
+import com.prim.core.model.DinamicModel;
+import com.prim.core.model.Model;
+import com.prim.core.modelStructure.Field;
+import com.prim.core.modelStructure.Structure;
+import com.prim.core.select.AgrTypes;
+import com.prim.core.select.OrdTypes;
+import com.prim.core.select.Select;
+import com.prim.core.select.Table;
+import com.prim.core.select.TableSelectFactory;
+import com.prim.core.warehouse.modelKeeper.ModelStructureKeeper;
 
 /**
  *

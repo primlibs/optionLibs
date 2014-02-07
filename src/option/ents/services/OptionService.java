@@ -6,14 +6,14 @@ package option.ents.services;
 
 import java.util.ArrayList;
 import java.util.List;
-import prim.AbstractApplication;
-import prim.model.Model;
-import prim.model.ModelFactory;
-import prim.modelStructure.Structure;
-import prim.select.Select;
-import prim.select.Table;
-import prim.select.TableSelectFactory;
-import warehouse.modelKeeper.ModelStructureKeeper;
+import com.prim.core.AbstractApplication;
+import com.prim.core.model.Model;
+import com.prim.core.model.ModelFactory;
+import com.prim.core.modelStructure.Structure;
+import com.prim.core.select.Select;
+import com.prim.core.select.Table;
+import com.prim.core.select.TableSelectFactory;
+import com.prim.core.warehouse.modelKeeper.ModelStructureKeeper;
 
 /**
  *

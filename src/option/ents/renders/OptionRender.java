@@ -8,11 +8,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import web.HrefOptionInterface;
-import web.Render;
-import web.fabric.AbsEnt;
-import web.fabric.EnumAttrType;
-import web.objects.Parameter;
+import com.prim.web.HrefOptionInterface;
+import com.prim.web.Render;
+import com.prim.web.fabric.AbsEnt;
+import com.prim.web.fabric.EnumAttrType;
+import com.prim.web.objects.Parameter;
 
 /**
  *

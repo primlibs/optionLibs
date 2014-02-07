@@ -9,12 +9,12 @@ import java.util.Map;
 import option.Creator;
 import option.Renderrable;
 import option.Renderrable;
-import prim.AbstractApplication;
-import prim.libs.MyString;
-import warehouse.WarehouseSingleton;
-import web.Render;
-import web.fabric.AbsEnt;
-import web.fabric.EnumAttrType;
+import com.prim.core.AbstractApplication;
+import com.prim.support.MyString;
+import com.prim.core.warehouse.WarehouseSingleton;
+import com.prim.web.Render;
+import com.prim.web.fabric.AbsEnt;
+import com.prim.web.fabric.EnumAttrType;
 
 /**
  *

@@ -16,14 +16,14 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import prim.AbstractApplication;
-import prim.libs.MyString;
-import prim.libs.primXml;
-import warehouse.OptionsKeeper;
-import web.Render;
-import web.fabric.AbsEnt;
-import web.fabric.AbstractWebFabric;
-import web.fabric.EnumAttrType;
+import com.prim.core.AbstractApplication;
+import com.prim.support.MyString;
+import com.prim.support.primXml;
+import com.prim.core.warehouse.OptionsKeeper;
+import com.prim.web.Render;
+import com.prim.web.fabric.AbsEnt;
+import com.prim.web.fabric.AbstractWebFabric;
+import com.prim.web.fabric.EnumAttrType;
 
 /**
  *

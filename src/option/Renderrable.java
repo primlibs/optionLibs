@@ -5,8 +5,8 @@
 package option;
 
 import java.util.Map;
-import prim.AbstractApplication;
-import web.Render;
+import com.prim.core.AbstractApplication;
+import com.prim.web.Render;
 
 /**
  *

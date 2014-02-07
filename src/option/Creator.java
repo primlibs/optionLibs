@@ -7,9 +7,9 @@ package option;
 import option.ents.OptionAbstract;
 import java.util.HashMap;
 import java.util.Map;
-import prim.AbstractApplication;
-import prim.libs.MyString;
-import web.Render;
+import com.prim.core.AbstractApplication;
+import com.prim.support.MyString;
+import com.prim.web.Render;
 
 /**
  *

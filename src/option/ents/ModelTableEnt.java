@@ -12,11 +12,11 @@ import java.util.Map;
 import option.Creator;
 import option.ents.renders.ModelTableRender;
 import option.ents.services.ModelTableService;
-import prim.AbstractApplication;
-import prim.libs.MyString;
-import prim.model.DinamicModel;
-import prim.modelStructure.Structure;
-import web.Render;
+import com.prim.core.AbstractApplication;
+import com.prim.support.MyString;
+import com.prim.core.model.DinamicModel;
+import com.prim.core.modelStructure.Structure;
+import com.prim.web.Render;
 
 /**
  *

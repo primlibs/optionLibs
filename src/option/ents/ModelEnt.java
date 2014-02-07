@@ -10,9 +10,9 @@ import option.ents.modelEnts.AllStructure;
 import option.ents.modelEnts.ChangeStructure;
 import option.ents.modelEnts.ChangeValidator;
 import option.ents.modelEnts.OneStructure;
-import prim.AbstractApplication;
-import prim.libs.MyString;
-import web.Render;
+import com.prim.core.AbstractApplication;
+import com.prim.support.MyString;
+import com.prim.web.Render;
 
 /**
  *

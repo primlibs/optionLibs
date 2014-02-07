@@ -5,7 +5,7 @@
 package option.objects;
 
 import java.util.ArrayList;
-import prim.libs.MyString;
+import com.prim.support.MyString;
 
 /**
  *

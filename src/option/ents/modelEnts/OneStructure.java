@@ -11,16 +11,16 @@ import java.util.Map;
 import java.util.TreeMap;
 import option.Creator;
 import option.ents.ModelEnt;
-import prim.AbstractApplication;
-import prim.filterValidator.entity.ValidatorAbstract;
-import prim.modelStructure.Field;
-import prim.modelStructure.Structure;
-import prim.modelStructure.Unique;
-import warehouse.modelKeeper.ModelStructureKeeper;
-import warehouse.modelKeeper.ModelStructureManager;
-import web.Render;
-import web.fabric.AbsEnt;
-import web.fabric.EnumAttrType;
+import com.prim.core.AbstractApplication;
+import com.prim.core.modelStructure.Field;
+import com.prim.core.modelStructure.Structure;
+import com.prim.core.modelStructure.Unique;
+import com.prim.support.filterValidator.entity.ValidatorAbstract;
+import com.prim.core.warehouse.modelKeeper.ModelStructureKeeper;
+import com.prim.core.warehouse.modelKeeper.ModelStructureManager;
+import com.prim.web.Render;
+import com.prim.web.fabric.AbsEnt;
+import com.prim.web.fabric.EnumAttrType;
 
 /**
  *

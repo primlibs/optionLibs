@@ -9,12 +9,12 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import prim.AbstractApplication;
-import warehouse.pair.PairKeeper;
-import web.pair.Pair;
-import web.pair.PairObject;
-import web.pair.Sequence;
-import web.pair.SequenceObject;
+import com.prim.core.AbstractApplication;
+import com.prim.core.warehouse.pair.PairKeeper;
+import com.prim.core.pair.Pair;
+import com.prim.core.pair.PairObject;
+import com.prim.core.pair.Sequence;
+import com.prim.core.pair.SequenceObject;
 
 /**
  *

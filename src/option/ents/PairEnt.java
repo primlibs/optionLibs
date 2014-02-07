@@ -20,21 +20,21 @@ import option.objects.PairController;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import prim.AbstractApplication;
-import prim.libs.MyString;
-import prim.libs.primXml;
-import prim.service.ServiceFactory;
-import warehouse.WarehouseSingleton;
-import warehouse.controllerStructure.ControllerKeeper;
-import warehouse.controllerStructure.StructureController;
-import warehouse.pair.PairKeeper;
-import web.FormOptionInterface;
-import web.Render;
-import web.fabric.AbsEnt;
-import web.fabric.EnumAttrType;
-import web.pair.Pair;
-import web.pair.PairObject;
-import web.pair.Sequence;
+import com.prim.core.AbstractApplication;
+import com.prim.support.MyString;
+import com.prim.support.primXml;
+import com.prim.core.service.ServiceFactory;
+import com.prim.core.warehouse.WarehouseSingleton;
+import com.prim.core.warehouse.controllerStructure.ControllerKeeper;
+import com.prim.core.warehouse.controllerStructure.StructureController;
+import com.prim.core.warehouse.pair.PairKeeper;
+import com.prim.web.FormOptionInterface;
+import com.prim.web.Render;
+import com.prim.web.fabric.AbsEnt;
+import com.prim.web.fabric.EnumAttrType;
+import com.prim.core.pair.Pair;
+import com.prim.core.pair.PairObject;
+import com.prim.core.pair.Sequence;
 
 /**
  *

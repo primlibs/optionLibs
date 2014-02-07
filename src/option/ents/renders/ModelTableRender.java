@@ -12,15 +12,15 @@ import java.util.Map;
 import java.util.TreeMap;
 import option.Creator;
 import option.ents.ModelTableEnt;
-import prim.model.DinamicModel;
-import prim.modelStructure.Field;
-import prim.modelStructure.Structure;
-import web.FormOptionInterface;
-import web.HrefOptionInterface;
-import web.Render;
-import web.fabric.AbsEnt;
-import web.fabric.EnumAttrType;
-import web.fabric.entities.Txt;
+import com.prim.core.model.DinamicModel;
+import com.prim.core.modelStructure.Field;
+import com.prim.core.modelStructure.Structure;
+import com.prim.web.FormOptionInterface;
+import com.prim.web.HrefOptionInterface;
+import com.prim.web.Render;
+import com.prim.web.fabric.AbsEnt;
+import com.prim.web.fabric.EnumAttrType;
+import com.prim.web.fabric.entities.Txt;
 
 /**
  *
