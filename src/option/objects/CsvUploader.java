@@ -32,6 +32,7 @@ import com.prim.core.select.Table;
 import com.prim.core.select.TableSelectFactory;
 
 /**
+ * класс, который загружает данные из файла CSV в базу данных
  *
  * @author Pavel Rice
  */
@@ -49,11 +50,11 @@ public class CsvUploader {
   private List<String> messages = new ArrayList();
 
   /**
-   * 
+   *
    * @param app объект Application
    * @param csv файл, из которого нужно загрузить данные
    * @param params параметры из запроса
-   * @throws Exception 
+   * @throws Exception
    */
   public CsvUploader(AbstractApplication app, File csv, Map<String, Object> params) throws Exception {
     this.app = app;
@@ -61,11 +62,6 @@ public class CsvUploader {
     this.tableFactory = new TableSelectFactory(app);
     this.csv = csv;
     this.params = params;
-    this.baos = new ByteArrayOutputStream();
-    reader = new CsvReader(new FileInputStream(csv), Charset.forName("UTF-8"));
-    reader.setDelimiter(',');
-    reader.readHeaders();
-    this.writer = new CsvWriter(baos, reader.getDelimiter(), Charset.forName("UTF-8"));
   }
 
   public List<String> getErrors() {
@@ -76,21 +72,51 @@ public class CsvUploader {
     return messages;
   }
 
-  // загрузить данные
+  /**
+   * загрузить данные из файла в БД
+   *
+   * Читается файл CSV. Каждая строка из файла сохраняется в БД. Если строка
+   * успешно сохранена - она удаляется из файла. Если не удалось сохранить
+   * строку - строка остается в файле + в отдельную ячейку записваются ошибки.
+   *
+   * @return
+   * @throws Exception
+   */
   public boolean uploadData() throws Exception {
-    // прочитать заголовки файла
-    String[] headers = reader.getHeaders();
-    // записать заголовки в файл csv
-    writeHeaders(headers);
-    int number = 0;
-    while (reader.readRecord()) {
-      String[] values = reader.getValues();
-      // загрузить данные из строки
-      boolean ok = uploadRow(values, number);
-      number++;
+    // данные должны быть прочтены из файла, а потом другие данные заново записаны в тот же файл.
+    // реализовано так: данные читаются из файла, в это время новые данные записываются в массив байтов.
+    // после завершения чтения файла, файл стирается, и в него записываются новые данные из массива байтов.
+    try {
+      this.baos = new ByteArrayOutputStream();
+      reader = new CsvReader(new FileInputStream(csv), Charset.forName("UTF-8"));
+      reader.setDelimiter(',');
+      reader.readHeaders();
+      this.writer = new CsvWriter(baos, reader.getDelimiter(), Charset.forName("UTF-8"));
+
+      // прочитать заголовки файла
+      String[] headers = reader.getHeaders();
+      // записать заголовки в файл csv
+      writeHeaders(headers);
+      int number = 0;
+      while (reader.readRecord()) {
+        String[] values = reader.getValues();
+        // загрузить данные из строки
+        boolean ok = uploadRow(values, number);
+        number++;
+      }
+      // записать всё в новый файл
+      writeNewFile();
+    } finally {
+      if (writer != null) {
+        writer.close();
+      }
+      if (reader != null) {
+        reader.close();
+      }
+      if (baos != null) {
+        baos.close();
+      }
     }
-    // записать всё в новый файл
-    writeNewFile();
     return true;
   }
 
@@ -102,7 +128,7 @@ public class CsvUploader {
     fos.write(bytes);
   }
 
-  // записать в файл заголовки
+  // записать заголовки во writer
   private void writeHeaders(String[] headers) throws Exception {
     for (String header : headers) {
       writer.write(header);
@@ -111,7 +137,14 @@ public class CsvUploader {
     writer.endRecord();
   }
 
-  // загрузить данные из строки
+  /**
+   * загрузить данные из строки файла в БД
+   *
+   * @param values
+   * @param rowNumber
+   * @return
+   * @throws Exception
+   */
   private boolean uploadRow(String[] values, int rowNumber) throws Exception {
     errors.clear();
     boolean ok = true;
@@ -239,7 +272,7 @@ public class CsvUploader {
     return ok;
   }
 
-  // записать строку в новый файл CSV
+  // записать строку в writer
   private void writeRow(String[] values) throws Exception {
     for (String value : values) {
       writer.write(value);
@@ -321,11 +354,11 @@ public class CsvUploader {
       }
       if (model.get("update_user_id") == null) {
         model.set("update_user_id", app.getRightsObject().getUserId());
-      }     
+      }
       // произвести поиск по old_id
       boolean ok = checkOldId(model);
       if (ok) {
-         // сохранить модель
+        // сохранить модель
         ok = model.save();
       }
       if (!ok) {
@@ -339,9 +372,10 @@ public class CsvUploader {
 
   /**
    * проверить наличие старого ИД
+   *
    * @param model
    * @return
-   * @throws Exception 
+   * @throws Exception
    */
   private boolean checkOldId(Model model) throws Exception {
     if (model.get("old_id") != null) {

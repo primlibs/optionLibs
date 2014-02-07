@@ -24,7 +24,6 @@ import com.prim.web.Render;
  */
 public class ModelTableEnt extends OptionAbstract {
 
-  public static PrintWriter out2;
   private String str = "";
   private List<String> errors = new ArrayList();
   ModelTableService service;

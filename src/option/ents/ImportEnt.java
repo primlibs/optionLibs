@@ -52,7 +52,6 @@ import com.prim.core.pair.Sequence;
  */
 public class ImportEnt extends OptionAbstract {
 
-  public static PrintWriter out2;
   private String str = "";
   private List<String> errors = new ArrayList();
   public final static String FILE_LIST_ACTION = "fileList";
@@ -170,9 +169,10 @@ public class ImportEnt extends OptionAbstract {
 
   /**
    * форма удаления файла
+   *
    * @param fileName
    * @return
-   * @throws Exception 
+   * @throws Exception
    */
   private String deleteFileForm(String fileName) throws Exception {
     FormOptionInterface fo = rd.getFormOption();
@@ -190,9 +190,10 @@ public class ImportEnt extends OptionAbstract {
 
   /**
    * форма скачивания файла
+   *
    * @param fileName
    * @return
-   * @throws Exception 
+   * @throws Exception
    */
   private String downloadFileForm(String fileName) throws Exception {
     FormOptionInterface fo = rd.getFormOption();
@@ -261,37 +262,44 @@ public class ImportEnt extends OptionAbstract {
    */
   private String showOneFile() throws Exception {
     String result = "";
-    if (params.get("fileName") != null) {
-      String fileName = params.get("fileName").toString();
-      // прочитать содержимое файла
-      CsvReader reader = new CsvReader(new FileInputStream(new File(getFileDir() + "/" + fileName)), Charset.forName("UTF-8"));
-      reader.setDelimiter(',');
-      reader.readHeaders();
-      String[] headers = reader.getHeaders();
+    CsvReader reader = null;
+    try {
+      if (params.get("fileName") != null) {
+        String fileName = params.get("fileName").toString();
+        // прочитать содержимое файла
+        reader = new CsvReader(new FileInputStream(new File(getFileDir() + "/" + fileName)), Charset.forName("UTF-8"));
+        reader.setDelimiter(',');
+        reader.readHeaders();
+        String[] headers = reader.getHeaders();
 
-      // вывести форму
-      result += uploadDataForm(headers);
+        // вывести форму
+        result += uploadDataForm(headers);
 
-      AbsEnt table = rd.table("1", "5", "0");
-      // вывести заголовки
-      AbsEnt trHeader = rd.getFabric().get("tr");
-      table.addEnt(trHeader);
-      for (String header : headers) {
-        rd.td(trHeader, header);
-      }
-      // вывести каждую строку файла
-      while (reader.readRecord()) {
-        int columnCount = reader.getColumnCount();
-        AbsEnt tr = rd.getFabric().get("tr");
-        table.addEnt(tr);
-        for (int i = 0; i <= columnCount; i++) {
-          rd.td(tr, reader.get(i));
+        AbsEnt table = rd.table("1", "5", "0");
+        // вывести заголовки
+        AbsEnt trHeader = rd.getFabric().get("tr");
+        table.addEnt(trHeader);
+        for (String header : headers) {
+          rd.td(trHeader, header);
         }
+        // вывести каждую строку файла
+        while (reader.readRecord()) {
+          int columnCount = reader.getColumnCount();
+          AbsEnt tr = rd.getFabric().get("tr");
+          table.addEnt(tr);
+          for (int i = 0; i <= columnCount; i++) {
+            rd.td(tr, reader.get(i));
+          }
+        }
+        result += table.render();
+        return result;
+      } else {
+        errors.add("Не передано название файла");
       }
-      result += table.render();
-      return result;
-    } else {
-      errors.add("Не передано название файла");
+    } finally {
+      if (reader != null) {
+        reader.close();
+      }
     }
     return "";
   }
@@ -363,7 +371,7 @@ public class ImportEnt extends OptionAbstract {
   }
 
   /**
-   * загрузить данные
+   * загрузить данные из файла в БД
    */
   private void uploadData() throws Exception {
     if (params.get("fileName") != null) {
@@ -379,7 +387,7 @@ public class ImportEnt extends OptionAbstract {
       errors.add("Ошибка: не передано имя файла");
     }
   }
-  
+
   /**
    * удалить файл
    */
@@ -392,7 +400,7 @@ public class ImportEnt extends OptionAbstract {
       errors.add("Ошибка: не передано имя файла");
     }
   }
-  
+
   /**
    * скачать файл
    */
@@ -407,5 +415,4 @@ public class ImportEnt extends OptionAbstract {
       errors.add("Ошибка: не передано имя файла");
     }
   }
-  
 }

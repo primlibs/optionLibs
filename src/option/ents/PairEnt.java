@@ -47,7 +47,6 @@ public class PairEnt extends OptionAbstract {
   private List<Pair> allPairs = new ArrayList<Pair>();
   // все контроллеры и методы
   private TreeMap<String, Object> controllers;
-  public static PrintWriter out2;
   private TreeMap<String, Object> rendersMethods = new TreeMap<String, Object>();
   // активные пары, то есть те, которые нужно отобразить в развернутом виде
   private ArrayList<Pair> activePairs;
