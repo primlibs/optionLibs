@@ -45,6 +45,10 @@ import com.prim.web.fabric.EnumAttrType;
 import com.prim.core.pair.Pair;
 import com.prim.core.pair.PairObject;
 import com.prim.core.pair.Sequence;
+import java.io.FileNotFoundException;
+import option.ents.renders.OptionRender;
+import option.objects.ViewFunctions;
+import org.omg.PortableServer.REQUEST_PROCESSING_POLICY_ID;
 
 /**
  *
@@ -267,9 +271,7 @@ public class ImportEnt extends OptionAbstract {
       if (params.get("fileName") != null) {
         String fileName = params.get("fileName").toString();
         // прочитать содержимое файла
-        reader = new CsvReader(new FileInputStream(new File(getFileDir() + "/" + fileName)), Charset.forName("UTF-8"));
-        reader.setDelimiter(',');
-        reader.readHeaders();
+        reader = getReader(fileName);
         String[] headers = reader.getHeaders();
 
         // вывести форму
@@ -282,16 +284,44 @@ public class ImportEnt extends OptionAbstract {
         for (String header : headers) {
           rd.td(trHeader, header);
         }
-        // вывести каждую строку файла
-        while (reader.readRecord()) {
-          int columnCount = reader.getColumnCount();
-          AbsEnt tr = rd.getFabric().get("tr");
-          table.addEnt(tr);
-          for (int i = 0; i <= columnCount; i++) {
-            rd.td(tr, reader.get(i));
+
+        // получить количество строк в файле
+        int countRows = getCountRows(fileName);
+        Integer page = null;
+        if (MyString.NotNull(params.get("page"))) {
+          try {
+            page = Integer.parseInt(params.get("page").toString());
+          } catch (Exception e) {
           }
         }
+        if (page == null || page < 1) {
+          page = 1;
+        }
+        final int recordsOfPage = 50;
+        int start = (page - 1) * recordsOfPage;
+        int end = start + recordsOfPage;
+
+        double countDouble = countRows;
+        double recordsOfPageDouble = recordsOfPage;
+        int countPages = (int) Math.ceil(countDouble / recordsOfPageDouble);
+
+        int numberRow = 0;
+        while (reader.readRecord()) {
+          if (start <= numberRow && numberRow < end) {
+            int columnCount = reader.getColumnCount();
+            AbsEnt tr = rd.getFabric().get("tr");
+            table.addEnt(tr);
+            for (int i = 0; i <= columnCount; i++) {
+              rd.td(tr, reader.get(i));
+            }
+          }
+          numberRow++;
+        }
         result += table.render();
+
+        Map<String, Object> paginatorParams = new HashMap();
+        paginatorParams.put("fileName", params.get("fileName"));
+        result += ViewFunctions.paginator3000(rd, page, countPages, object, action, paginatorParams, "page", "import_paginator");
         return result;
       } else {
         errors.add("Не передано название файла");
@@ -302,6 +332,30 @@ public class ImportEnt extends OptionAbstract {
       }
     }
     return "";
+  }
+
+  private int getCountRows(String fileName) throws Exception {
+    CsvReader reader = null;
+    try {
+      reader = getReader(fileName);
+      reader.readHeaders();
+      int count = 0;
+      while (reader.readRecord()) {
+        count++;
+      }
+      return count;
+    } finally {
+      if (reader != null) {
+        reader.close();
+      }
+    }
+  }
+
+  private CsvReader getReader(String fileName) throws FileNotFoundException, Exception {
+    CsvReader reader = new CsvReader(new FileInputStream(new File(getFileDir() + "/" + fileName)), Charset.forName("UTF-8"));
+    reader.setDelimiter(',');
+    reader.readHeaders();
+    return reader;
   }
 
   // методы работы с данными ----------------------------------------------------------------------------------------------------------
