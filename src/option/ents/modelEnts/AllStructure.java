@@ -276,6 +276,7 @@ public class AllStructure extends ModelEnt {
           errors.add("Файл не является файлом XML или имеет неправильную структуру");
         }
         if (doc != null) {
+          
           NodeList list = doc.getChildNodes();
           Element root = (Element) list.item(0);
           NodeList modelsNodeList = root.getElementsByTagName(Structure.ELEMENT_NAME);
@@ -294,7 +295,14 @@ public class AllStructure extends ModelEnt {
               // если модели с таким именем нет в списке
               if (!models.containsKey(name)) {
                 // добавить
+                /*
+                app.getConnection().prepareStatement("insert into user_data_types (name, active_from, struct_text) values (?, now(), ?)");
+                if (!app.equals(mss.getApplication())) {
+                  throw new Exception(app.getConnection().isClosed() + " " + mss.getApplication().getConnection().isClosed() + " ");
+                }
+                */
                 mss.addStructure(name, newStructure);
+                
               } else {
                 // если модель с таким именем уже есть
                 // если поставлена галочка заменять
