@@ -392,7 +392,7 @@ public class CsvUploader {
         return false;
       }
       int size = sel.getDinamicList().size();
-      if (size > 1) {
+      if (size > 0) {
         errors.add("Найден такой же old_id для модели " + tableName);
         return false;
       }
