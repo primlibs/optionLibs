@@ -85,7 +85,7 @@ public class OptionRender {
     ho.setNoValidateRights();
     AbsEnt link = rd.href(params, ho);
     String href = link.getAttribute(EnumAttrType.href);
-    return "<div class=\"paginator\" id=\"" + paginatorId + "\"></div>"
+    return "<div class=\"paginator\" style='margin-top: 50px;' id=\"" + paginatorId + "\"></div>"
             + "<script type=\"text/javascript\">"
             + "paginator_example = new Paginator("
             + "'" + paginatorId + "',"
