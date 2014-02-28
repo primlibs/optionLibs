@@ -993,8 +993,8 @@ public class PairEnt extends OptionAbstract {
     hs.put(rd.combo(rendersMethods, "", "falseRender"), "FALSE Render");
     hs.put(rd.combo(allPairsToString, "", "trueRedirect"), "TRUE Redirect");
     hs.put(rd.combo(allPairsToString, "", "falseRedirect"), "FALSE Redirect");
-    hs.put(rd.textInput("trueParams", "", "TRUE Redirect params"), "TRUE Redirect params");
-    hs.put(rd.textInput("falseParams", "", "FALSE Redirect params"), "FALSE Redirect params");
+    hs.put(rd.textArea("trueParams", "", "TRUE Redirect params"), "TRUE Redirect params");
+    hs.put(rd.textArea("falseParams", "", "FALSE Redirect params"), "FALSE Redirect params");
     AbsEnt form = rd.verticalForm(hs, "+ Sequence", "images/add.png");
     form.setAttribute(EnumAttrType.style, "");
     form.addEnt(rd.hiddenInput("method", "addSeq"));
@@ -1029,8 +1029,8 @@ public class PairEnt extends OptionAbstract {
     hs.put(rd.combo(rendersMethods, seq.getFalseRender(), "falseRender"), "FALSE Render");
     hs.put(rd.combo(allPairsToString, seq.getTrueRedirect(), "trueRedirect"), "TRUE Redirect");
     hs.put(rd.combo(allPairsToString, seq.getFalseRedirect(), "falseRedirect"), "FALSE Redirect");
-    hs.put(rd.textInput("trueParams", seq.getTrueRedirectParams(), "TRUE Redirect params"), "TRUE Redirect params");
-    hs.put(rd.textInput("falseParams", seq.getFalseRedirectParams(), "FALSE Redirect params"), "FALSE Redirect params");
+    hs.put(rd.textArea("trueParams", seq.getTrueRedirectParams(), "TRUE Redirect params"), "TRUE Redirect params");
+    hs.put(rd.textArea("falseParams", seq.getFalseRedirectParams(), "FALSE Redirect params"), "FALSE Redirect params");
     AbsEnt form = rd.verticalForm(hs, "Изменить", "images/change.png");
     form.setAttribute(EnumAttrType.style, "");
     form.addEnt(rd.hiddenInput("seqName", seqName));
