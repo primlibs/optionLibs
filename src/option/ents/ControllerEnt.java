@@ -24,6 +24,7 @@ import com.prim.support.primXml;
 import com.prim.core.modelStructure.Structure;
 import com.prim.core.modelStructure.StructureFabric;
 import com.prim.core.service.ServiceFactory;
+import com.prim.core.warehouse.DataTypes;
 import com.prim.core.warehouse.OptionsKeeper;
 import com.prim.core.warehouse.controllerStructure.ControllerKeeper;
 import com.prim.core.warehouse.controllerStructure.ControllerMethod;
@@ -389,7 +390,7 @@ public class ControllerEnt extends OptionAbstract {
       }
 
       /*
-       изменить источник на входе
+       изменить настройки параметра на входе
        */
       reqAr = new ArrayList<String>();
       reqAr.add("changeSourceInner");
@@ -409,6 +410,24 @@ public class ControllerEnt extends OptionAbstract {
             cp.setOrigin(co);
           }
         }
+        boolean mandatory = false;
+        if (params.get("mandatory") != null) {
+          mandatory = true;
+        }
+        cp.setMandatory(mandatory);
+        DataTypes dataType = null;
+        if (params.get("dataType") != null) {
+          String dataTypeString = params.get("dataType").toString().trim();
+          if (dataTypeString != null) {
+            for (DataTypes type : DataTypes.values()) {
+              if (dataTypeString.equalsIgnoreCase(type.toString())) {
+                dataType = type;
+                break;
+              }
+            }
+          }
+        }
+        cp.setDataType(dataType);
         ck.saveController(params.get("cntrlName").toString().trim());
         ck.setDataFromBase();
       }
@@ -476,6 +495,24 @@ public class ControllerEnt extends OptionAbstract {
             cp.setOrigin(co);
           }
         }
+        boolean mandatory = false;
+        if (params.get("mandatory") != null) {
+          mandatory = true;
+        }
+        cp.setMandatory(mandatory);
+        DataTypes dataType = null;
+        if (params.get("dataType") != null) {
+          String dataTypeString = params.get("dataType").toString().trim();
+          if (dataTypeString != null) {
+            for (DataTypes type : DataTypes.values()) {
+              if (dataTypeString.equalsIgnoreCase(type.toString())) {
+                dataType = type;
+                break;
+              }
+            }
+          }
+        }
+        cp.setDataType(dataType);
         ck.saveController(params.get("cntrlName").toString().trim());
         ck.setDataFromBase();
       }
@@ -611,10 +648,15 @@ public class ControllerEnt extends OptionAbstract {
               str += ("<table>");
               str += ("<tr><td>Имя</td><td>Алиас</td><td>Источник</td><td>Действие</td></tr>");
               for (String innerName : clS.getInnerParams().keySet()) {
+                ServiceParameter parameter = clS.getInnerParams().get(innerName);
+                String dataTypeString = "";
+                if (parameter.getDataType() != null) {
+                  dataTypeString = parameter.getDataType().toString();
+                }
                 str += ("<tr>");
                 str += ("<td>" + innerName + "</td>");
                 str += ("<td>" + clS.getInnerParams().get(innerName).getAlias() + "</td>");
-                str += ("<td>" + changeSourseInner(name, action, cm.getServiceList().indexOf(clS), innerName, clS.getInnerParams().get(innerName).getOrigin()) + "</td>");
+                str += ("<td>" + changeSourseInner(name, action, cm.getServiceList().indexOf(clS), innerName, clS.getInnerParams().get(innerName).getOrigin(), parameter.isMandatory(), dataTypeString) + "</td>");
                 str += ("<td>");
 
                 linkParams = new HashMap();
@@ -635,10 +677,16 @@ public class ControllerEnt extends OptionAbstract {
               str += ("<table>");
               str += ("<tr><td>Имя</td><td>Алиас</td><td>Источник</td><td>Действие</td></tr>");
               for (String outerName : clS.getOuterParams().keySet()) {
+                ServiceParameter parameter = clS.getOuterParams().get(outerName);
+                String dataTypeString = "";
+                if (parameter.getDataType() != null) {
+                  dataTypeString = parameter.getDataType().toString();
+                }
+
                 str += ("<tr>");
                 str += ("<td>" + outerName + "</td>");
-                str += ("<td>" + clS.getOuterParams().get(outerName).getAlias() + "</td>");
-                str += ("<td>" + changeSourseOuter(name, action, cm.getServiceList().indexOf(clS), outerName, clS.getOuterParams().get(outerName).getOrigin()) + "</td>");
+                str += ("<td>" + parameter.getAlias() + "</td>");
+                str += ("<td>" + changeSourseOuter(name, action, cm.getServiceList().indexOf(clS), outerName, parameter.getOrigin(), parameter.isMandatory(), dataTypeString) + "</td>");
                 str += ("<td>");
 
                 linkParams = new HashMap();
@@ -1226,7 +1274,7 @@ public class ControllerEnt extends OptionAbstract {
    * @return
    * @throws Exception
    */
-  String changeSourseInner(String contr, String Action, Integer Index, String paramName, ControllerOrigin srcCode) throws Exception {
+  String changeSourseInner(String contr, String Action, Integer Index, String paramName, ControllerOrigin srcCode, boolean mandatory, String dataType) throws Exception {
     String result = "";
     LinkedHashMap<String, Object> ls = new LinkedHashMap<String, Object>();
     ls.put(ControllerOrigin.Input.toString(), "INPUT");
@@ -1238,6 +1286,8 @@ public class ControllerEnt extends OptionAbstract {
 
     LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
     hs.put(rd.combo(ls, srcCode, "sourse"), "");
+    hs.put(rd.checkBox("mandatory", mandatory, ""), "Обяз.");
+    hs.put(rd.combo(DataTypes.all(), dataType, "dataType", false), "");
     AbsEnt form = rd.horizontalForm(hs, "OK", "images/ok.png");
     form.addEnt(rd.hiddenInput("changeSourceInner", Index));
     form.addEnt(rd.hiddenInput("indexX", Index));
@@ -1259,7 +1309,7 @@ public class ControllerEnt extends OptionAbstract {
    * @return
    * @throws Exception
    */
-  String changeSourseOuter(String contr, String Action, Integer Index, String paramName, ControllerOrigin srcCode) throws Exception {
+  String changeSourseOuter(String contr, String Action, Integer Index, String paramName, ControllerOrigin srcCode, boolean mandatory, String dataType) throws Exception {
     String result = "";
     LinkedHashMap<String, Object> ls = new LinkedHashMap<String, Object>();
     ls.put(ControllerOrigin.Input.toString(), "INPUT");
@@ -1268,6 +1318,8 @@ public class ControllerEnt extends OptionAbstract {
 
     LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
     hs.put(rd.combo(ls, srcCode, "sourse"), "");
+    hs.put(rd.checkBox("mandatory", mandatory, ""), "Обяз.");
+    hs.put(rd.combo(DataTypes.all(), dataType, "dataType", false), "");
     AbsEnt form = rd.horizontalForm(hs, "OK", "images/ok.png");
     form.addEnt(rd.hiddenInput("changeSourceOuter", Index));
     form.addEnt(rd.hiddenInput("indexX", Index));
