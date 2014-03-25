@@ -15,6 +15,7 @@ import com.prim.core.AbstractApplication;
 import com.prim.core.modelStructure.Field;
 import com.prim.core.modelStructure.Structure;
 import com.prim.core.modelStructure.Unique;
+import com.prim.core.warehouse.DataTypes;
 import com.prim.support.filterValidator.entity.ValidatorAbstract;
 import com.prim.core.warehouse.modelKeeper.ModelStructureKeeper;
 import com.prim.core.warehouse.modelKeeper.ModelStructureManager;
@@ -267,8 +268,10 @@ public class OneStructure extends ModelEnt {
 
       // добавить поле
       if (specAction.equals("addField")) {
+        DataTypes dataType = DataTypes.getTypeByString(getParameter("type"));
+        
         manager.addField(getParameter("alias"), getParameter("appName"), getParameter("mandatory"),
-                getParameter("updatable"), getParameter("type"), getParameter("relations"),
+                getParameter("updatable"), dataType, getParameter("relations"),
                 getParameter("structureAlias"), getParameter("def"));
         redirectAction = "OneStructure";
         redirectParams.put("structureAlias", structureAlias);

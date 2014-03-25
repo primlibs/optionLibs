@@ -41,6 +41,7 @@ import com.prim.core.pair.Pair;
 import com.prim.core.pair.PairObject;
 import com.prim.core.pair.Sequence;
 import com.prim.core.pair.SequenceObject;
+import com.prim.core.warehouse.DataTypes;
 
 /**
  *
@@ -378,11 +379,15 @@ public class AllStructure extends ModelEnt {
         css = cm.addControllerService();
         css.setServiceName(modelName);
         css.setServiceAction("searchById");
+        /*
         cp = css.addInnerParams(modelStructure.getPrimaryAlias());
         cp.setOrigin(ControllerOrigin.Request);
         cp.setAlias(modelStructure.getPrimaryAlias());
+        */
         cp = css.addInnerParams(modelStructure.getPrimaryAlias());
         cp.setAlias(modelStructure.getPrimaryAlias());
+        cp.setOrigin(ControllerOrigin.Request);
+        setParameterSettings(cp, modelStructure.getField(modelStructure.getPrimaryAlias()));
         cs.addMethod(modelName, method, cm);
         if (cs.saveController(modelName) != true) {
           throw new Exception("Не удалось сохранить контроллер просмотра");
@@ -404,11 +409,13 @@ public class AllStructure extends ModelEnt {
             cp = css.addInnerParams(fi.getAlias());
             cp.setOrigin(ControllerOrigin.Request);
             cp.setAlias(fi.getAlias());
+            setParameterSettings(cp, fi);
           }
           if (fi.getAlias().equals(modelStructure.getPrimaryAlias())) {
             cp = css.addOuterParams(fi.getAlias());
             cp.setOrigin(ControllerOrigin.Input);
             cp.setAlias(fi.getAlias());
+            setParameterSettings(cp, fi);
           }
         }
         cs.addMethod(modelName, method, cm);
@@ -433,6 +440,7 @@ public class AllStructure extends ModelEnt {
             cp = css.addInnerParams(fi.getAlias());
             cp.setOrigin(ControllerOrigin.Request);
             cp.setAlias(fi.getAlias());
+            setParameterSettings(cp, fi);
           }
         }
         cs.addMethod(modelName, method, cm);
@@ -456,11 +464,13 @@ public class AllStructure extends ModelEnt {
             cp = css.addInnerParams(fi.getAlias());
             cp.setOrigin(ControllerOrigin.Request);
             cp.setAlias(fi.getAlias());
+            setParameterSettings(cp, fi);
           }
         }
         cp = css.addInnerParams("cId");
         cp.setOrigin(ControllerOrigin.Request);
         cp.setAlias("cId");
+        cp.setDataType(DataTypes.CHAR); 
 
         cs.addMethod(modelName, method, cm);
         if (cs.saveController(modelName) != true) {
@@ -483,6 +493,7 @@ public class AllStructure extends ModelEnt {
             cp = css.addInnerParams(fi.getAlias());
             cp.setOrigin(ControllerOrigin.Request);
             cp.setAlias("model_id");
+            setParameterSettings(cp, fi);
           }
         }
         cs.addMethod(modelName, method, cm);
@@ -505,9 +516,11 @@ public class AllStructure extends ModelEnt {
             cp = css.addInnerParams(fi.getAlias());
             cp.setOrigin(ControllerOrigin.Request);
             cp.setAlias(fi.getAlias());
+            setParameterSettings(cp, fi);
             cp = css.addOuterParams(fi.getAlias());
             cp.setOrigin(ControllerOrigin.Input);
             cp.setAlias(fi.getAlias());
+            setParameterSettings(cp, fi);
           }
         }
         cp = css.addInnerParams("_FILEARRAY_");
@@ -534,14 +547,18 @@ public class AllStructure extends ModelEnt {
             cp = css.addInnerParams(fi.getAlias());
             cp.setOrigin(ControllerOrigin.Request);
             cp.setAlias(fi.getAlias());
+            setParameterSettings(cp, fi);
             cp = css.addOuterParams(fi.getAlias());
             cp.setOrigin(ControllerOrigin.Input);
             cp.setAlias(fi.getAlias());
+            setParameterSettings(cp, fi);
           }
         }
         cp = css.addInnerParams("file_id");
         cp.setOrigin(ControllerOrigin.Request);
         cp.setAlias("file_id");
+        cp.setDataType(DataTypes.INT);
+        cp.setMandatory(true);
         cs.addMethod(modelName, method, cm);
         if (cs.saveController(modelName) != true) {
           throw new Exception("Не удалось сохранить контроллер удаления файлов");
@@ -562,11 +579,14 @@ public class AllStructure extends ModelEnt {
             cp = css.addInnerParams(fi.getAlias());
             cp.setOrigin(ControllerOrigin.Request);
             cp.setAlias(fi.getAlias());
+            setParameterSettings(cp, fi);
           }
         }
         cp = css.addInnerParams("file_id");
         cp.setOrigin(ControllerOrigin.Request);
         cp.setAlias("file_id");
+        cp.setDataType(DataTypes.INT);
+        cp.setMandatory(true);
         cs.addMethod(modelName, method, cm);
         if (cs.saveController(modelName) != true) {
           throw new Exception("Не удалось сохранить контроллер получения файлов");
@@ -580,6 +600,11 @@ public class AllStructure extends ModelEnt {
     return result;
   }
 
+  private void setParameterSettings(ServiceParameter parameter, Field field) {
+    parameter.setMandatory(field.isMandatory());
+    parameter.setDataType(field.getType());
+  }
+  
   /**
    * создать пары
    *

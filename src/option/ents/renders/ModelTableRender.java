@@ -15,6 +15,7 @@ import option.ents.ModelTableEnt;
 import com.prim.core.model.DinamicModel;
 import com.prim.core.modelStructure.Field;
 import com.prim.core.modelStructure.Structure;
+import com.prim.core.warehouse.DataTypes;
 import com.prim.web.FormOptionInterface;
 import com.prim.web.HrefOptionInterface;
 import com.prim.web.Render;
@@ -135,10 +136,10 @@ public class ModelTableRender extends OptionRender {
         if (!struct.isSystem()) {
           // добавить в форму поле
           AbsEnt formElement;
-          String type = field.getType();
-          if (type.equalsIgnoreCase("datetime")) {
+          DataTypes type = field.getType();
+          if (type.equals(DataTypes.DATETIME)) {
             formElement = rd.dateTimeInput(fieldName, model.get(fieldName), fieldName);
-          } else if (type.equalsIgnoreCase("text")) {
+          } else if (type.equals(DataTypes.TEXT)) {
             formElement = rd.textArea(fieldName, model.get(fieldName), fieldName);
           } else {
             formElement = rd.textInput(fieldName, model.get(fieldName), fieldName);
@@ -233,10 +234,10 @@ public class ModelTableRender extends OptionRender {
     for (String fieldName : notSystemFields.keySet()) {
       Field field = fieldsMap.get(fieldName);
       if (field.isEditable()) {
-        String type = field.getType();
-        if (type.equalsIgnoreCase("datetime")) {
+        DataTypes type = field.getType();
+        if (type.equals(DataTypes.DATETIME)) {
           inner.put(rd.dateTimeInput(fieldName, requestParams.get(fieldName), fieldName), "");
-        } else if (type.equalsIgnoreCase("text")) {
+        } else if (type.equals(DataTypes.TEXT)) {
           inner.put(rd.textArea(fieldName, requestParams.get(fieldName), fieldName), "");
         } else {
           inner.put(rd.textInput(fieldName, requestParams.get(fieldName), fieldName), "");

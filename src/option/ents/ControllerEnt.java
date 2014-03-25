@@ -174,6 +174,10 @@ public class ControllerEnt extends OptionAbstract {
         if (hid == null || hid.equals("")) {
           hidden = false;
         }
+        boolean free = false;
+        if (params.get("free") != null) {
+          free = true;
+        }
         StructureController crn = ck.getController(contrName);
         if (crn != null) {
           ControllerMethod cm = crn.getMethod(oldmName);
@@ -182,12 +186,14 @@ public class ControllerEnt extends OptionAbstract {
               cm.setAlias(alim);
               cm.setDescription(desm);
               cm.setHidden(hidden);
+              cm.setFree(free);
             } else if (crn.getMethod(newmName) == null) {
               crn.deleteMethod(oldmName);
               crn.setMethod(newmName, cm);
               cm.setAlias(alim);
               cm.setDescription(desm);
               cm.setHidden(hidden);
+              cm.setFree(free);
             }
             ck.saveController(contrName);
           }
@@ -415,7 +421,7 @@ public class ControllerEnt extends OptionAbstract {
           mandatory = true;
         }
         cp.setMandatory(mandatory);
-        DataTypes dataType = null;
+        DataTypes dataType = DataTypes.NONE;
         if (params.get("dataType") != null) {
           String dataTypeString = params.get("dataType").toString().trim();
           if (dataTypeString != null) {
@@ -500,7 +506,7 @@ public class ControllerEnt extends OptionAbstract {
           mandatory = true;
         }
         cp.setMandatory(mandatory);
-        DataTypes dataType = null;
+        DataTypes dataType = DataTypes.NONE;
         if (params.get("dataType") != null) {
           String dataTypeString = params.get("dataType").toString().trim();
           if (dataTypeString != null) {
@@ -602,7 +608,7 @@ public class ControllerEnt extends OptionAbstract {
             linkParams.put("cAction", action);
             linkParams.put("deleteMeth", "1");
 
-            str += ("<div style='float:left;'>" + changeMethodForm(name, action, cm.getAlias(), cm.getDescription(), cm.getHidden()) + "</div><div style='float:left;'> " + href(object, action, "", "Удалить", linkParams, "", "onclick=\"return confirmDelete();\"") + "<font color=brown onclick=\"hide('" + name + action + "1');\" >Отображение</font></div>");
+            str += ("<div style='float:left;'>" + changeMethodForm(name, action, cm.getAlias(), cm.getDescription(), cm.getHidden(), cm.isFree()) + "</div><div style='float:left;'> " + href(object, action, "", "Удалить", linkParams, "", "onclick=\"return confirmDelete();\"") + "<font color=brown onclick=\"hide('" + name + action + "1');\" >Отображение</font></div>");
             str += ("</br>");
             str += ("<div style='clear:both;'>" + getAddServiceForm(name, action) + "</div>");
             str += ("</div>");
@@ -1287,7 +1293,7 @@ public class ControllerEnt extends OptionAbstract {
     LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
     hs.put(rd.combo(ls, srcCode, "sourse"), "");
     hs.put(rd.checkBox("mandatory", mandatory, ""), "Обяз.");
-    hs.put(rd.combo(DataTypes.all(), dataType, "dataType", false), "");
+    hs.put(rd.combo(DataTypes.all(), dataType, "dataType", true), "");
     AbsEnt form = rd.horizontalForm(hs, "OK", "images/ok.png");
     form.addEnt(rd.hiddenInput("changeSourceInner", Index));
     form.addEnt(rd.hiddenInput("indexX", Index));
@@ -1319,7 +1325,7 @@ public class ControllerEnt extends OptionAbstract {
     LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
     hs.put(rd.combo(ls, srcCode, "sourse"), "");
     hs.put(rd.checkBox("mandatory", mandatory, ""), "Обяз.");
-    hs.put(rd.combo(DataTypes.all(), dataType, "dataType", false), "");
+    hs.put(rd.combo(DataTypes.all(), dataType, "dataType", true), "");
     AbsEnt form = rd.horizontalForm(hs, "OK", "images/ok.png");
     form.addEnt(rd.hiddenInput("changeSourceOuter", Index));
     form.addEnt(rd.hiddenInput("indexX", Index));
@@ -1396,13 +1402,14 @@ public class ControllerEnt extends OptionAbstract {
    * @return
    * @throws Exception
    */
-  String changeMethodForm(String cntrlName, String methName, String alias, String description, Boolean hidden) throws Exception {
+  String changeMethodForm(String cntrlName, String methName, String alias, String description, Boolean hidden, boolean free) throws Exception {
     String result = "";
     LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
     hs.put(rd.textInput("newMethName", methName, "Метод"), "Метод: ");
     hs.put(rd.textInput("metAlias", alias, "Алиас"), "Алиас(рус): ");
     hs.put(rd.textArea("metDescr", description, "Описание: "), "Описание: ");
     hs.put(rd.checkBox("hidden", hidden, null), "Скрытый");
+    hs.put(rd.checkBox("free", free, null), "Общедоступный");
     AbsEnt form = rd.horizontalForm(hs, "OK", "images/ok.png");
     form.addEnt(rd.hiddenInput("chngMethod", "chngMethod"));;
     form.addEnt(rd.hiddenInput("cntrlName", cntrlName));
