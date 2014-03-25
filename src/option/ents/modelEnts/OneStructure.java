@@ -15,7 +15,7 @@ import com.prim.core.AbstractApplication;
 import com.prim.core.modelStructure.Field;
 import com.prim.core.modelStructure.Structure;
 import com.prim.core.modelStructure.Unique;
-import com.prim.core.warehouse.DataTypes;
+import com.prim.support.enums.DataTypes;
 import com.prim.support.filterValidator.entity.ValidatorAbstract;
 import com.prim.core.warehouse.modelKeeper.ModelStructureKeeper;
 import com.prim.core.warehouse.modelKeeper.ModelStructureManager;

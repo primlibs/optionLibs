@@ -41,7 +41,7 @@ import com.prim.core.pair.Pair;
 import com.prim.core.pair.PairObject;
 import com.prim.core.pair.Sequence;
 import com.prim.core.pair.SequenceObject;
-import com.prim.core.warehouse.DataTypes;
+import com.prim.support.enums.DataTypes;
 
 /**
  *
