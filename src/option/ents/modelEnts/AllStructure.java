@@ -41,6 +41,7 @@ import com.prim.core.pair.Pair;
 import com.prim.core.pair.PairObject;
 import com.prim.core.pair.Sequence;
 import com.prim.core.pair.SequenceObject;
+import com.prim.core.representation.Xml;
 import com.prim.support.enums.DataTypes;
 
 /**
@@ -248,7 +249,8 @@ public class AllStructure extends ModelEnt {
       if (models.containsKey(name)) {
         Element modelElement = primXml.createEmptyElement(doc, root, Structure.ELEMENT_NAME);
         Structure modelStructure = models.get(name);
-        modelStructure.getSelfInXml(doc, modelElement);
+        //modelStructure.getSelfInXml(doc, modelElement);
+        Xml.structureToXml(doc, modelElement, modelStructure);
       }
     }
 
@@ -290,7 +292,8 @@ public class AllStructure extends ModelEnt {
           for (int i = 0; i < modelsNodeList.getLength(); i++) {
             Element modelElement = (Element) modelsNodeList.item(i);
             // создать модель
-            Structure newStructure = StructureFabric.getStructureFromXml(modelElement);
+            //Structure newStructure = StructureFabric.getStructureFromXml(modelElement);
+            Structure newStructure = Xml.structureFromXml(modelElement);
             if (!newStructure.isSystem()) {
               String name = newStructure.getName();
               // если модели с таким именем нет в списке

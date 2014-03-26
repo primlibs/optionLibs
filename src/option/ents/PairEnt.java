@@ -35,6 +35,7 @@ import com.prim.web.fabric.EnumAttrType;
 import com.prim.core.pair.Pair;
 import com.prim.core.pair.PairObject;
 import com.prim.core.pair.Sequence;
+import com.prim.core.representation.Xml;
 
 /**
  *
@@ -295,7 +296,8 @@ public class PairEnt extends OptionAbstract {
 
       Pair pair = ps.searchOnePair(pairObject, pairAction);
 
-      pair.getSelfInXml(doc, root);
+      //pair.getSelfInXml(doc, root);
+      Xml.pairToXml(doc, root, pair); 
 
     }
     fileContent = primXml.documentToString(doc).getBytes("UTF-8");
@@ -416,7 +418,8 @@ public class PairEnt extends OptionAbstract {
           NodeList list = doc.getChildNodes();
           Element root = (Element) list.item(0);
 
-          Pair newPair = PairObject.getPairFromXml(root);
+          //Pair newPair = PairObject.getPairFromXml(root);
+          Pair newPair = Xml.pairFromXml(root);
           String pairObject = newPair.getObject();
           String pairAction = newPair.getAction();
           PairKeeper pk = app.getKeeper().getPairKeeper();
@@ -467,7 +470,8 @@ public class PairEnt extends OptionAbstract {
           NodeList list = doc.getChildNodes();
           Element root = (Element) list.item(0);
 
-          Pair newPair = PairObject.getPairFromXml(root);
+          //Pair newPair = PairObject.getPairFromXml(root);
+          Pair newPair = Xml.pairFromXml(root);
           String pairObject = newPair.getObject();
           String pairAction = newPair.getAction();
           PairKeeper pk = app.getKeeper().getPairKeeper();
