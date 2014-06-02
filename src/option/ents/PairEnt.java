@@ -335,7 +335,8 @@ public class PairEnt extends OptionAbstract {
               && !mm.getName().equals("renderChangeEntityForm")
               && !mm.getName().equals("renderEntityList")
               && !mm.getName().equals("addFiles")
-              && !mm.getName().equals("showAllFiles")) {
+              && !mm.getName().equals("showAllFiles")
+              && !mm.getName().equals("showFile")) {
         checkList.add(mm.getName());
       }
     }
