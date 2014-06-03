@@ -157,7 +157,8 @@ public final class Backup {
     private void createArchive() {
         try {
             File dir = new File(dumpPath);
-            String command = "tar -cjvf " + archiveName + " " + dumpPath + "/" + innerDir;
+            //String command = "tar -cjvf " + archiveName + " " + dumpPath + "/" + innerDir;
+            String command = "tar -cjvf " + archiveName + " " + "./" + innerDir;
             Process proc = Runtime.getRuntime().exec(command, null, dir);
             int processComplete = proc.waitFor();
             if (processComplete != 0) {
@@ -191,6 +192,10 @@ public final class Backup {
         return result;
     }
 
+    /**
+     * загрузить дамп
+     * @return 
+     */
     public Boolean loadDump() {
         try {
             if (error.isEmpty()) {
