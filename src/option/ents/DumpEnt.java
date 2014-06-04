@@ -100,13 +100,15 @@ public class DumpEnt extends OptionAbstract {
       backup.Backup bb = backup.Backup.getInstance();
       bb.setDbOpts(ok.getDbName(), ok.getDbUser(), ok.getDbPass());
       bb.setArhiveName(year + "_" + month + "_" + day + ".tar.bz2");
-      bb.setDumpDirectoryName(ok.getDumpPath(), year + "_" + month + "_" + day);
+      //bb.setDumpDirectoryName(ok.getDumpPath(), year + "_" + month + "_" + day);
+      bb.setDumpDirectoryName(ok.getDumpPath());
       bb.setSqlDumpName("dump.sql");
       bb.addConfigFile(ok.getAppUserDataConfigPath(), "pair.xml");
       bb.addConfigFile(ok.getAppUserDataConfigPath(), "systemModel.xml");
       bb.addConfigFile("/usr/local/" + app.getAppName(), "config.xml");
       str += ok.getAppUserDataConfigPath();
       bb.createBackup();
+      str += "<br/>" + message + "<br/>";
       if (bb.getError().isEmpty()) {
         str += "дамп создан";
       } else {
@@ -120,16 +122,16 @@ public class DumpEnt extends OptionAbstract {
     } else if (action.equals("fromDump")) {
       OptionsKeeper ok = app.getKeeper().getOptionKeeper();
 
-      if (killTable(app.getConnection(), ok.getDbName()) == true) {
+      if (killBase(app.getConnection(), ok.getDbName()) == true) {
         backup.Backup bb = backup.Backup.getInstance();
         bb.setDbOpts(ok.getDbName(), ok.getDbUser(), ok.getDbPass());
         bb.setArhiveName(MyString.getString(params.get("fileName")));
-        bb.setDumpDirectoryName(ok.getDumpPath(), ok.getDumpPath());
+        //bb.setDumpDirectoryName(ok.getDumpPath(), ok.getDumpPath());
+        bb.setDumpDirectoryName(ok.getDumpPath());
         bb.setSqlDumpName("dump.sql");
         bb.addConfigFile(ok.getAppUserDataConfigPath(), "pair.xml");
         bb.addConfigFile(ok.getAppUserDataConfigPath(), "systemModel.xml");
         bb.loadDump();
-        str += message;
         if (bb.getError().isEmpty()) {
           str += "дамп создан";
         } else {
@@ -261,26 +263,15 @@ public class DumpEnt extends OptionAbstract {
     return true;
   }
 
-  private Boolean killTable(Connection cn, String dbname) {
+  private boolean killBase(Connection cn, String dbname) {
     Boolean res = true;
-
-    QueryExecutor ex = ExecutorFabric.getExecutor(cn, " show tables;");
     try {
       cn.setAutoCommit(false);
-      ex.select();
-      if (ex.getError().isEmpty()) {
-        List<Map<String, Object>> resList = ex.getResultList();
-        for (Map<String, Object> mp : resList) {
-          String query = " drop table " + mp.get("Tables_in_" + dbname) + ";";
-          QueryExecutor ex1 = ExecutorFabric.getExecutor(cn, query);
-          ex1.update();
-          if (!ex1.getError().isEmpty()) {
-            str += ex1.getError();
-            res = false;
-          }
-        }
-      } else {
-        str += ex.getError();
+      String query = " drop database " + dbname + ";";
+      QueryExecutor ex1 = ExecutorFabric.getExecutor(cn, query);
+      ex1.update();
+      if (!ex1.getError().isEmpty()) {
+        str += ex1.getError();
         res = false;
       }
       if (res == true) {
@@ -291,6 +282,52 @@ public class DumpEnt extends OptionAbstract {
       str += MyString.getStackExeption(exc);
       res = false;
     }
+
+    if (res) {
+      try {
+        String query = "create database " + dbname;
+        Statement stat = cn.createStatement();
+        stat.executeUpdate(query);
+      } catch (Exception exc) {
+        str += MyString.getStackExeption(exc);
+        res = false;
+      }
+    }
+
     return res;
   }
+  /*
+   private Boolean killTable(Connection cn, String dbname) {
+   Boolean res = true;
+
+   QueryExecutor ex = ExecutorFabric.getExecutor(cn, " show tables;");
+   try {
+   cn.setAutoCommit(false);
+   ex.select();
+   if (ex.getError().isEmpty()) {
+   List<Map<String, Object>> resList = ex.getResultList();
+   for (Map<String, Object> mp : resList) {
+   String query = " drop table " + mp.get("Tables_in_" + dbname) + ";";
+   QueryExecutor ex1 = ExecutorFabric.getExecutor(cn, query);
+   ex1.update();
+   if (!ex1.getError().isEmpty()) {
+   str += ex1.getError();
+   res = false;
+   }
+   }
+   } else {
+   str += ex.getError();
+   res = false;
+   }
+   if (res == true) {
+   cn.commit();
+   cn.setAutoCommit(true);
+   }
+   } catch (Exception exc) {
+   str += MyString.getStackExeption(exc);
+   res = false;
+   }
+   return res;
+   }
+   */
 }

@@ -9,7 +9,10 @@ import com.prim.support.FileExecutor;
 import com.prim.support.FileSearch;
 import com.prim.support.MyString;
 import com.prim.web.objects.Parameter;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
@@ -98,10 +101,19 @@ public final class Backup {
    *
    * @param name
    */
-  public void setDumpDirectoryName(String dumpPath, String innerDir) {
-    if (MyString.NotNull(dumpPath, innerDir)) {
+  /*
+   public void setDumpDirectoryName(String dumpPath, String innerDir) {
+   if (MyString.NotNull(dumpPath, innerDir)) {
+   this.dumpPath = dumpPath;
+   this.innerDir = innerDir;
+   } else {
+   error.add("Директория для дампа или локальной директории не было передано");
+   }
+   }
+   */
+  public void setDumpDirectoryName(String dumpPath) {
+    if (MyString.NotNull(dumpPath)) {
       this.dumpPath = dumpPath;
-      this.innerDir = innerDir;
     } else {
       error.add("Директория для дампа или локальной директории не было передано");
     }
@@ -115,6 +127,7 @@ public final class Backup {
   public void setArhiveName(String name) {
     if (MyString.NotNull(name)) {
       archiveName = name;
+      innerDir = getFolderName(archiveName);
     } else {
       error.add("Имя архива не было передано");
     }
@@ -151,7 +164,6 @@ public final class Backup {
     if (error.isEmpty()) {
       createArchive();
     }
-
   }
 
   private void createArchive() {
@@ -162,7 +174,7 @@ public final class Backup {
       Process proc = Runtime.getRuntime().exec(command, null, dir);
       int processComplete = proc.waitFor();
       if (processComplete != 0) {
-        error.add("не удалось создать архив");
+        error.add("не удалось создать архив " + getError(proc));
       }
     } catch (Exception ex) {
       error.add("Ошибка при попытке создать архив");
@@ -170,6 +182,51 @@ public final class Backup {
     }
   }
 
+  private String getError(Process proc) throws Exception {
+    InputStream input = proc.getErrorStream();
+    InputStreamReader reader = new InputStreamReader(input);
+    BufferedReader read = new BufferedReader(reader);
+    String err = "";
+    String line = "";
+    while ((line = read.readLine()) != null) {
+      err += line;
+    }
+    return err;
+  }
+
+  /*
+   private void createArchive() {
+   try {
+   File dir = new File(dumpPath + "/" + innerDir);
+   String command = "tar -cjvf " + archiveName + " ./";
+   DumpEnt.message += dumpPath + "/" + innerDir + "<br/>";
+   DumpEnt.message += command + "<br/>";
+   Process proc = Runtime.getRuntime().exec(command, null, dir);
+   int processComplete = proc.waitFor();
+   InputStream input = proc.getErrorStream();
+   InputStreamReader reader = new InputStreamReader(input);
+   BufferedReader read = new BufferedReader(reader);
+   String err = "";
+   String line = "";
+   while ((line = read.readLine()) != null) {
+   err += line;
+   }      
+   if (processComplete != 0) {
+   error.add("не удалось создать архив " + err);
+   }
+   command = "mv " + archiveName + " " + dumpPath;
+   proc = Runtime.getRuntime().exec(command, null, dir);
+   processComplete = proc.waitFor();
+   if (processComplete != 0) {
+   error.add("не удалось переместить архив в общую директорию");
+   }
+
+   } catch (Exception ex) {
+   error.add("Ошибка при попытке создать архив");
+   error.add(MyString.getStackExeption(ex));
+   }
+   }
+   */
   private void copyConfigFiles() {
     try {
       for (Parameter pm : configFiles) {
@@ -202,14 +259,12 @@ public final class Backup {
       if (error.isEmpty()) {
         unzip();
       }
-      /*
-       if (error.isEmpty()) {
-       loadDumpBD();
-       }
-       if (error.isEmpty()) {
-       loadConfigFiles();
-       }
-       */
+      if (error.isEmpty()) {
+        loadDumpBD();
+      }
+      if (error.isEmpty()) {
+        loadConfigFiles();
+      }
     } catch (Exception ex) {
       error.add(MyString.getStackExeption(ex));
     }
@@ -219,13 +274,15 @@ public final class Backup {
     return false;
   }
 
+  
   // залить дамп БД
   private void loadDumpBD() throws Exception {
     if (new File(unzipDir).exists()) {
       FileSearch fs = FileSearch.findInDir(unzipDir, sqlDumpName);
       if (fs.getResult().equals(EnumFileSearch.success)) {
         String newDumpPath = fs.getFilePath();
-        String[] command = new String[]{"mysql -u" + dbUser + " -p" + dbPass + " " + dbName + " --default-character-set=utf8 < " + newDumpPath};
+        //String[] command = new String[]{"mysql -u" + dbUser + " -p" + dbPass + " " + dbName + " --default-character-set=utf8 < " + newDumpPath};
+        String[] command = new String[]{"/bin/sh", "-c", "mysql -u" + dbUser + " -p" + dbPass + " " + dbName + " --default-character-set=utf8 < " + newDumpPath};
         Process proc = Runtime.getRuntime().exec(command);
         int i = proc.waitFor();
 
@@ -270,6 +327,25 @@ public final class Backup {
   }
 
   // распаковать архив
+  /*
+   private void unzip() throws Exception {
+   File zip = new File(dumpPath + "/" + archiveName);
+   String dirName = zip.getParent();
+   String newDirName;
+   if (!dirName.equals("/")) {
+   newDirName = dirName + "/";
+   } else {
+   newDirName = dirName;
+   }
+   String command = "tar xvf " + zip + " -C " + newDirName;
+   Process proc = Runtime.getRuntime().exec(command);
+   int i = proc.waitFor();
+   if (i != 0) {
+   throw new Exception("не удалось разархивировать " + command + " !");
+   }
+   unzipDir = newDirName.substring(newDirName.length() - 1);
+   }
+   */
   private void unzip() throws Exception {
     File zip = new File(dumpPath + "/" + archiveName);
     String dirName = zip.getParent();
@@ -285,7 +361,39 @@ public final class Backup {
     if (i != 0) {
       throw new Exception("не удалось разархивировать " + command + " !");
     }
-    unzipDir = newDirName.substring(newDirName.length() - 1);
+    unzipDir = newDirName + getFolderName(archiveName);
+  }
+
+  // распаковать архив
+  /*
+  private void unzip() throws Exception {
+    File zip = new File(dumpPath + "/" + archiveName);
+    String ownerName = getFolderName(archiveName);
+    String newDirName = dumpPath + "/" + ownerName;
+    String command = "tar xvf " + zip + " -C " + newDirName;
+    Process proc = Runtime.getRuntime().exec(command);
+    int i = proc.waitFor();
+    if (i != 0) {
+      throw new Exception("не удалось разархивировать " + command + " !");
+    }
+    // после распаковки проверяем наличие файлов в двух директориях
+    // это нужно потому, что раньше алгоритм упаковки архива был другой,
+    // и в архив запаковывались не файлы, а вся директория
+    String oldDirName = newDirName + "/" + ownerName;
+    if (new File(oldDirName).exists() && new File(oldDirName).isDirectory()) {
+      unzipDir = oldDirName;
+    } else {
+      unzipDir = newDirName;
+    }
+  }
+  */
+
+  private String getFolderName(String archiveName) {
+    int end = archiveName.indexOf(".");
+    if (end < 1) {
+      end = archiveName.length();
+    }
+    return archiveName.substring(0, end);
   }
 
   private void createDir() {
