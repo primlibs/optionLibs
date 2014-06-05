@@ -940,8 +940,13 @@ public class PairEnt extends OptionAbstract {
     pairs.removeAll(pair.getAllParentСlone());
     pairs.remove(pair);
     TreeMap<String, Object> pairsMap = new TreeMap<String, Object>();
+    List<String> childrenNames = new ArrayList();
+    for (Pair p: pair.getPairsClone()) {
+      childrenNames.add(p.getObject() + ":" + p.getAction());
+    }
+    
     for (Pair p : pairs) {
-      if (!pair.containsPair(p.getObject(), p.getAction())) {
+      if (!childrenNames.contains(p.getObject() + ":" + p.getAction())) {
         pairsMap.put(p.getObject() + ":" + p.getAction(), p.getObject() + ":" + p.getAction());
       }
     }
