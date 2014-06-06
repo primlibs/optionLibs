@@ -40,6 +40,7 @@ public final class Backup {
   private String dbPass = "";
   private String dbName = "";
   private String unzipDir = "";
+  private boolean skipOptions = true;
 
   private Backup() {
   }
@@ -67,6 +68,19 @@ public final class Backup {
     } else {
       error.add("Имя конфигурационного файла или путь к нему не передан");
     }
+  }
+
+  /**
+   * включать ли опцию --skip-options при создании дампа БД. По умолчанию -
+   * true. Если данная опция включается, то не работает блокировка таблиц. Для
+   * того, чтобы дамп гарантированно был сделан, лучше не включать данную опцию
+   * (то есть устанавливать значение false). Но делать это можно только в том
+   * случае, если у пользователя есть права на блокировку таблиц (LOCK TABLES).
+   *
+   * @param skipOptions
+   */
+  public void setSkipOptions(boolean skipOptions) {
+    this.skipOptions = skipOptions;
   }
 
   /**
@@ -274,7 +288,6 @@ public final class Backup {
     return false;
   }
 
-  
   // залить дамп БД
   private void loadDumpBD() throws Exception {
     if (new File(unzipDir).exists()) {
@@ -366,28 +379,27 @@ public final class Backup {
 
   // распаковать архив
   /*
-  private void unzip() throws Exception {
-    File zip = new File(dumpPath + "/" + archiveName);
-    String ownerName = getFolderName(archiveName);
-    String newDirName = dumpPath + "/" + ownerName;
-    String command = "tar xvf " + zip + " -C " + newDirName;
-    Process proc = Runtime.getRuntime().exec(command);
-    int i = proc.waitFor();
-    if (i != 0) {
-      throw new Exception("не удалось разархивировать " + command + " !");
-    }
-    // после распаковки проверяем наличие файлов в двух директориях
-    // это нужно потому, что раньше алгоритм упаковки архива был другой,
-    // и в архив запаковывались не файлы, а вся директория
-    String oldDirName = newDirName + "/" + ownerName;
-    if (new File(oldDirName).exists() && new File(oldDirName).isDirectory()) {
-      unzipDir = oldDirName;
-    } else {
-      unzipDir = newDirName;
-    }
-  }
-  */
-
+   private void unzip() throws Exception {
+   File zip = new File(dumpPath + "/" + archiveName);
+   String ownerName = getFolderName(archiveName);
+   String newDirName = dumpPath + "/" + ownerName;
+   String command = "tar xvf " + zip + " -C " + newDirName;
+   Process proc = Runtime.getRuntime().exec(command);
+   int i = proc.waitFor();
+   if (i != 0) {
+   throw new Exception("не удалось разархивировать " + command + " !");
+   }
+   // после распаковки проверяем наличие файлов в двух директориях
+   // это нужно потому, что раньше алгоритм упаковки архива был другой,
+   // и в архив запаковывались не файлы, а вся директория
+   String oldDirName = newDirName + "/" + ownerName;
+   if (new File(oldDirName).exists() && new File(oldDirName).isDirectory()) {
+   unzipDir = oldDirName;
+   } else {
+   unzipDir = newDirName;
+   }
+   }
+   */
   private String getFolderName(String archiveName) {
     int end = archiveName.indexOf(".");
     if (end < 1) {
@@ -416,7 +428,12 @@ public final class Backup {
         String pass = dbPass;
         String database = dbName;
         //String command = "mysqldump --skip-opt -u" + user + " -p" + pass + " -B --create-options " + database + " -r " + dumpPath + "/" + innerDir + "/" + sqlDumpName;
-        String command = "mysqldump --skip-opt -u" + user + " -p" + pass + " --create-options " + database + " -r " + dumpPath + "/" + innerDir + "/" + sqlDumpName;
+        String command;
+        if (skipOptions) {
+          command = "mysqldump --skip-opt -u" + user + " -p" + pass + " --create-options " + database + " -r " + dumpPath + "/" + innerDir + "/" + sqlDumpName;
+        } else {
+          command = "mysqldump -u" + user + " -p" + pass + " --create-options " + database + " -r " + dumpPath + "/" + innerDir + "/" + sqlDumpName;
+        }
         Process proc = Runtime.getRuntime().exec(command);
         int processComplete = proc.waitFor();
         if (processComplete != 0) {
