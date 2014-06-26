@@ -257,6 +257,8 @@ public class PairEnt extends OptionAbstract {
       str += "<br/>";
       str += uploadMainPairForm();
       str += "<br/>";
+      str += linkShowAll();
+      str += "<br/>";
 
       str += (content);
       str += (ps.getErrors());
@@ -862,6 +864,10 @@ public class PairEnt extends OptionAbstract {
     return form.render();
   }
 
+  private String linkShowAll() {
+    return "<font class='display_link' onclick=\"$('.pair_show:has(.pair_show)').slideToggle();\">[Показать все]</font>";
+  }
+  
   private String uploadMainPairForm() throws Exception {
     FormOptionInterface fo = rd.getFormOption();
     fo.setAction(action);
