@@ -680,7 +680,7 @@ public class AllStructure extends ModelEnt {
       method = "showAllFiles";
       if (!ps.containsPair(modelName, method)) {
         Pair showAllFiles = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair);
-        showAllFiles.setDef(Boolean.TRUE);
+        showAllFiles.setDef(false);
         Sequence showSeq = SequenceObject.getInstance("default", modelName, method, modelName + ":" + method, modelName + ":" + method, null, null, null, null);;
         showAllFiles.setSequence(showSeq);
         pair.addPair(showAllFiles);
