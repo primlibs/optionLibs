@@ -49,6 +49,7 @@ public class PairController {
     String falseRender = params.get("falseRender");
     String trueRedirect = params.get("trueRedirect");
     String falseRedirect = params.get("falseRedirect");
+    
 
     if (checkParams(object, action, newObject, newAction, objectMethod,
             trueRender, falseRender, trueRedirect, falseRedirect)) {
@@ -180,7 +181,7 @@ public class PairController {
             methodName = str[1];
           }
 
-          Sequence s = SequenceObject.getInstance(seqName, objectName, methodName, trueRender, falseRender, trueRedirect, falseRedirect, trueRedirect, falseRedirect);
+          Sequence s = SequenceObject.getInstance(seqName, objectName, methodName, trueRender, falseRender, trueRedirect, falseRedirect, trueParams, falseParams);
           pair.setSequence(s);
           status = ps.SaveCollectionInFile();
         } else {
