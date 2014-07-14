@@ -669,7 +669,7 @@ public class AllStructure extends ModelEnt {
     method = "showOne";
     if (!ps.containsPair(modelName, method)) {
       Pair showPair = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair);
-      Sequence showSeq = SequenceObject.getInstance("default", modelName, method, modelName + ":" + "renderOneEntity", modelName + ":" + "renderOneEntity", modelName, pairName, pairName, pairName);
+      Sequence showSeq = SequenceObject.getInstance("default", modelName, method, modelName + ":" + "renderOneEntity", modelName + ":" + "renderOneEntity", null, null, null, null);
       showPair.setSequence(showSeq);
       pair.addPair(showPair);
     }
