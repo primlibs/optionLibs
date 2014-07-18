@@ -123,6 +123,7 @@ public class ImportEnt extends OptionAbstract {
    */
   private String uploadFileForm() throws Exception {
     Map<AbsEnt, String> inner = new LinkedHashMap();
+    inner.put(rd.txt("Файл должен быть в кодировке UTF-8, в качестве разделителя запятая"), "");
     inner.put(rd.fileInput("file", null, "Выберите файл"), "");
     FormOptionInterface fo = rd.getFormOption();
     fo.setFormToUploadFiles(true);
