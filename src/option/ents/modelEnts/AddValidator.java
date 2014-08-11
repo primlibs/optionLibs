@@ -148,6 +148,7 @@ public class AddValidator extends ModelEnt {
     res.add(new Valids("ValidatorAbstract", "ValidatorAbstract"));
     res.add(new Valids("WorkingHoursFilter", "WorkingHoursFilter"));
     res.add(new Valids("PfFilter", "PfFilter"));
+    res.add(new Valids("OgrnValidator", "OgrnValidator"));
     res.add(new Valids("InnValidator", "InnValidator"));
     res.add(new Valids("MailValidator", "MailValidator"));
     return res;
