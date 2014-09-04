@@ -632,13 +632,13 @@ public class AllStructure extends ModelEnt {
       Sequence searchSeq = SequenceObject.getInstance("default", modelName, method, modelName + ":" + "renderEntityList", modelName + ":" + "renderEntityList", null, null, null, null);
       Map<String, Sequence> seq = new HashMap();
       seq.put(searchSeq.getName(), searchSeq);
-      Pair searchPair = PairObject.getInstance(modelName, method, false, seq, null, pair);
+      Pair searchPair = PairObject.getInstance(modelName, method, false, seq, null, pair, false, "");
       pair.addPair(searchPair);
     }
 
     method = "change";
     if (!ps.containsPair(modelName, method)) {
-      Pair changePair = PairObject.getInstance(modelName, method, false, null, null, pair);
+      Pair changePair = PairObject.getInstance(modelName, method, false, null, null, pair, false, "");
       Sequence changeSeq = SequenceObject.getInstance("default", modelName, "showOne", modelName + ":" + "renderChangeEntityForm", modelName + ":" + "renderChangeEntityForm", null, null, null, null);
       changePair.setSequence(changeSeq);
       changeSeq = SequenceObject.getInstance("change", modelName, "change", null, modelName + ":" + "renderChangeEntityForm", modelName + ":search", null, null, null);
@@ -648,7 +648,7 @@ public class AllStructure extends ModelEnt {
 
     method = "delete";
     if (!ps.containsPair(modelName, method)) {
-      Pair deletePair = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair);
+      Pair deletePair = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair, false, "");
       Sequence deleteSeq = SequenceObject.getInstance("default", modelName, method, null, null, modelName + ":search", modelName + ":search", null, null);
       deletePair.setSequence(deleteSeq);
       pair.addPair(deletePair);
@@ -656,7 +656,7 @@ public class AllStructure extends ModelEnt {
 
     method = "add";
     if (!ps.containsPair(modelName, method)) {
-      Pair addPair = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair);
+      Pair addPair = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair, false, "");
 
       Sequence defSeq = SequenceObject.getInstance("default", null, null, modelName + ":renderAddEntityForm", modelName + ":renderAddEntityForm", null, null, null, null);
       addPair.setSequence(defSeq);
@@ -668,7 +668,7 @@ public class AllStructure extends ModelEnt {
 
     method = "showOne";
     if (!ps.containsPair(modelName, method)) {
-      Pair showPair = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair);
+      Pair showPair = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair, false, "");
       Sequence showSeq = SequenceObject.getInstance("default", modelName, method, modelName + ":" + "renderOneEntity", modelName + ":" + "renderOneEntity", null, null, null, null);
       showPair.setSequence(showSeq);
       pair.addPair(showPair);
@@ -679,7 +679,7 @@ public class AllStructure extends ModelEnt {
       //метод просмотра файлов
       method = "showAllFiles";
       if (!ps.containsPair(modelName, method)) {
-        Pair showAllFiles = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair);
+        Pair showAllFiles = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair, false, "");
         showAllFiles.setDef(false);
         Sequence showSeq = SequenceObject.getInstance("default", modelName, method, modelName + ":" + method, modelName + ":" + method, null, null, null, null);;
         showAllFiles.setSequence(showSeq);
@@ -688,7 +688,7 @@ public class AllStructure extends ModelEnt {
       //метод добавления файлов
       method = "addFiles";
       if (!ps.containsPair(modelName, method)) {
-        Pair addFiles = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair);
+        Pair addFiles = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair, false, "");
         Sequence showSeq = SequenceObject.getInstance("default", modelName, method, modelName + ":" + method, modelName + ":" + method, null, null, null, null);;
         addFiles.setSequence(showSeq);
         
@@ -701,7 +701,7 @@ public class AllStructure extends ModelEnt {
       //метод удаления файла
       method = "delFile";
       if (!ps.containsPair(modelName, method)) {
-        Pair deletePair = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair);
+        Pair deletePair = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair, false, "");
         Sequence deleteSeq = SequenceObject.getInstance("default", modelName, method, null, null, modelName + ":search", modelName + ":search", null, null);;
         deletePair.setSequence(deleteSeq);
         pair.addPair(deletePair);
@@ -709,7 +709,7 @@ public class AllStructure extends ModelEnt {
       //метод прочтения файла
       method = "getFile";
       if (!ps.containsPair(modelName, method)) {
-        Pair readFilePair = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair);
+        Pair readFilePair = PairObject.getInstance(modelName, method, Boolean.FALSE, null, null, pair, false, "");
         Sequence seq = SequenceObject.getInstance("default", modelName, method, null, null, modelName + ":search", modelName + ":search", null, null);;
         readFilePair.setSequence(seq);
         pair.addPair(readFilePair);

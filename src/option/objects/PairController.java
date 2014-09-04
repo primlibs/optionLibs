@@ -33,6 +33,36 @@ public class PairController {
     return errors;
   }
 
+  public boolean addNewPair(Map<String, Object> request) throws Exception {
+    boolean status = false;
+    HashMap<String, String> params = getRequestParams(request);
+    String newPairObject = params.get("newPairObject");
+    String newPairAction = params.get("newPairAction");
+    String webController = params.get("webController");
+    String pairObject = params.get("pairObject");
+    String pairAction = params.get("pairAction");
+    if (checkParams(newPairObject, newPairAction, webController, pairObject, pairAction)) {
+      Pair pair = ps.searchOnePair(pairObject, pairAction);
+      if (pair != null) {
+        if (!ps.containsPair(newPairObject, newPairAction)) {
+          
+          Sequence s = SequenceObject.getInstance("default", "", "", "", "", "", "", "", "");
+          Map<String, Sequence> seqMap = new HashMap();
+          seqMap.put(s.getName(), s);
+          
+          pair.addPair(PairObject.getInstance(newPairObject, newPairAction, false, seqMap, null, pair, true, webController));
+          
+          status = ps.SaveCollectionInFile();
+        } else {
+          errors.add("Пара с именем " + newPairObject + " и методом " + newPairAction + " уже существует");
+        }
+      }
+    }
+    return status;
+  }
+  
+  
+
   // добавить пару
   public boolean addPair(Map<String, Object> request) throws Exception {
     boolean status = false;
@@ -49,7 +79,6 @@ public class PairController {
     String falseRender = params.get("falseRender");
     String trueRedirect = params.get("trueRedirect");
     String falseRedirect = params.get("falseRedirect");
-    
 
     if (checkParams(object, action, newObject, newAction, objectMethod,
             trueRender, falseRender, trueRedirect, falseRedirect)) {
@@ -70,9 +99,9 @@ public class PairController {
           }
 
           Sequence s = SequenceObject.getInstance("default", objectName, methodName, trueRender, falseRender, trueRedirect, falseRedirect, trueRedirect, falseRedirect);
-          Map<String,Sequence> seqMap = new HashMap();
+          Map<String, Sequence> seqMap = new HashMap();
           seqMap.put(s.getName(), s);
-          pair.addPair(PairObject.getInstance(newObject, newAction, (def != null ? true : false),seqMap, null, pair));
+          pair.addPair(PairObject.getInstance(newObject, newAction, (def != null ? true : false), seqMap, null, pair, false, ""));
 
           status = ps.SaveCollectionInFile();
         } else {
@@ -92,9 +121,29 @@ public class PairController {
     String def = params.get("def");
     if (checkParams(object, action)) {
       Pair pair = ps.searchOnePair(object, action);
-      
+
       if (pair != null) {
         pair.setDef(def != null ? true : false);
+        status = ps.SaveCollectionInFile();
+      }
+    }
+    return status;
+  }
+  
+  // изменить новую пару
+  public boolean changeNewPair(Map<String, Object> request) throws Exception {
+    boolean status = false;
+    HashMap<String, String> params = getRequestParams(request);
+    String object = params.get("objectName");
+    String action = params.get("actionName");
+    String def = params.get("def");
+    String webController = params.get("webController");
+    if (checkParams(object, action)) {
+      Pair pair = ps.searchOnePair(object, action);
+
+      if (pair != null) {
+        pair.setDef(def != null ? true : false);
+        pair.setControllerName(webController);
         status = ps.SaveCollectionInFile();
       }
     }
@@ -262,11 +311,9 @@ public class PairController {
     return status;
   }
 
-
-  
   private HashMap<String, String> getRequestParams(Map<String, Object> request) {
     HashMap<String, String> params = new HashMap<String, String>();
-    for (String name: request.keySet()) {
+    for (String name : request.keySet()) {
       Object value = request.get(name);
       if (value != null) {
         params.put(name, value.toString());

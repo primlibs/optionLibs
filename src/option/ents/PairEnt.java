@@ -36,6 +36,9 @@ import com.prim.core.pair.Pair;
 import com.prim.core.pair.PairObject;
 import com.prim.core.pair.Sequence;
 import com.prim.core.representation.Xml;
+import com.prim.web.webcontroller.WebController;
+import java.util.Arrays;
+import sun.nio.cs.Surrogate;
 
 /**
  *
@@ -49,6 +52,7 @@ public class PairEnt extends OptionAbstract {
   // все контроллеры и методы
   private TreeMap<String, Object> controllers;
   private TreeMap<String, Object> rendersMethods = new TreeMap<String, Object>();
+  private TreeMap<String, Object> webControllers = new TreeMap<String, Object>();
   // активные пары, то есть те, которые нужно отобразить в развернутом виде
   private ArrayList<Pair> activePairs;
   private String formAction = "";
@@ -57,6 +61,8 @@ public class PairEnt extends OptionAbstract {
   private final String UPLOAD_FILE_SPECACTION = "uploadPairFiles";
   private final String UPLOAD_MAIN_FILE_SPECACTION = "uploadMainPairFiles";
   private final String CHECK_SPECACTION = "checkPairs";
+  private final String ADD_NEW_PAIR_SPECACTION = "addNewPair";
+  private final String CHANGE_NEW_PAIR_SPECACTION = "changeNewPair";
   private List<String> errors = new ArrayList();
 
   private PairEnt(AbstractApplication app, Render rd, String action, String specAction) {
@@ -89,6 +95,9 @@ public class PairEnt extends OptionAbstract {
 
     controllers.put("0", "не выбрано");
     controllers.putAll(getControllers());
+
+    webControllers.put("0", "--");
+    webControllers.putAll(getWebControllers());
 
     // вернуть файл пар
     if (specAction.equals(DOWNLOAD_FILE_SPECACTION)) {
@@ -154,10 +163,6 @@ public class PairEnt extends OptionAbstract {
         }
       }
 
-
-
-
-
       // получить список всех пар
       allPairsToString.put("0", "не выбрано");
       allPairs = ps.getAllPairs();
@@ -172,8 +177,6 @@ public class PairEnt extends OptionAbstract {
 
       // получить список всех контроллеров и методов
       //ControllerKeeper cs = ControllerKeeper.getInstance(SettingOptions.set("project"));
-
-
       String content = "";
       if (pair != null) {
 
@@ -264,8 +267,6 @@ public class PairEnt extends OptionAbstract {
       str += (ps.getErrors());
       str += (PairObject.message);
 
-
-
     } catch (Exception e) {
       str += MyString.getStackExeption(e);
     }
@@ -299,7 +300,7 @@ public class PairEnt extends OptionAbstract {
       Pair pair = ps.searchOnePair(pairObject, pairAction);
 
       //pair.getSelfInXml(doc, root);
-      Xml.pairToXml(doc, root, pair); 
+      Xml.pairToXml(doc, root, pair);
 
     }
     fileContent = primXml.documentToString(doc).getBytes("UTF-8");
@@ -307,8 +308,7 @@ public class PairEnt extends OptionAbstract {
   }
 
   /**
-   * получить список рендеров. Формат списка: ключ - объект : метод. Значение -
-   * то же.
+   * получить список рендеров. Формат списка: ключ - объект : метод. Значение - то же.
    *
    * @return
    * @throws Exception
@@ -353,10 +353,40 @@ public class PairEnt extends OptionAbstract {
     return servicesMap;
   }
 
+  private TreeMap<String, Object> getWebControllers() throws Exception {
+    String controllerPath = WarehouseSingleton.getInstance().getKeeper(app).getOptionKeeper().getControllerPath();
+    Collection<String> classes = new ArrayList<String>();
+    try {
+      classes = ServiceFactory.scan(controllerPath);
+    } catch (Exception e) {
+
+    }
+    TreeMap<String, Object> cntMap = new TreeMap<String, Object>();
+    HashMap<String, ArrayList<String>> hs = new HashMap<String, ArrayList<String>>();
+    for (String clName : classes) {
+      Class cls = Class.forName("controllers." + clName);
+      ArrayList<String> al = new ArrayList<String>();
+      hs.put(clName, al);
+      Method[] m = cls.getMethods();
+      for (Method mm : m) {
+        List<String> internalMethods = Arrays.asList(WebController.internalMethods);
+        if (!internalMethods.contains(mm.getName())) {
+          al.add(mm.getName());
+        }
+      }
+    }
+
+    for (String str : hs.keySet()) {
+      for (String str2 : hs.get(str)) {
+        cntMap.put(str + ":" + str2, str + ":" + str2);
+      }
+    }
+    return cntMap;
+  }
+
   /**
-   * получить список контроллеров. Формат списка: ключ - объект : метод.
-   * Значение - то же. Возвращаются не все контроллеры, а только те, которые
-   * подходят к данной паре
+   * получить список контроллеров. Формат списка: ключ - объект : метод. Значение - то же. Возвращаются не все
+   * контроллеры, а только те, которые подходят к данной паре
    *
    * @return
    * @throws Exception
@@ -674,14 +704,19 @@ public class PairEnt extends OptionAbstract {
    */
   private String renderPair(Pair pair) throws Exception {
 
+    String style = "";
+    if (pair.isByWebController()) {
+      style = " style = 'background:red;' ";
+    }
+
     String pairAction = pair.getAction();
     String pairObject = pair.getObject();
     String fullName = pairAction + pairObject;
     String str = "";
-    str += "<div class='pair'>";
+    str += "<div class='pair' >";
 
     // заголовок пары
-    str += "<div class='pair_head'>";
+    str += "<div class='pair_head' " + style + ">";
     str += "<table><tr>";
     str += "<td>Object: <b>" + pairObject + "</b> Action: <b>" + pairAction + "</b></td>";
     str += "<td>" + removePairForm(pair) + "</td>";
@@ -693,7 +728,6 @@ public class PairEnt extends OptionAbstract {
     str += "</tr></table>";
     str += "</div>";
 
-
     String display = "";
     if (activePairs.contains(pair)) {
       display = "";
@@ -703,6 +737,10 @@ public class PairEnt extends OptionAbstract {
 
     // основной вывод пары
     str += "<div class='pair_show' id='pair_show" + fullName + "' " + display + "'>";
+
+    if (pair.getObject().equals("app")) {
+      str += addNewPairForm(pair);
+    }
 
     str += "<div class='inner_pairs'>";
 
@@ -728,6 +766,26 @@ public class PairEnt extends OptionAbstract {
     return str;
   }
 
+  private String addNewPairForm(Pair pair) throws Exception {
+    FormOptionInterface fo = rd.getFormOption();
+    fo.setAction(action);
+    fo.setObject(object);
+    fo.setSpecAction(ADD_NEW_PAIR_SPECACTION);
+    Map<AbsEnt, String> map = new LinkedHashMap();
+    map.put(rd.hiddenInput("action", action), "");
+    map.put(rd.hiddenInput("object", object), "");
+    map.put(rd.textInput("newPairObject", "", "Object"), "");
+    map.put(rd.textInput("newPairAction", "", "Object"), "");
+    map.put(rd.combo(webControllers, null, "webController"), "");
+    map.put(rd.hiddenInput("pairObject", pair.getObject()), "");
+    map.put(rd.hiddenInput("pairAction", pair.getAction()), "");
+
+    AbsEnt form = rd.horizontalForm(map, "Добавить новую пару", null);
+    form.addEnt(rd.hiddenInput("method", "addNewPair"));
+    form.setAttribute(EnumAttrType.style, " background: red; ");
+    return form.render();
+  }
+
   /**
    * детальный вывод пары
    *
@@ -735,15 +793,129 @@ public class PairEnt extends OptionAbstract {
    * @return
    */
   private String detailRenderPair(Pair pair) throws Exception {
+    if (!pair.isByWebController()) {
+      String action = pair.getAction();
+      String object = pair.getObject();
+      String fullName = action + object;
+      String str = "";
+      str += "<div class='pair'>";
 
+      // заголовок пары
+      str += "<div class='pair_head'>";
+      str += "<table><tr>";
+      str += "<td>Object: <b>" + object + "</b> Action: <b>" + action + "</b></td>";
+      str += "<td>" + removePairForm(pair) + "</td>";
+      str += "<td><font class='display_link' onclick=\"hide('pair_show" + fullName + "');\">[Отображение]</font></td>";
+      str += "</tr></table>";
+      str += "</div>";
+
+      // определяем, показывать ли пару в развернутом виде
+      String display = "";
+      if (activePairs.contains(pair)) {
+        display = "";
+      } else {
+        display = "style='display:none;'";
+      }
+
+      // определяем, показывать ли sequence в развернутом виде
+      String displaySeq = "";
+      if (params.get("objectName") != null && params.get("actionName") != null && params.get("objectName").toString().equals(object)
+              && params.get("actionName").toString().equals(action) && params.get("seq") != null) {
+        displaySeq = "";
+        display = "";
+      } else {
+        displaySeq = "style='display:none;'";
+      }
+
+      // основной вывод пары
+      str += "<div class='pair_show' id='pair_show" + fullName + "' " + display + "'>";
+
+      // START SEQUENCE
+      str += "<div class='seq'>";
+
+      // заголовок sequence
+      str += "<div class='seq_head'>";
+      str += "<font class='display_link' onclick=\"hide('seq_show" + fullName + "');\">[Показать SEQUENCE]</font>";
+      str += "</div>";
+
+      // основная часть sequence
+      str += "<div class='seq_show' id='seq_show" + fullName + "' " + displaySeq + " >";
+
+      // форма добавления новой sequence
+      str += "<div class='seq_add_form'>";
+      str += addSeqForm(object, action);
+      str += "</div>";
+
+      // все sequence
+      str += "<div class='seq_all'>";
+
+      // сначала показать Sequence по умолчанию
+      Sequence defSeq = pair.getSequenceClone().get("default");
+      if (defSeq != null) {
+        str += "<div class='seq_one'>";
+        str += changeSeqForm(pair, defSeq, "default");
+        str += "</div>";
+      }
+
+      TreeMap<String, Sequence> seqMap = new TreeMap(pair.getSequenceClone());
+      for (String seqName : seqMap.keySet()) {
+        if (!seqName.equals("default")) {
+          Sequence seq = pair.getSequenceClone().get(seqName);
+          str += "<div class='seq_one'>";
+          str += changeSeqForm(pair, seq, seqName);
+          str += removeSeqForm(pair, seqName);
+          str += "</div>";
+        }
+      }
+      str += "</div>";
+      str += "</div>";
+
+      str += "</div>";
+      // END SEQUENCE  
+
+      str += "<div class='inner_pairs'>";
+
+      // добавить вложенную пару
+      str += "<div class='add_pair'>";
+      str += "<p><font class='display_link' onclick=\"hide('add_pair_form" + fullName + "');\">[Добавить вложенную пару]</font></p>";
+      str += "<div id='add_pair_form" + fullName + "' style='display:none;float:left;width:100%;' >";
+      str += addPairForm(object, action);
+      str += movePairForm(pair);
+      str += "</div>";
+      str += "</div>";
+
+      str += changePairForm(pair);
+
+      // вывод вложенных пар
+      TreeMap<String, Pair> pairsMap = new TreeMap<String, Pair>();
+      for (Pair innerPair : pair.getPairsClone()) {
+        pairsMap.put(innerPair.getObject() + ":" + innerPair.getAction(), innerPair);
+      }
+
+      for (Pair innerPair : pairsMap.values()) {
+        str += renderPair(innerPair);
+      }
+      str += "</div>";
+
+      str += "</div>";
+
+      str += "</div>";
+
+      return str;
+    } else {
+      return detailNewRenderPair(pair);
+    }
+  }
+
+  private String detailNewRenderPair(Pair pair) throws Exception {
     String action = pair.getAction();
     String object = pair.getObject();
     String fullName = action + object;
     String str = "";
-    str += "<div class='pair'>";
+    str += "<div class='pair'  >";
 
     // заголовок пары
-    str += "<div class='pair_head'>";
+    str += "<div class='pair_head' style='background:red;' >";
     str += "<table><tr>";
     str += "<td>Object: <b>" + object + "</b> Action: <b>" + action + "</b></td>";
     str += "<td>" + removePairForm(pair) + "</td>";
@@ -759,61 +931,8 @@ public class PairEnt extends OptionAbstract {
       display = "style='display:none;'";
     }
 
-    // определяем, показывать ли sequence в развернутом виде
-    String displaySeq = "";
-    if (params.get("objectName") != null && params.get("actionName") != null && params.get("objectName").toString().equals(object)
-            && params.get("actionName").toString().equals(action) && params.get("seq") != null) {
-      displaySeq = "";
-      display = "";
-    } else {
-      displaySeq = "style='display:none;'";
-    }
-
     // основной вывод пары
     str += "<div class='pair_show' id='pair_show" + fullName + "' " + display + "'>";
-
-    // START SEQUENCE
-    str += "<div class='seq'>";
-
-    // заголовок sequence
-    str += "<div class='seq_head'>";
-    str += "<font class='display_link' onclick=\"hide('seq_show" + fullName + "');\">[Показать SEQUENCE]</font>";
-    str += "</div>";
-
-    // основная часть sequence
-    str += "<div class='seq_show' id='seq_show" + fullName + "' " + displaySeq + " >";
-
-    // форма добавления новой sequence
-    str += "<div class='seq_add_form'>";
-    str += addSeqForm(object, action);
-    str += "</div>";
-
-    // все sequence
-    str += "<div class='seq_all'>";
-
-    // сначала показать Sequence по умолчанию
-    Sequence defSeq = pair.getSequenceClone().get("default");
-    if (defSeq != null) {
-      str += "<div class='seq_one'>";
-      str += changeSeqForm(pair, defSeq, "default");
-      str += "</div>";
-    }
-
-    TreeMap<String, Sequence> seqMap = new TreeMap(pair.getSequenceClone());
-    for (String seqName : seqMap.keySet()) {
-      if (!seqName.equals("default")) {
-        Sequence seq = pair.getSequenceClone().get(seqName);
-        str += "<div class='seq_one'>";
-        str += changeSeqForm(pair, seq, seqName);
-        str += removeSeqForm(pair, seqName);
-        str += "</div>";
-      }
-    }
-    str += "</div>";
-    str += "</div>";
-
-    str += "</div>";
-    // END SEQUENCE  
 
     str += "<div class='inner_pairs'>";
 
@@ -826,7 +945,7 @@ public class PairEnt extends OptionAbstract {
     str += "</div>";
     str += "</div>";
 
-    str += changePairForm(pair);
+    str += changeNewPairForm(pair);
 
     // вывод вложенных пар
     TreeMap<String, Pair> pairsMap = new TreeMap<String, Pair>();
@@ -867,7 +986,7 @@ public class PairEnt extends OptionAbstract {
   private String linkShowAll() {
     return "<font class='display_link' onclick=\"$('.pair_show:has(.pair_show)').slideToggle();\">[Показать все]</font>";
   }
-  
+
   private String uploadMainPairForm() throws Exception {
     FormOptionInterface fo = rd.getFormOption();
     fo.setAction(action);
@@ -934,6 +1053,21 @@ public class PairEnt extends OptionAbstract {
 
   }
 
+  private String changeNewPairForm(Pair pair) throws Exception {
+    LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
+    hs.put(rd.checkBox("def", Boolean.parseBoolean(MyString.getString(pair.getDef())), null), "Default");
+    hs.put(rd.combo(webControllers, pair.getControllerName(), "webController"), "Веб Контроллер");
+    hs.put(rd.hiddenInput("action", action), "");
+    hs.put(rd.hiddenInput("object", object), "");
+    AbsEnt form = rd.verticalForm(hs, "Изменить", "images/change.png");
+    form.setAttribute(EnumAttrType.style, "");
+    form.addEnt(rd.hiddenInput("method", "changeNewPair"));
+    form.addEnt(rd.hiddenInput("objectName", pair.getObject()));
+    form.addEnt(rd.hiddenInput("actionName", pair.getAction()));
+    form.setAttribute(EnumAttrType.action, formAction);
+    return form.render();
+  }
+
   /**
    * форма перемещения пары
    *
@@ -947,10 +1081,10 @@ public class PairEnt extends OptionAbstract {
     pairs.remove(pair);
     TreeMap<String, Object> pairsMap = new TreeMap<String, Object>();
     List<String> childrenNames = new ArrayList();
-    for (Pair p: pair.getPairsClone()) {
+    for (Pair p : pair.getPairsClone()) {
       childrenNames.add(p.getObject() + ":" + p.getAction());
     }
-    
+
     for (Pair p : pairs) {
       if (!childrenNames.contains(p.getObject() + ":" + p.getAction())) {
         pairsMap.put(p.getObject() + ":" + p.getAction(), p.getObject() + ":" + p.getAction());
