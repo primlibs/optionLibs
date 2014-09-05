@@ -776,7 +776,7 @@ public class PairEnt extends OptionAbstract {
     map.put(rd.hiddenInput("action", action), "");
     map.put(rd.hiddenInput("object", object), "");
     map.put(rd.textInput("newPairObject", "", "Object"), "");
-    map.put(rd.textInput("newPairAction", "", "Object"), "");
+    map.put(rd.textInput("newPairAction", "", "Action"), "");
     map.put(rd.combo(webControllers, null, "webController"), "");
     map.put(rd.hiddenInput("pairObject", pair.getObject()), "");
     map.put(rd.hiddenInput("pairAction", pair.getAction()), "");
