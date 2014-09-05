@@ -706,7 +706,7 @@ public class PairEnt extends OptionAbstract {
 
     String style = "";
     if (pair.isByWebController()) {
-      style = " style = 'background:red;' ";
+      style = " style = 'background:yellow;' ";
     }
 
     String pairAction = pair.getAction();
@@ -782,7 +782,7 @@ public class PairEnt extends OptionAbstract {
 
     AbsEnt form = rd.horizontalForm(map, "Добавить новую пару", null);
     form.addEnt(rd.hiddenInput("method", "addNewPair"));
-    form.setAttribute(EnumAttrType.style, " background: red; ");
+    form.setAttribute(EnumAttrType.style, " background: yellow; ");
     return form.render();
   }
 
@@ -915,7 +915,7 @@ public class PairEnt extends OptionAbstract {
     str += "<div class='pair'  >";
 
     // заголовок пары
-    str += "<div class='pair_head' style='background:red;' >";
+    str += "<div class='pair_head' style='background: yellow;' >";
     str += "<table><tr>";
     str += "<td>Object: <b>" + object + "</b> Action: <b>" + action + "</b></td>";
     str += "<td>" + removePairForm(pair) + "</td>";
