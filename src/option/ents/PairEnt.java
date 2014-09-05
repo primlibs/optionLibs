@@ -365,7 +365,7 @@ public class PairEnt extends OptionAbstract {
     HashMap<String, ArrayList<String>> hs = new HashMap<String, ArrayList<String>>();
     for (String clName : classes) {
       
-      Class cls = Class.forName("controllers." + clName);
+      Class cls = Class.forName(app.getControllerClassPath() + "." + clName);
       ArrayList<String> al = new ArrayList<String>();
       hs.put(clName, al);
       Method[] m = cls.getMethods();
