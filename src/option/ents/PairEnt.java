@@ -209,7 +209,7 @@ public class PairEnt extends OptionAbstract {
             }
           }
 
-          content += href(object, action, "", "Посмотреть все", new HashMap());
+          content += href(object, action, "", "Посмотреть полный список", new HashMap());
           content += detailRenderPair(pair);
         } else if (params.get("search") != null) {
           // если задан запрос на поиск
@@ -253,6 +253,8 @@ public class PairEnt extends OptionAbstract {
 
       // форма поиска
       errorList.addAll(errors);
+      
+      str += "<h2> Веб-интерфейсы (пары). </h2>";
       str += errorList;
       str += searchForm();
       str += checkForm();
@@ -260,8 +262,8 @@ public class PairEnt extends OptionAbstract {
       str += "<br/>";
       str += uploadMainPairForm();
       str += "<br/>";
-      str += linkShowAll();
-      str += "<br/>";
+      str += linkExpandAll();
+      str += "<br/> <br/>";
 
       str += (content);
       str += (ps.getErrors());
@@ -364,7 +366,7 @@ public class PairEnt extends OptionAbstract {
     TreeMap<String, Object> cntMap = new TreeMap<String, Object>();
     HashMap<String, ArrayList<String>> hs = new HashMap<String, ArrayList<String>>();
     for (String clName : classes) {
-      
+
       Class cls = Class.forName(app.getControllerClassPath() + "." + clName);
       ArrayList<String> al = new ArrayList<String>();
       hs.put(clName, al);
@@ -698,7 +700,7 @@ public class PairEnt extends OptionAbstract {
   }
 
   /**
-   * краткий вывод пары
+   * краткий вывод пары со всеми вложенными парами
    *
    * @param pair
    * @return
@@ -707,7 +709,7 @@ public class PairEnt extends OptionAbstract {
 
     String style = "";
     if (pair.isByWebController()) {
-      style = " style = 'background:yellow;' ";
+      style = " style = 'background:rgb(255, 255, 171);' ";
     }
 
     String pairAction = pair.getAction();
@@ -716,17 +718,30 @@ public class PairEnt extends OptionAbstract {
     String str = "";
     str += "<div class='pair' >";
 
+    Map<String, Object> linkParams = new HashMap();
+    linkParams.put("pairObject", pair.getObject());
+    linkParams.put("pairAction", pair.getAction());
+    
     // заголовок пары
     str += "<div class='pair_head' " + style + ">";
     str += "<table><tr>";
     str += "<td>Object: <b>" + pairObject + "</b> Action: <b>" + pairAction + "</b></td>";
     str += "<td>" + removePairForm(pair) + "</td>";
     str += "<td>" + fileForm(pairAction, pairObject) + "</td>";
-    str += "<td><font class='display_link' onclick=\"hide('pair_show" + fullName + "');\">[Отображение]</font></td>";
+    str += "<td>" + href(object, action, "", "Показать подробно", linkParams) + "</td>";
+    //str += "<td><font class='display_link' onclick=\"hide('pair_show" + fullName + "');\">[Отображение]</font></td>";
     if (pair.getDef()) {
       str += " Default ";
     }
     str += "</tr></table>";
+    
+    if (pair.isByWebController()) {
+      str += "<br/>";
+      str += changeNewPairForm(pair);
+      str += "<br/>";
+      str += movePairForm(pair);
+    }
+    
     str += "</div>";
 
     String display = "";
@@ -737,18 +752,22 @@ public class PairEnt extends OptionAbstract {
     }
 
     // основной вывод пары
-    str += "<div class='pair_show' id='pair_show" + fullName + "' " + display + "'>";
+   // str += "<div class='pair_show' id='pair_show" + fullName + "' " + display + "'>";
+    str += "<div class='pair_show' id='pair_show" + fullName + "'>";
 
     if (pair.getObject().equals("app")) {
       str += addNewPairForm(pair);
     }
 
-    str += "<div class='inner_pairs'>";
+    //str += "<div class='inner_pairs'>";
+    str += "<div>";
 
+    /*
     Map<String, Object> linkParams = new HashMap();
     linkParams.put("pairObject", pair.getObject());
     linkParams.put("pairAction", pair.getAction());
     str += href(object, action, "", "Показать подробно", linkParams);
+    */
     // вывод вложенных пар
 
     TreeMap<String, Pair> pairsMap = new TreeMap<String, Pair>();
@@ -767,6 +786,13 @@ public class PairEnt extends OptionAbstract {
     return str;
   }
 
+  /**
+   * добавить новую пару новую
+   *
+   * @param pair родительская пара, к которой будет добавляться
+   * @return
+   * @throws Exception
+   */
   private String addNewPairForm(Pair pair) throws Exception {
     FormOptionInterface fo = rd.getFormOption();
     fo.setAction(action);
@@ -778,8 +804,8 @@ public class PairEnt extends OptionAbstract {
     map.put(rd.textInput("newPairObject", "", "Object"), "");
     map.put(rd.textInput("newPairAction", "", "Action"), "");
     map.put(rd.combo(webControllers, null, "webController"), "");
-    map.put(rd.hiddenInput("pairObject", pair.getObject()), "");
-    map.put(rd.hiddenInput("pairAction", pair.getAction()), "");
+    map.put(rd.hiddenInput("pObject", pair.getObject()), "");
+    map.put(rd.hiddenInput("pAction", pair.getAction()), "");
 
     AbsEnt form = rd.horizontalForm(map, "Добавить новую пару", null);
     form.addEnt(rd.hiddenInput("method", "addNewPair"));
@@ -806,7 +832,7 @@ public class PairEnt extends OptionAbstract {
       str += "<table><tr>";
       str += "<td>Object: <b>" + object + "</b> Action: <b>" + action + "</b></td>";
       str += "<td>" + removePairForm(pair) + "</td>";
-      str += "<td><font class='display_link' onclick=\"hide('pair_show" + fullName + "');\">[Отображение]</font></td>";
+      //str += "<td><font class='display_link' onclick=\"hide('pair_show" + fullName + "');\">[Отображение]</font></td>";
       str += "</tr></table>";
       str += "</div>";
 
@@ -829,7 +855,8 @@ public class PairEnt extends OptionAbstract {
       }
 
       // основной вывод пары
-      str += "<div class='pair_show' id='pair_show" + fullName + "' " + display + "'>";
+      //str += "<div class='pair_show' id='pair_show" + fullName + "' " + display + "'>";
+      str += "<div class='pair_show' id='pair_show" + fullName + "' >";
 
       // START SEQUENCE
       str += "<div class='seq'>";
@@ -874,7 +901,8 @@ public class PairEnt extends OptionAbstract {
       str += "</div>";
       // END SEQUENCE  
 
-      str += "<div class='inner_pairs'>";
+      //str += "<div class='inner_pairs'>";
+      str += "<div>";
 
       // добавить вложенную пару
       str += "<div class='add_pair'>";
@@ -920,7 +948,7 @@ public class PairEnt extends OptionAbstract {
     str += "<table><tr>";
     str += "<td>Object: <b>" + object + "</b> Action: <b>" + action + "</b></td>";
     str += "<td>" + removePairForm(pair) + "</td>";
-    str += "<td><font class='display_link' onclick=\"hide('pair_show" + fullName + "');\">[Отображение]</font></td>";
+    //str += "<td><font class='display_link' onclick=\"hide('pair_show" + fullName + "');\">[Отображение]</font></td>";
     str += "</tr></table>";
     str += "</div>";
 
@@ -933,9 +961,11 @@ public class PairEnt extends OptionAbstract {
     }
 
     // основной вывод пары
-    str += "<div class='pair_show' id='pair_show" + fullName + "' " + display + "'>";
+    //str += "<div class='pair_show' id='pair_show" + fullName + "' " + display + "'>";
+    str += "<div class='pair_show' id='pair_show" + fullName + "' >";
 
-    str += "<div class='inner_pairs'>";
+    //str += "<div class='inner_pairs'>";
+    str += "<div>";
 
     // добавить вложенную пару
     str += "<div class='add_pair'>";
@@ -984,8 +1014,9 @@ public class PairEnt extends OptionAbstract {
     return form.render();
   }
 
-  private String linkShowAll() {
-    return "<font class='display_link' onclick=\"$('.pair_show:has(.pair_show)').slideToggle();\">[Показать все]</font>";
+  private String linkExpandAll() {
+    //return "<font class='display_link' onclick=\"$('.pair_show:has(.pair_show)').show();\">[Развернуть все]</font>";
+    return "";
   }
 
   private String uploadMainPairForm() throws Exception {
@@ -1060,7 +1091,7 @@ public class PairEnt extends OptionAbstract {
     hs.put(rd.combo(webControllers, pair.getControllerName(), "webController"), "Веб Контроллер");
     hs.put(rd.hiddenInput("action", action), "");
     hs.put(rd.hiddenInput("object", object), "");
-    AbsEnt form = rd.verticalForm(hs, "Изменить", "images/change.png");
+    AbsEnt form = rd.horizontalForm(hs, "Изменить", "images/change.png");
     form.setAttribute(EnumAttrType.style, "");
     form.addEnt(rd.hiddenInput("method", "changeNewPair"));
     form.addEnt(rd.hiddenInput("objectName", pair.getObject()));
@@ -1081,6 +1112,7 @@ public class PairEnt extends OptionAbstract {
     pairs.removeAll(pair.getAllParentСlone());
     pairs.remove(pair);
     TreeMap<String, Object> pairsMap = new TreeMap<String, Object>();
+    pairsMap.put("", "---");
     List<String> childrenNames = new ArrayList();
     for (Pair p : pair.getPairsClone()) {
       childrenNames.add(p.getObject() + ":" + p.getAction());
@@ -1094,7 +1126,8 @@ public class PairEnt extends OptionAbstract {
 
     LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
     hs.put(rd.combo(pairsMap, "", "move"), "Пары");
-    AbsEnt form = rd.verticalForm(hs, "Переместить пару", "images/ok.png");
+    //AbsEnt form = rd.verticalForm(hs, "Переместить пару", "images/ok.png");
+    AbsEnt form = rd.horizontalForm(hs, "Переместить пару", "");
     form.setAttribute(EnumAttrType.style, "");
     form.addEnt(rd.hiddenInput("method", "movePair"));
     form.addEnt(rd.hiddenInput("objectName", pair.getObject()));
@@ -1121,6 +1154,7 @@ public class PairEnt extends OptionAbstract {
       form.addEnt(rd.hiddenInput("objectName", parent.getObject()));
       form.addEnt(rd.hiddenInput("actionName", parent.getAction()));
     }
+    form.addEnt(rd.hiddenInput("object", "pairEnt"));
     form.addEnt(rd.hiddenInput("removeObject", pair.getObject()));
     form.addEnt(rd.hiddenInput("removeAction", pair.getAction()));
     form.setAttribute(EnumAttrType.action, formAction);

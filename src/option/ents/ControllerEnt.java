@@ -550,6 +550,8 @@ public class ControllerEnt extends OptionAbstract {
         title = "Cnt " + name;
       }
 
+      str += "<h2> Системные контроллеры </h2>";
+      
       str += errors;
 
       str += downloadForm();

@@ -39,8 +39,8 @@ public class PairController {
     String newPairObject = params.get("newPairObject");
     String newPairAction = params.get("newPairAction");
     String webController = params.get("webController");
-    String pairObject = params.get("pairObject");
-    String pairAction = params.get("pairAction");
+    String pairObject = params.get("pObject");
+    String pairAction = params.get("pAction");
     if (checkParams(newPairObject, newPairAction, webController, pairObject, pairAction)) {
       Pair pair = ps.searchOnePair(pairObject, pairAction);
       if (pair != null) {

@@ -66,7 +66,7 @@ class OptionEnt extends OptionAbstract {
     inner.put(rd.textInput("maxUploadSizeMB",  os.getMaxUploadSizeMB(), "Максимальный размер загружаемых файлов в мб"), "Максимальный размер загружаемых файлов в мб");
     inner.put(rd.textInput("dumpPath",  os.getDumpPath(), "Путь к дампам БД"), "Путь к дампам БД");
     inner.put(rd.textInput("emailNotification",  os.getEmailNotification(), "Email для получения служебных сообщений"), "Email для получения служебных сообщений");
-    inner.put(rd.textInput("controllerPath",  os.getControllerPath(), "Путь к контроллерам"), "Путь к контроллерам");
+    inner.put(rd.textInput("controllerPath",  os.getControllerPath(), "Путь к веб-контроллерам"), "Путь к веб-контроллерам");
     
     AbsEnt form=rd.rightForm(false,object,"refresh", null, inner, "Подтвердить изменения", rd.getRenderConstant().OK_IMGPH, false);
     return form.render() + "Ошибки:" + os.getError();
