@@ -95,7 +95,8 @@ public class AllStructure extends ModelEnt {
         return true;
       }
 
-      if (params.get("modelName") != null && !"".equals(params.get("modelName")) && specAction.equals("modulate")) {
+      if (params.get("modelName") != null && !"".equals(params.get("modelName")) && 
+              (specAction.equals("modulate") || specAction.equals("modulateNew"))) {
         String modelName = params.get("modelName").toString();
 
         content += errors;
@@ -109,7 +110,13 @@ public class AllStructure extends ModelEnt {
         if (result.getErrors().isEmpty()) {
           content += "</br><b>Контроллер смоделирован</b>";
           content += "</br>Модуляция пар........";
-          result = modulatePairs(modelName, null);
+          
+          if (specAction.equals("modulate")) {
+            result = modulatePairs(modelName, null);
+          } else if (specAction.equals("modulateNew")) {
+            result = modulateNewPairs(modelName);
+          }
+          
           for (String res : result.getMessages()) {
             content += "</br> " + res;
           }
@@ -162,9 +169,17 @@ public class AllStructure extends ModelEnt {
           AbsEnt form = rd.verticalForm(hs, name, "images/refresh.png");
           form.addEnt(rd.hiddenInput("modelName", name));
           content += form.render();
+          content += "</td>";
+          
+          LinkedHashMap<AbsEnt, String> hsNew = new LinkedHashMap<AbsEnt, String>();
+          hsNew.put(rd.hiddenInput("object", object), "");
+          hsNew.put(rd.hiddenInput("action", action), "");
+          hsNew.put(rd.hiddenInput("specAction", "modulateNew"), "");
+          AbsEnt formNew = rd.verticalForm(hsNew, name + " NEW MODULATE", null);
+          formNew.addEnt(rd.hiddenInput("modelName", name));
+          content += "<td>" +  formNew.render() + "<td/>";
 
-
-          content += "</td></tr>";
+          content += "</tr>";
         } else {
           systemMap.add(name);
         }
@@ -606,6 +621,55 @@ public class AllStructure extends ModelEnt {
   private void setParameterSettings(ServiceParameter parameter, Field field) {
     parameter.setMandatory(field.isMandatory());
     parameter.setDataType(field.getType());
+  }
+  
+  private ModuleError modulateNewPairs(String modelName) throws Exception {
+    ModuleError result = new ModuleError();
+
+    PairKeeper ps = app.getKeeper().getPairKeeper();
+    Pair pair = ps.getPair();
+    ModelStructureKeeper mss = app.getKeeper().getModelStructureKeeper();
+
+    Structure ModelStructure = mss.getStructure(modelName);
+    if (ModelStructure == null) {
+      throw new Exception("Модели с переданным именем не существует");
+    }
+    String method = "search";
+    if (!ps.containsPair(modelName, method)) {
+      Pair searchPair = PairObject.getInstance(modelName, method, false, new HashMap(), null, pair, true, modelName + ":search");
+      pair.addPair(searchPair);
+    }
+
+    method = "change";
+    if (!ps.containsPair(modelName, method)) {
+      Pair changePair = PairObject.getInstance(modelName, method, false, new HashMap(), null, pair, true, modelName + ":change");
+      pair.addPair(changePair);
+    }
+
+    method = "delete";
+    if (!ps.containsPair(modelName, method)) {
+      Pair deletePair = PairObject.getInstance(modelName, method, false, new HashMap(), null, pair, true, modelName + ":delete");
+      pair.addPair(deletePair);
+    }
+
+    method = "add";
+    if (!ps.containsPair(modelName, method)) {
+      Pair addPair = PairObject.getInstance(modelName, method, false, new HashMap(), null, pair, true, modelName + ":add");
+      pair.addPair(addPair);
+    }
+
+    method = "showOne";
+    if (!ps.containsPair(modelName, method)) {
+      Pair showPair = PairObject.getInstance(modelName, method, false, new HashMap(), null, pair, true, modelName + ":showOne");
+      pair.addPair(showPair);
+    }
+
+    if (ModelStructure.isFileWork() == true) {
+        
+    }
+
+    ps.SaveCollectionInFile();
+    return result;
   }
   
   /**
