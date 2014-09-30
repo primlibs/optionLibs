@@ -150,6 +150,49 @@ public class PairController {
     return status;
   }
 
+  /**
+   * переместить пару - новый метод
+   * @param request запрос
+   * @return
+   * @throws Exception 
+   */
+  public boolean movePairNew(Map<String, Object> request) throws Exception {
+    boolean status = false;
+    HashMap<String, String> params = getRequestParams(request);
+ 
+    String child = params.get("child");
+    String parent = params.get("parent");
+
+    if (checkParams(parent, child)) {
+
+      String childObject = null;
+      String childAction = null;
+      String parentObject = null;
+      String parentAction = null;
+
+      String[] strChild = child.split(":");
+      String[] strParent = parent.split(":");
+      if (strChild.length == 2 && strParent.length == 2) {
+        childObject = strChild[0];
+        childAction = strChild[1];
+        parentObject = strParent[0];
+        parentAction = strParent[1];
+      }
+      if (childObject != null & childAction != null
+              && parentObject != null && parentAction != null) {
+        Pair childPair = ps.searchOnePair(childObject, childAction);
+        Pair pair = ps.searchOnePair(parentObject, parentAction);
+        List<Pair> parents = pair.getAllParentСlone();
+        if (!parents.contains(childPair) && !(pair == childPair)) {
+          ps.removePair(childObject, childAction);
+          pair.addPair(childPair);
+        }
+        status = ps.SaveCollectionInFile();
+      }
+    }
+    return status;
+  }
+  
   public boolean movePair(Map<String, Object> request) throws Exception {
     boolean status = false;
     HashMap<String, String> params = getRequestParams(request);

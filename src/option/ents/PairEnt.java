@@ -253,7 +253,7 @@ public class PairEnt extends OptionAbstract {
 
       // форма поиска
       errorList.addAll(errors);
-      
+
       str += "<h2> Веб-интерфейсы (пары). </h2>";
       str += errorList;
       str += searchForm();
@@ -262,8 +262,9 @@ public class PairEnt extends OptionAbstract {
       str += "<br/>";
       str += uploadMainPairForm();
       str += "<br/>";
-      str += linkExpandAll();
-      str += "<br/> <br/>";
+      //str += linkExpandAll();
+      str += movePairNewForm();
+      str += "<br/> <br/> <br/>";
 
       str += (content);
       str += (ps.getErrors());
@@ -721,7 +722,7 @@ public class PairEnt extends OptionAbstract {
     Map<String, Object> linkParams = new HashMap();
     linkParams.put("pairObject", pair.getObject());
     linkParams.put("pairAction", pair.getAction());
-    
+
     // заголовок пары
     str += "<div class='pair_head' " + style + ">";
     str += "<table><tr>";
@@ -734,14 +735,16 @@ public class PairEnt extends OptionAbstract {
       str += " Default ";
     }
     str += "</tr></table>";
-    
+
     if (pair.isByWebController()) {
       str += "<br/>";
       str += changeNewPairForm(pair);
-      str += "<br/>";
-      str += movePairForm(pair);
     }
-    
+    /*
+    str += "<br/>";
+    str += movePairForm(pair);
+    */
+
     str += "</div>";
 
     String display = "";
@@ -752,7 +755,7 @@ public class PairEnt extends OptionAbstract {
     }
 
     // основной вывод пары
-   // str += "<div class='pair_show' id='pair_show" + fullName + "' " + display + "'>";
+    // str += "<div class='pair_show' id='pair_show" + fullName + "' " + display + "'>";
     str += "<div class='pair_show' id='pair_show" + fullName + "'>";
 
     if (pair.getObject().equals("app")) {
@@ -763,13 +766,12 @@ public class PairEnt extends OptionAbstract {
     str += "<div>";
 
     /*
-    Map<String, Object> linkParams = new HashMap();
-    linkParams.put("pairObject", pair.getObject());
-    linkParams.put("pairAction", pair.getAction());
-    str += href(object, action, "", "Показать подробно", linkParams);
-    */
+     Map<String, Object> linkParams = new HashMap();
+     linkParams.put("pairObject", pair.getObject());
+     linkParams.put("pairAction", pair.getAction());
+     str += href(object, action, "", "Показать подробно", linkParams);
+     */
     // вывод вложенных пар
-
     TreeMap<String, Pair> pairsMap = new TreeMap<String, Pair>();
     for (Pair innerPair : pair.getPairsClone()) {
       pairsMap.put(innerPair.getObject() + ":" + innerPair.getAction(), innerPair);
@@ -1015,8 +1017,8 @@ public class PairEnt extends OptionAbstract {
   }
 
   private String linkExpandAll() {
-    //return "<font class='display_link' onclick=\"$('.pair_show:has(.pair_show)').show();\">[Развернуть все]</font>";
-    return "";
+    return "<font class='display_link' onclick=\"$('.pair_show:has(.pair_show)').show();\">[Развернуть все]</font>";
+    //return "";
   }
 
   private String uploadMainPairForm() throws Exception {
@@ -1101,6 +1103,28 @@ public class PairEnt extends OptionAbstract {
   }
 
   /**
+   * переместить пару - новый метод
+   * @return
+   * @throws Exception 
+   */
+  private String movePairNewForm() throws Exception {
+    TreeMap<String, Object> pairsMap = new TreeMap<String, Object>();
+    pairsMap.put("", "---");
+    for (Pair p : allPairs) {
+      pairsMap.put(p.getObject() + ":" + p.getAction(), p.getObject() + ":" + p.getAction());
+    }
+
+    LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
+    hs.put(rd.combo(pairsMap, "", "parent"), "Родительская пара:");
+    hs.put(rd.combo(pairsMap, "", "child"), "Дочерняя пара:");
+    AbsEnt form = rd.horizontalForm(hs, "Переместить пару", "");
+    form.setAttribute(EnumAttrType.style, "");
+    form.addEnt(rd.hiddenInput("method", "movePairNew"));
+    form.setAttribute(EnumAttrType.action, formAction);
+    return form.render();
+  }
+
+  /**
    * форма перемещения пары
    *
    * @param pair
@@ -1126,7 +1150,6 @@ public class PairEnt extends OptionAbstract {
 
     LinkedHashMap<AbsEnt, String> hs = new LinkedHashMap<AbsEnt, String>();
     hs.put(rd.combo(pairsMap, "", "move"), "Пары");
-    //AbsEnt form = rd.verticalForm(hs, "Переместить пару", "images/ok.png");
     AbsEnt form = rd.horizontalForm(hs, "Переместить пару", "");
     form.setAttribute(EnumAttrType.style, "");
     form.addEnt(rd.hiddenInput("method", "movePair"));
