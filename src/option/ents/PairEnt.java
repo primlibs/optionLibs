@@ -368,14 +368,18 @@ public class PairEnt extends OptionAbstract {
     HashMap<String, ArrayList<String>> hs = new HashMap<String, ArrayList<String>>();
     for (String clName : classes) {
 
-      Class cls = Class.forName(app.getControllerClassPath() + "." + clName);
-      ArrayList<String> al = new ArrayList<String>();
-      hs.put(clName, al);
-      Method[] m = cls.getMethods();
-      for (Method mm : m) {
-        List<String> internalMethods = Arrays.asList(WebController.internalMethods);
-        if (!internalMethods.contains(mm.getName())) {
-          al.add(mm.getName());
+      String className = app.getControllerClassPath() + "." + clName;
+      if (ServiceFactory.classExists(className)) {
+
+        Class cls = Class.forName(className);
+        ArrayList<String> al = new ArrayList<String>();
+        hs.put(clName, al);
+        Method[] m = cls.getMethods();
+        for (Method mm : m) {
+          List<String> internalMethods = Arrays.asList(WebController.internalMethods);
+          if (!internalMethods.contains(mm.getName())) {
+            al.add(mm.getName());
+          }
         }
       }
     }
@@ -741,9 +745,9 @@ public class PairEnt extends OptionAbstract {
       str += changeNewPairForm(pair);
     }
     /*
-    str += "<br/>";
-    str += movePairForm(pair);
-    */
+     str += "<br/>";
+     str += movePairForm(pair);
+     */
 
     str += "</div>";
 
@@ -1104,8 +1108,9 @@ public class PairEnt extends OptionAbstract {
 
   /**
    * переместить пару - новый метод
+   *
    * @return
-   * @throws Exception 
+   * @throws Exception
    */
   private String movePairNewForm() throws Exception {
     TreeMap<String, Object> pairsMap = new TreeMap<String, Object>();
