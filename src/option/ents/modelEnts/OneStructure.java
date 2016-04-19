@@ -87,6 +87,8 @@ public class OneStructure extends ModelEnt {
         str += "<div style='overflow:hidden;'>" + addFieldForm() + "</div>";
         str += "<h2>Поля модели</h2>";
 
+       sql += getSqlFromField(struct.getField(struct.getPrimaryAlias()));
+        
         // вывод параметров полей
         for (Field field : map.values()) {
 
@@ -109,20 +111,11 @@ public class OneStructure extends ModelEnt {
           str += "</tr>";
           str += "</table>";
 
-          sql += " "+field.getAlias()+" ";
-          if(field.getType().equals(DataTypes.CHAR)){
-              sql +=" VARCHAR (255)";
-          }else if(field.getType().equals(DataTypes.TEXT)){
-               sql +=" TEXT (20000)";
-          }else if(field.getType().equals(DataTypes.BOOL)){
-               sql +=" int";
-          }else{
-              sql +=field.getType()+" ";
+          if(!field.getAlias().equals(struct.getPrimaryAlias())){
+              sql += getSqlFromField(field);
           }
-          if(field.isMandatory()){
-              sql += " NOT NULL";
-          }
-          sql += " ,";
+          
+          
           sqlToOut+=" "+field.getAlias()+" - "+field.getName()+", ";
           
           if (field.isEditable()) {
@@ -181,7 +174,7 @@ public class OneStructure extends ModelEnt {
           }
 
         }
-
+        sql+= "   PRIMARY KEY ("+struct.getPrimaryAlias()+")";
         sql +=" ) TYPE=innodb;";
         
         str += "<div><h2>sql</h2>"+sql+"<h2>sql</h2>"+sqlToOut+"</div>";
@@ -409,5 +402,25 @@ public class OneStructure extends ModelEnt {
     AbsEnt form = rd.horizontalForm(hs, "Удалить Unique", "images/delete.png");
     form.setAttribute(EnumAttrType.action, rd.getBaseLinkPath());
     return form.render();
+  }
+  
+  
+  private static String getSqlFromField(Field fd){
+      String sql="";
+       sql+=" "+fd.getAlias()+" ";
+          if(fd.getType().equals(DataTypes.CHAR)){
+              sql +=" VARCHAR (255)";
+          }else if(fd.getType().equals(DataTypes.TEXT)){
+               sql +=" TEXT (20000)";
+          }else if(fd.getType().equals(DataTypes.BOOL)){
+               sql +=" int";
+          }else{
+              sql +=fd.getType()+" ";
+          }
+          if(fd.isMandatory()){
+              sql += " NOT NULL";
+          }
+          sql += " ,";
+     return sql;
   }
 }
