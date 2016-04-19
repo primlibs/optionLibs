@@ -56,7 +56,10 @@ public class OneStructure extends ModelEnt {
       Structure struct = structureMap.get(structureAlias);
       if (struct != null) {
         // вывод параметров модели
+        String sql="";   
+        String sqlToOut="";    
         str += "<h1>Структура модели " + struct.getTableAlias() + "</h1>";
+        sql +="create table IF NOT EXISTS " + struct.getTableAlias() +" ( ";
         str += "Название таблицы: " + struct.getTableName() + "<br/>";
         str += "Алиас таблицы: " + struct.getTableAlias() + "<br/>";
         str += "Первичный ключ таблицы: " + struct.getPrimaryAlias() + "<br/>";
@@ -106,6 +109,18 @@ public class OneStructure extends ModelEnt {
           str += "</tr>";
           str += "</table>";
 
+          sql += field.getName()+" ";
+          if(field.getType().equals(DataTypes.CHAR)){
+              sql +=" VARCHAR (255)";
+          }else if(field.getType().equals(DataTypes.TEXT)){
+               sql +=" TEXT (20000)";
+          }else{
+              sql +=field.getType()+" ";
+          }
+          if(field.isMandatory()){
+              sql += " NOT NULL";
+          }
+          
           if (field.isEditable()) {
 
             str += changeFieldForm(field);
@@ -163,6 +178,9 @@ public class OneStructure extends ModelEnt {
 
         }
 
+        sql +=" ) TYPE=innodb;";
+        
+        str += "<div><h2>sql</h2>"+sql+"</div>";
         str += "<h2>Unique</h2>";
         str += "<div style='overflow:hidden;'>" + addUniqueForm() + "</div>";
         List<Unique> uList = struct.getUniqueList();
