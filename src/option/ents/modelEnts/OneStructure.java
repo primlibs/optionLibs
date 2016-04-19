@@ -109,7 +109,7 @@ public class OneStructure extends ModelEnt {
           str += "</tr>";
           str += "</table>";
 
-          sql += field.getName()+" ";
+          sql += " "+field.getAlias()+" ";
           if(field.getType().equals(DataTypes.CHAR)){
               sql +=" VARCHAR (255)";
           }else if(field.getType().equals(DataTypes.TEXT)){
@@ -118,8 +118,10 @@ public class OneStructure extends ModelEnt {
               sql +=field.getType()+" ";
           }
           if(field.isMandatory()){
-              sql += " NOT NULL";
+              sql += " NOT NULL,";
           }
+          
+          sqlToOut+=" "+field.getAlias()+" - "+field.getName()+", ";
           
           if (field.isEditable()) {
 
@@ -180,7 +182,7 @@ public class OneStructure extends ModelEnt {
 
         sql +=" ) TYPE=innodb;";
         
-        str += "<div><h2>sql</h2>"+sql+"</div>";
+        str += "<div><h2>sql</h2>"+sql+"<h2>sql</h2>"+sqlToOut+"</div>";
         str += "<h2>Unique</h2>";
         str += "<div style='overflow:hidden;'>" + addUniqueForm() + "</div>";
         List<Unique> uList = struct.getUniqueList();
