@@ -114,6 +114,8 @@ public class OneStructure extends ModelEnt {
               sql +=" VARCHAR (255)";
           }else if(field.getType().equals(DataTypes.TEXT)){
                sql +=" TEXT (20000)";
+          }else if(field.getType().equals(DataTypes.BOOL)){
+               sql +=" int";
           }else{
               sql +=field.getType()+" ";
           }
