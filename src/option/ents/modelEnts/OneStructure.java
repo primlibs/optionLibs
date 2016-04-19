@@ -118,9 +118,9 @@ public class OneStructure extends ModelEnt {
               sql +=field.getType()+" ";
           }
           if(field.isMandatory()){
-              sql += " NOT NULL,";
+              sql += " NOT NULL";
           }
-          
+          sql += " ,";
           sqlToOut+=" "+field.getAlias()+" - "+field.getName()+", ";
           
           if (field.isEditable()) {
