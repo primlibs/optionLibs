@@ -87,7 +87,7 @@ public class OneStructure extends ModelEnt {
         str += "<div style='overflow:hidden;'>" + addFieldForm() + "</div>";
         str += "<h2>Поля модели</h2>";
 
-       sql += getSqlFromField(struct.getField(struct.getPrimaryAlias()));
+       sql += getSqlFromField(struct.getField(struct.getPrimaryAlias()),true);
         
         // вывод параметров полей
         for (Field field : map.values()) {
@@ -112,7 +112,7 @@ public class OneStructure extends ModelEnt {
           str += "</table>";
 
           if(!field.getAlias().equals(struct.getPrimaryAlias())){
-              sql += getSqlFromField(field);
+              sql += getSqlFromField(field,false);
           }
           
           
@@ -175,7 +175,7 @@ public class OneStructure extends ModelEnt {
 
         }
         sql+= "   PRIMARY KEY ("+struct.getPrimaryAlias()+")";
-        sql +=" ) TYPE=innodb;";
+        sql +=" ) ENGINE=innodb charset='utf8';";
         
         str += "<div><h2>sql</h2>"+sql+"<h2>sql</h2>"+sqlToOut+"</div>";
         str += "<h2>Unique</h2>";
@@ -405,7 +405,7 @@ public class OneStructure extends ModelEnt {
   }
   
   
-  private static String getSqlFromField(Field fd){
+  private static String getSqlFromField(Field fd,boolean inc){
       String sql="";
        sql+=" "+fd.getAlias()+" ";
           if(fd.getType().equals(DataTypes.CHAR)){
@@ -419,6 +419,9 @@ public class OneStructure extends ModelEnt {
           }
           if(fd.isMandatory()){
               sql += " NOT NULL";
+          }
+          if(inc==true){
+              sql += " AUTO_INCREMENT";
           }
           sql += " ,";
      return sql;
