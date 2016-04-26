@@ -59,7 +59,7 @@ public class OneStructure extends ModelEnt {
         String sql="";   
         String sqlToOut="";    
         str += "<h1>Структура модели " + struct.getTableAlias() + "</h1>";
-        sql +="create table IF NOT EXISTS " + struct.getTableAlias() +" ( ";
+        sql +="create table IF NOT EXISTS " + struct.getTableAlias().toLowerCase() +" ( ";
         str += "Название таблицы: " + struct.getTableName() + "<br/>";
         str += "Алиас таблицы: " + struct.getTableAlias() + "<br/>";
         str += "Первичный ключ таблицы: " + struct.getPrimaryAlias() + "<br/>";
